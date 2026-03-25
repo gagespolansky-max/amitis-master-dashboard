@@ -1,0 +1,79 @@
+{
+  "this_week": [
+    {
+      "id": "tw-1",
+      "title": "Attend Claude Training session",
+      "description": "Join scheduled training call with Adam Feldheim on Thursday March 26 at 9am EDT.",
+      "source": "email",
+      "urgency": "high"
+    },
+    {
+      "id": "tw-2",
+      "title": "Follow up on Eleven Labs SPV terms",
+      "description": "Wait for Sonia Peterson to send finalized SPV terms and staple within 1-2 days.",
+      "source": "email",
+      "urgency": "high"
+    },
+    {
+      "id": "tw-3",
+      "title": "Process HDSR course invoice",
+      "description": "Handle payment or filing for HDSI course invoice INV-00003067 dated March 24.",
+      "source": "email",
+      "urgency": "medium"
+    },
+    {
+      "id": "tw-4",
+      "title": "Follow up on Radiant discussion",
+      "description": "Clarify status of Radiant Nuclear meeting after cancellation and reschedule if needed.",
+      "source": "email",
+      "urgency": "medium"
+    },
+    {
+      "id": "tw-5",
+      "title": "Review Notion AI Sync updates",
+      "description": "Check Tactiq mention in Gage/Adam AI Sync meeting notes from March 25.",
+      "source": "email",
+      "urgency": "low"
+    }
+  ],
+  "this_month": [
+    {
+      "id": "tm-1",
+      "title": "Evaluate Eleven Labs SPV investment",
+      "description": "Complete due diligence and investment decision once SPV terms are received from Sonia.",
+      "source": "email",
+      "urgency": "high"
+    },
+    {
+      "id": "tm-2",
+      "title": "Assess Radiant Nuclear opportunity",
+      "description": "Complete evaluation of Radiant Nuclear investment after rescheduled discussion with Lionel Pastor.",
+      "source": "email",
+      "urgency": "medium"
+    }
+  ],
+  "on_deck": [
+    {
+      "id": "od-1",
+      "title": "Explore AI automation research tools",
+      "description": "Investigate auto research skill technology shared via Twitter link for potential integration.",
+      "source": "email",
+      "urgency": "low"
+    },
+    {
+      "id": "od-2",
+      "title": "Monitor crypto market developments",
+      "description": "Stay updated on Bitcoin market dynamics and regulatory changes based on recent market analysis.",
+      "source": "email",
+      "urgency": "low"
+    },
+    {
+      "id": "od-3",
+      "title": "Consider BTC Prague conference attendance",
+      "description": "Evaluate attending BTC Prague conference featuring Jack Mallers for networking and insights.",
+      "source": "email",
+      "urgency": "low"
+    }
+  ],
+  "last_refreshed": "2026-03-25T16:43:21.573088"
+}

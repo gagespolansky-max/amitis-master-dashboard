@@ -1,0 +1,14 @@
+[
+  {
+    "week": "Week of Mar 16, 2026",
+    "suggestions": [
+      {
+        "date": "2026-03-21",
+        "type": "Skill",
+        "title": "Create /enablement-coach skill",
+        "description": "A custom slash command that reviews your session and suggests workflow improvements, reusable skills, and underutilized features.",
+        "status": "done"
+      }
+    ]
+  }
+]
