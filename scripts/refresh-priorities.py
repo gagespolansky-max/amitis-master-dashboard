@@ -139,7 +139,7 @@ Return valid JSON only, no markdown:
 }}"""
 
     response = client.messages.create(
-        model="claude-sonnet-4-20250514",
+        model="claude-sonnet-4-20250514",  # Stable Sonnet 4 model ID
         max_tokens=2000,
         messages=[{"role": "user", "content": prompt}],
     )
@@ -184,8 +184,21 @@ def main():
     priorities = merge_with_existing(priorities, existing)
     priorities["last_refreshed"] = datetime.now().isoformat()
 
+    # Write local backup
     PRIORITIES_FILE.write_text(json.dumps(priorities, indent=2))
-    print(f"Priorities updated: {sum(len(priorities[c]) for c in ['this_week', 'this_month', 'on_deck'])} items")
+    count = sum(len(priorities[c]) for c in ['this_week', 'this_month', 'on_deck'])
+    print(f"Priorities updated locally: {count} items")
+
+    # POST to API (works for both local dev and deployed)
+    api_url = os.getenv("PRIORITIES_API_URL", "http://localhost:3000/api/priorities")
+    try:
+        resp = requests.post(api_url, json=priorities, timeout=10)
+        if resp.ok:
+            print(f"Synced to API: {api_url}")
+        else:
+            print(f"API sync failed ({resp.status_code}): {resp.text}")
+    except Exception as e:
+        print(f"API sync skipped (not running?): {e}")
 
 
 if __name__ == "__main__":

@@ -2,52 +2,59 @@
   "this_week": [
     {
       "id": "tw-1",
-      "title": "Attend Claude Training session",
-      "description": "Join scheduled training call with Adam Feldheim on Thursday March 26 at 9am EDT.",
+      "title": "Prepare for Pareto Capital Partners call",
+      "description": "Prep for confirmed meeting with Ettore Paratore scheduled for Wednesday April 1st at 10am EDT.",
       "source": "email",
       "urgency": "high"
     },
     {
       "id": "tw-2",
-      "title": "Follow up on Eleven Labs SPV terms",
-      "description": "Wait for Sonia Peterson to send finalized SPV terms and staple within 1-2 days.",
+      "title": "Coordinate Thursday meeting with Peter Bennett",
+      "description": "Set up 1pm London meeting next Thursday including Gage in invites as confirmed by Adam Feldheim.",
       "source": "email",
       "urgency": "high"
     },
     {
       "id": "tw-3",
-      "title": "Process HDSR course invoice",
-      "description": "Handle payment or filing for HDSI course invoice INV-00003067 dated March 24.",
+      "title": "Review Board Meeting materials for Amitis Capital",
+      "description": "Review attached draft audited financial statements, audit report, and related documents for the General Partner board meeting.",
       "source": "email",
-      "urgency": "medium"
+      "urgency": "high"
     },
     {
       "id": "tw-4",
-      "title": "Follow up on Radiant discussion",
-      "description": "Clarify status of Radiant Nuclear meeting after cancellation and reschedule if needed.",
+      "title": "Follow up on Oakbridge Group meeting coordination",
+      "description": "Coordinate meeting with Chris Bowden and Peter from Oakbridge following introductions and expressed interest to meet.",
       "source": "email",
       "urgency": "medium"
     },
     {
       "id": "tw-5",
-      "title": "Review Notion AI Sync updates",
-      "description": "Check Tactiq mention in Gage/Adam AI Sync meeting notes from March 25.",
+      "title": "Review Edge Capital mid-March position report",
+      "description": "Analyze the mid-March position report and February statement update received from Edge Capital Fund.",
       "source": "email",
-      "urgency": "low"
+      "urgency": "medium"
     }
   ],
   "this_month": [
     {
       "id": "tm-1",
-      "title": "Evaluate Eleven Labs SPV investment",
-      "description": "Complete due diligence and investment decision once SPV terms are received from Sonia.",
+      "title": "Finalize Amitis Capital audited financial statements",
+      "description": "Complete review and approval process for the audited financial statements and related audit documentation.",
       "source": "email",
       "urgency": "high"
     },
     {
       "id": "tm-2",
-      "title": "Assess Radiant Nuclear opportunity",
-      "description": "Complete evaluation of Radiant Nuclear investment after rescheduled discussion with Lionel Pastor.",
+      "title": "Attend Ligo Partners Family Office webinar",
+      "description": "Participate in the April 16th 6-7pm BST webinar forwarded by Monica from Ligo Partners.",
+      "source": "email",
+      "urgency": "medium"
+    },
+    {
+      "id": "tm-3",
+      "title": "Complete Edge Capital fund performance analysis",
+      "description": "Conduct thorough analysis of Edge Capital's fund performance based on mid-March position report and recent statements.",
       "source": "email",
       "urgency": "medium"
     }
@@ -55,25 +62,25 @@
   "on_deck": [
     {
       "id": "od-1",
-      "title": "Explore AI automation research tools",
-      "description": "Investigate auto research skill technology shared via Twitter link for potential integration.",
+      "title": "Develop Additional Opportunities strategy with Peter Bennett",
+      "description": "Continue strategic discussions on additional opportunities once the current big transaction is completed.",
       "source": "email",
-      "urgency": "low"
+      "urgency": "medium"
     },
     {
       "id": "od-2",
-      "title": "Monitor crypto market developments",
-      "description": "Stay updated on Bitcoin market dynamics and regulatory changes based on recent market analysis.",
+      "title": "Establish Oakbridge Group partnership framework",
+      "description": "Develop formal partnership or collaboration framework following initial meetings with Chris Bowden and Peter.",
       "source": "email",
       "urgency": "low"
     },
     {
       "id": "od-3",
-      "title": "Consider BTC Prague conference attendance",
-      "description": "Evaluate attending BTC Prague conference featuring Jack Mallers for networking and insights.",
+      "title": "Evaluate Pareto Capital Partners investment opportunities",
+      "description": "Assess potential investment or collaboration opportunities following the scheduled meeting with Ettore Paratore.",
       "source": "email",
       "urgency": "low"
     }
   ],
-  "last_refreshed": "2026-03-25T16:43:21.573088"
+  "last_refreshed": "2026-03-31T12:26:01.494229"
 }

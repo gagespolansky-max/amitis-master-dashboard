@@ -1,25 +1,17 @@
 import PageHeader from '@/components/page-header'
-import PlaceholderCard from '@/components/placeholder-card'
+import ACIOBoard from '@/components/acio/ACIOBoard'
 
 export default function ACIOPage() {
   return (
-    <div>
+    <div className="flex flex-col h-[calc(100vh-2rem)]">
       <PageHeader
         title="ACIO"
-        description="AI-powered tools for the investment process."
-        status="coming-soon"
+        description="Deal flow tracker — investment opportunities sourced from Gmail."
+        status="in-progress"
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <PlaceholderCard
-          title="Investment Memos"
-          description="Draft, review, and manage investment memoranda."
-          items={[
-            'Memo drafting & templates',
-            'Thesis tracking',
-            'Approval workflows',
-          ]}
-        />
+      <div className="flex-1 rounded-xl border border-card-border bg-card-bg overflow-hidden">
+        <ACIOBoard />
       </div>
     </div>
   )
