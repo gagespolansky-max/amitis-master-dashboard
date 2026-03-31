@@ -39,6 +39,7 @@ const navigation: NavItem[] = [
     label: 'ACIO',
     href: '/acio',
     children: [
+      { label: 'Deal Pipeline', href: '/acio' },
       { label: 'Investment Memos', href: '/acio/investment-memos' },
     ],
   },
