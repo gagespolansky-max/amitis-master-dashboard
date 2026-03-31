@@ -2,11 +2,11 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd"
-import { Deal, DealStage, STAGES, STAGE_LABELS } from "@/lib/acio/types"
+import { Deal, DealStage, DealPriority, STAGES, STAGE_LABELS } from "@/lib/acio/types"
 import DealCard from "./DealCard"
 import DealPanel from "./DealPanel"
 import BaselineReview from "./BaselineReview"
-import { RefreshCw, Search, LayoutGrid, List, AlertCircle } from "lucide-react"
+import { RefreshCw, Search, LayoutGrid, List, AlertCircle, Bell } from "lucide-react"
 
 type ViewMode = "board" | "table" | "review"
 
@@ -17,9 +17,16 @@ export default function ACIOBoard() {
   const [scanning, setScanning] = useState(false)
   const [search, setSearch] = useState("")
   const [lastScan, setLastScan] = useState<string | null>(null)
+  const [priorityFilter, setPriorityFilter] = useState<DealPriority | "all">("all")
 
   const pendingReview = deals.filter((d) => d.status === "pending_review")
   const confirmedDeals = deals.filter((d) => d.status === "confirmed")
+
+  const dueReminders = deals.filter((d) => {
+    if (!d.reminder_date || d.status !== "confirmed") return false
+    const diff = new Date(d.reminder_date).getTime() - Date.now()
+    return diff / 86400000 <= 7
+  })
 
   const fetchDeals = useCallback(async () => {
     const res = await fetch("/api/acio/deals")
@@ -78,15 +85,20 @@ export default function ACIOBoard() {
     setSelectedDeal(null)
   }
 
-  async function handleBulkConfirm(ids: string[]) {
+  async function handleBulkConfirm(ids: string[], overrides?: Record<string, { deal_type?: string; stage?: DealStage; priority?: DealPriority }>) {
     await Promise.all(
-      ids.map((id) =>
-        fetch(`/api/acio/deals/${id}`, {
+      ids.map((id) => {
+        const o = overrides?.[id] || {}
+        const body: Record<string, unknown> = { status: "confirmed" }
+        if (o.deal_type) body.deal_type = o.deal_type
+        if (o.stage) body.stage = o.stage
+        if (o.priority) body.priority = o.priority
+        return fetch(`/api/acio/deals/${id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ status: "confirmed" }),
+          body: JSON.stringify(body),
         })
-      )
+      })
     )
     await fetchDeals()
   }
@@ -104,11 +116,15 @@ export default function ACIOBoard() {
     await fetchDeals()
   }
 
-  const filteredDeals = search
-    ? confirmedDeals.filter((d) =>
-        d.company_name.toLowerCase().includes(search.toLowerCase())
-      )
-    : confirmedDeals
+  let filteredDeals = confirmedDeals
+  if (search) {
+    filteredDeals = filteredDeals.filter((d) =>
+      d.company_name.toLowerCase().includes(search.toLowerCase())
+    )
+  }
+  if (priorityFilter !== "all") {
+    filteredDeals = filteredDeals.filter((d) => d.priority === priorityFilter)
+  }
 
   const dealsByStage = (stage: DealStage) =>
     filteredDeals.filter((d) => d.stage === stage)
@@ -130,6 +146,16 @@ export default function ACIOBoard() {
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Due reminders badge */}
+          {dueReminders.length > 0 && (
+            <button
+              className="text-xs px-3 py-1.5 bg-yellow-500/20 text-yellow-400 rounded-md hover:bg-yellow-500/30 flex items-center gap-1.5"
+              title={`${dueReminders.length} reminder${dueReminders.length !== 1 ? "s" : ""} due`}
+            >
+              <Bell size={14} /> {dueReminders.length} due
+            </button>
+          )}
+
           {pendingReview.length > 0 && viewMode !== "review" && (
             <button
               onClick={() => setViewMode("review")}
@@ -138,6 +164,34 @@ export default function ACIOBoard() {
               <AlertCircle size={14} /> {pendingReview.length} to review
             </button>
           )}
+
+          {/* Priority filter */}
+          <div className="flex items-center border border-card-border rounded-md overflow-hidden">
+            <button
+              onClick={() => setPriorityFilter("all")}
+              className={`px-2 py-1.5 text-xs ${priorityFilter === "all" ? "bg-accent text-white" : "text-muted hover:text-foreground"}`}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setPriorityFilter("high")}
+              className={`px-2 py-1.5 text-xs ${priorityFilter === "high" ? "bg-red-500/30 text-red-400" : "text-muted hover:text-foreground"}`}
+            >
+              H
+            </button>
+            <button
+              onClick={() => setPriorityFilter("medium")}
+              className={`px-2 py-1.5 text-xs ${priorityFilter === "medium" ? "bg-yellow-500/30 text-yellow-400" : "text-muted hover:text-foreground"}`}
+            >
+              M
+            </button>
+            <button
+              onClick={() => setPriorityFilter("low")}
+              className={`px-2 py-1.5 text-xs ${priorityFilter === "low" ? "bg-zinc-500/30 text-zinc-400" : "text-muted hover:text-foreground"}`}
+            >
+              L
+            </button>
+          </div>
 
           <div className="relative">
             <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted" />
@@ -262,8 +316,10 @@ function TableView({ deals, onSelect }: { deals: Deal[]; onSelect: (d: Deal) => 
           <th className="pb-2 pr-4">Company</th>
           <th className="pb-2 pr-4">Type</th>
           <th className="pb-2 pr-4">Stage</th>
-          <th className="pb-2 pr-4">Source</th>
-          <th className="pb-2 pr-4">First Seen</th>
+          <th className="pb-2 pr-4">Priority</th>
+          <th className="pb-2 pr-4">Industry</th>
+          <th className="pb-2 pr-4">First Contacted</th>
+          <th className="pb-2 pr-4">Last Contacted</th>
           <th className="pb-2">Last Updated</th>
         </tr>
       </thead>
@@ -279,8 +335,21 @@ function TableView({ deals, onSelect }: { deals: Deal[]; onSelect: (d: Deal) => 
             <td className="py-2.5 pr-4">
               <span className="text-xs px-2 py-0.5 rounded bg-card-bg">{STAGE_LABELS[deal.stage]}</span>
             </td>
-            <td className="py-2.5 pr-4 text-muted capitalize">{deal.source.replace("_", " ")}</td>
-            <td className="py-2.5 pr-4 text-muted">{new Date(deal.first_seen_at).toLocaleDateString()}</td>
+            <td className="py-2.5 pr-4">
+              <span className={`text-xs px-2 py-0.5 rounded capitalize ${
+                deal.priority === "high" ? "bg-red-500/20 text-red-400" :
+                deal.priority === "low" ? "bg-zinc-500/20 text-zinc-400" : "text-muted"
+              }`}>
+                {deal.priority || "medium"}
+              </span>
+            </td>
+            <td className="py-2.5 pr-4 text-muted">{deal.industry || "—"}</td>
+            <td className="py-2.5 pr-4 text-muted">
+              {deal.first_contacted_at ? new Date(deal.first_contacted_at).toLocaleDateString() : "—"}
+            </td>
+            <td className="py-2.5 pr-4 text-muted">
+              {deal.last_contacted_at ? new Date(deal.last_contacted_at).toLocaleDateString() : "—"}
+            </td>
             <td className="py-2.5 text-muted">{new Date(deal.updated_at).toLocaleDateString()}</td>
           </tr>
         ))}

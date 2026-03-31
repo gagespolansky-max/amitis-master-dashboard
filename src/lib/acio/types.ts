@@ -4,6 +4,10 @@ export type DealStatus = "pending_review" | "confirmed" | "dismissed"
 
 export type DealSource = "baseline_scan" | "label"
 
+export type DealPriority = "high" | "medium" | "low"
+
+export type InvestmentType = "SPV" | "Fund" | "Direct" | "Co-Invest" | "Other"
+
 export interface Deal {
   id: string
   company_name: string
@@ -17,10 +21,32 @@ export interface Deal {
   notes: string | null
   memo_url: string | null
   memo_filename: string | null
+  priority: DealPriority
+  industry: string | null
+  investment_type: InvestmentType | null
+  company_description: string | null
+  value_proposition: string | null
+  reminder_date: string | null
+  reminder_note: string | null
+  first_contacted_at: string | null
+  last_contacted_at: string | null
   first_seen_at: string
   stage_updated_at: string
   created_at: string
   updated_at: string
+}
+
+export interface EmailMessage {
+  id: string
+  deal_email_id: string
+  message_id: string
+  from_name: string | null
+  from_email: string | null
+  date: string | null
+  subject: string | null
+  body_text: string | null
+  snippet: string | null
+  created_at: string
 }
 
 export interface DealEmail {
@@ -53,3 +79,17 @@ export const STAGE_COLORS: Record<DealStage, string> = {
   committed: "bg-green-500/20 text-green-400",
   passed: "bg-red-500/20 text-red-400",
 }
+
+export const PRIORITY_COLORS: Record<DealPriority, string> = {
+  high: "bg-red-500/20 text-red-400 border-red-500/30",
+  medium: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+  low: "bg-zinc-500/20 text-zinc-400 border-zinc-500/30",
+}
+
+export const PRIORITY_DOT_COLORS: Record<DealPriority, string> = {
+  high: "bg-red-400",
+  medium: "",
+  low: "bg-zinc-500",
+}
+
+export const INVESTMENT_TYPES: InvestmentType[] = ["SPV", "Fund", "Direct", "Co-Invest", "Other"]

@@ -82,6 +82,66 @@ function parseAddresses(raw: string): { name: string; email: string }[] {
   return results
 }
 
+export interface ThreadMessage {
+  messageId: string
+  fromName: string
+  fromEmail: string
+  date: string
+  subject: string
+  bodyText: string
+  snippet: string
+}
+
+export async function fetchThreadMessages(threadId: string): Promise<ThreadMessage[]> {
+  const gmail = getGmailClient()
+  const thread = await gmail.users.threads.get({
+    userId: "me",
+    id: threadId,
+    format: "full",
+  })
+
+  const messages: ThreadMessage[] = []
+  for (const msg of thread.data.messages || []) {
+    const headers = msg.payload?.headers || []
+    const getHeader = (name: string) => headers.find((h) => h.name === name)?.value || ""
+
+    const fromRaw = getHeader("From")
+    const parsed = parseAddresses(fromRaw)
+    const from = parsed[0] || { name: "", email: "" }
+
+    let bodyText = ""
+    if (msg.payload?.parts) {
+      const textPart = msg.payload.parts.find((p) => p.mimeType === "text/plain")
+      if (textPart?.body?.data) {
+        bodyText = Buffer.from(textPart.body.data, "base64url").toString("utf-8")
+      } else {
+        const htmlPart = msg.payload.parts.find((p) => p.mimeType === "text/html")
+        if (htmlPart?.body?.data) {
+          bodyText = Buffer.from(htmlPart.body.data, "base64url")
+            .toString("utf-8")
+            .replace(/<[^>]+>/g, " ")
+            .replace(/\s+/g, " ")
+            .trim()
+        }
+      }
+    } else if (msg.payload?.body?.data) {
+      bodyText = Buffer.from(msg.payload.body.data, "base64url").toString("utf-8")
+    }
+
+    messages.push({
+      messageId: msg.id || "",
+      fromName: from.name,
+      fromEmail: from.email,
+      date: getHeader("Date"),
+      subject: getHeader("Subject"),
+      bodyText,
+      snippet: msg.snippet || "",
+    })
+  }
+
+  return messages
+}
+
 export async function searchThreads(query: string): Promise<string[]> {
   const gmail = getGmailClient()
   const threadIds: string[] = []

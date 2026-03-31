@@ -1,18 +1,27 @@
 "use client"
 
 import { useState } from "react"
-import { Deal } from "@/lib/acio/types"
+import { Deal, DealStage, DealPriority, STAGES, STAGE_LABELS, STAGE_COLORS, PRIORITY_COLORS } from "@/lib/acio/types"
 import { Check, X } from "lucide-react"
+
+interface DealOverrides {
+  deal_type?: string
+  stage?: DealStage
+  priority?: DealPriority
+}
 
 interface BaselineReviewProps {
   deals: Deal[]
-  onConfirm: (ids: string[]) => void
+  onConfirm: (ids: string[], overrides?: Record<string, DealOverrides>) => void
   onDismiss: (ids: string[]) => void
   onFinish: () => void
 }
 
+const DEAL_TYPES = ["Series A", "Series B", "Series C", "Fund Allocation", "Co-Invest", "Direct", "Seed", "Other"]
+
 export default function BaselineReview({ deals, onConfirm, onDismiss, onFinish }: BaselineReviewProps) {
   const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [overrides, setOverrides] = useState<Record<string, DealOverrides>>({})
 
   function toggleSelect(id: string) {
     setSelected((prev) => {
@@ -28,6 +37,17 @@ export default function BaselineReview({ deals, onConfirm, onDismiss, onFinish }
     else setSelected(new Set(deals.map((d) => d.id)))
   }
 
+  function setOverride(dealId: string, field: keyof DealOverrides, value: string) {
+    setOverrides((prev) => ({
+      ...prev,
+      [dealId]: { ...prev[dealId], [field]: value },
+    }))
+  }
+
+  function getField<K extends keyof DealOverrides>(deal: Deal, field: K): string {
+    return (overrides[deal.id]?.[field] as string) ?? (deal[field] as string) ?? ""
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -40,7 +60,7 @@ export default function BaselineReview({ deals, onConfirm, onDismiss, onFinish }
             <>
               <button
                 onClick={() => {
-                  onConfirm(Array.from(selected))
+                  onConfirm(Array.from(selected), overrides)
                   setSelected(new Set())
                 }}
                 className="text-sm px-3 py-1.5 bg-success/20 text-success rounded-md hover:bg-success/30"
@@ -67,61 +87,128 @@ export default function BaselineReview({ deals, onConfirm, onDismiss, onFinish }
         </div>
       </div>
 
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-card-border text-left text-muted">
-            <th className="pb-2 pr-4 w-8">
-              <input
-                type="checkbox"
-                checked={selected.size === deals.length && deals.length > 0}
-                onChange={toggleAll}
-                className="accent-accent"
-              />
-            </th>
-            <th className="pb-2 pr-4">Company</th>
-            <th className="pb-2 pr-4">Deal Type</th>
-            <th className="pb-2 pr-4">Subject</th>
-            <th className="pb-2 pr-4">Date</th>
-            <th className="pb-2 w-24">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {deals.map((deal) => (
-            <tr key={deal.id} className="border-b border-card-border/50 hover:bg-card-bg/50">
-              <td className="py-2 pr-4">
+      <div className="space-y-3">
+        {/* Header */}
+        <div className="flex items-center gap-3 px-3 text-xs text-muted uppercase tracking-wide">
+          <div className="w-6">
+            <input
+              type="checkbox"
+              checked={selected.size === deals.length && deals.length > 0}
+              onChange={toggleAll}
+              className="accent-accent"
+            />
+          </div>
+          <div className="flex-1">Deal</div>
+          <div className="w-36">Type</div>
+          <div className="w-36">Stage</div>
+          <div className="w-24">Priority</div>
+          <div className="w-20">Actions</div>
+        </div>
+
+        {/* Rows */}
+        {deals.map((deal) => (
+          <div
+            key={deal.id}
+            className="bg-card-bg border border-card-border rounded-lg p-3"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-6">
                 <input
                   type="checkbox"
                   checked={selected.has(deal.id)}
                   onChange={() => toggleSelect(deal.id)}
                   className="accent-accent"
                 />
-              </td>
-              <td className="py-2 pr-4 font-medium">{deal.company_name}</td>
-              <td className="py-2 pr-4 text-muted">{deal.deal_type || "—"}</td>
-              <td className="py-2 pr-4 text-muted truncate max-w-[200px]">{deal.source_subject || "—"}</td>
-              <td className="py-2 pr-4 text-muted">
-                {new Date(deal.first_seen_at).toLocaleDateString()}
-              </td>
-              <td className="py-2 flex gap-1">
+              </div>
+
+              {/* Company + description */}
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-sm">{deal.company_name}</div>
+                <div className="text-xs text-muted truncate mt-0.5">
+                  {deal.source_subject || "—"}
+                </div>
+                {(deal.company_description || deal.industry) && (
+                  <div className="text-xs text-muted/70 mt-1 flex gap-2">
+                    {deal.industry && (
+                      <span className="px-1.5 py-0.5 bg-accent/10 text-accent rounded">{deal.industry}</span>
+                    )}
+                    {deal.investment_type && (
+                      <span className="px-1.5 py-0.5 bg-purple-500/10 text-purple-400 rounded">{deal.investment_type}</span>
+                    )}
+                  </div>
+                )}
+                {deal.company_description && (
+                  <div className="text-xs text-muted/60 mt-1 line-clamp-1">{deal.company_description}</div>
+                )}
+              </div>
+
+              {/* Deal type dropdown */}
+              <div className="w-36">
+                <select
+                  value={getField(deal, "deal_type")}
+                  onChange={(e) => setOverride(deal.id, "deal_type", e.target.value)}
+                  className="w-full bg-background border border-card-border rounded-md px-2 py-1 text-xs text-foreground"
+                >
+                  <option value="">—</option>
+                  {DEAL_TYPES.map((t) => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Stage dropdown */}
+              <div className="w-36">
+                <select
+                  value={getField(deal, "stage")}
+                  onChange={(e) => setOverride(deal.id, "stage", e.target.value)}
+                  className="w-full bg-background border border-card-border rounded-md px-2 py-1 text-xs text-foreground"
+                >
+                  {STAGES.map((s) => (
+                    <option key={s} value={s}>{STAGE_LABELS[s]}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Priority buttons */}
+              <div className="w-24 flex gap-1">
+                {(["high", "medium", "low"] as DealPriority[]).map((p) => {
+                  const current = getField(deal, "priority") || "medium"
+                  const active = current === p
+                  return (
+                    <button
+                      key={p}
+                      onClick={() => setOverride(deal.id, "priority", p)}
+                      className={`text-xs px-1.5 py-0.5 rounded border transition-colors ${
+                        active ? PRIORITY_COLORS[p] : "border-card-border text-muted hover:text-foreground"
+                      }`}
+                    >
+                      {p[0].toUpperCase()}
+                    </button>
+                  )
+                })}
+              </div>
+
+              {/* Actions */}
+              <div className="w-20 flex gap-1 justify-end">
                 <button
-                  onClick={() => onConfirm([deal.id])}
-                  className="p-1 text-success hover:bg-success/20 rounded"
+                  onClick={() => onConfirm([deal.id], overrides)}
+                  className="p-1.5 text-success hover:bg-success/20 rounded"
                   title="Confirm"
                 >
                   <Check size={16} />
                 </button>
                 <button
                   onClick={() => onDismiss([deal.id])}
-                  className="p-1 text-danger hover:bg-danger/20 rounded"
+                  className="p-1.5 text-danger hover:bg-danger/20 rounded"
                   title="Dismiss"
                 >
                   <X size={16} />
                 </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

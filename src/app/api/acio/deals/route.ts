@@ -36,6 +36,11 @@ export async function POST(req: NextRequest) {
       source_subject: body.source_subject || null,
       key_contacts: body.key_contacts || null,
       notes: body.notes || null,
+      priority: body.priority || "medium",
+      industry: body.industry || null,
+      investment_type: body.investment_type || null,
+      company_description: body.company_description || null,
+      value_proposition: body.value_proposition || null,
     })
     .select()
     .single()

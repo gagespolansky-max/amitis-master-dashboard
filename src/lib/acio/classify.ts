@@ -8,6 +8,10 @@ export interface DealExtraction {
   deal_type: string
   suggested_stage: string
   key_contacts: { name: string; email: string; role: string }[]
+  industry: string | null
+  investment_type: "SPV" | "Fund" | "Direct" | "Co-Invest" | "Other" | null
+  company_description: string | null
+  value_proposition: string | null
 }
 
 export interface BaselineClassification extends DealExtraction {
@@ -25,6 +29,10 @@ Return JSON (no markdown, no code fences):
   "deal_type": "Series A|Series B|Series C|Fund Allocation|Co-Invest|Direct|Seed|Other",
   "suggested_stage": "sourced|initial_call|dd_in_progress|ic_review|committed|passed",
   "key_contacts": [{"name": "...", "email": "...", "role": "counterparty|internal|advisor"}],
+  "industry": "sector/industry (e.g. Fintech, Healthcare, AI/ML, Real Estate, Energy, etc.)",
+  "investment_type": "SPV|Fund|Direct|Co-Invest|Other",
+  "company_description": "1-2 sentence description of the company/fund and what they do",
+  "value_proposition": "1 sentence on why this is relevant to Amitis Capital",
   "reasoning": "one sentence explanation"
 }
 
@@ -49,7 +57,11 @@ Return JSON (no markdown, no code fences):
   "company_name": "the company or fund being evaluated",
   "deal_type": "Series A|Series B|Series C|Fund Allocation|Co-Invest|Direct|Seed|Other",
   "suggested_stage": "sourced|initial_call|dd_in_progress|ic_review|committed|passed",
-  "key_contacts": [{"name": "...", "email": "...", "role": "counterparty|internal|advisor"}]
+  "key_contacts": [{"name": "...", "email": "...", "role": "counterparty|internal|advisor"}],
+  "industry": "sector/industry (e.g. Fintech, Healthcare, AI/ML, Real Estate, Energy, etc.)",
+  "investment_type": "SPV|Fund|Direct|Co-Invest|Other",
+  "company_description": "1-2 sentence description of the company/fund and what they do",
+  "value_proposition": "1 sentence on why this is relevant to Amitis Capital"
 }
 
 Determine the stage based on conversation progression:

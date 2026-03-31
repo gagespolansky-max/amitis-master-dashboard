@@ -19,6 +19,13 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (body.company_name !== undefined) updates.company_name = body.company_name
   if (body.deal_type !== undefined) updates.deal_type = body.deal_type
   if (body.key_contacts !== undefined) updates.key_contacts = body.key_contacts
+  if (body.priority !== undefined) updates.priority = body.priority
+  if (body.industry !== undefined) updates.industry = body.industry
+  if (body.investment_type !== undefined) updates.investment_type = body.investment_type
+  if (body.company_description !== undefined) updates.company_description = body.company_description
+  if (body.value_proposition !== undefined) updates.value_proposition = body.value_proposition
+  if (body.reminder_date !== undefined) updates.reminder_date = body.reminder_date
+  if (body.reminder_note !== undefined) updates.reminder_note = body.reminder_note
 
   const { data, error } = await supabase
     .from("acio_deals")

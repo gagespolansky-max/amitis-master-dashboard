@@ -1,8 +1,10 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import { Deal, DealEmail, DealStage, STAGES, STAGE_LABELS } from "@/lib/acio/types"
-import { X, ExternalLink, Upload, Trash2, Link2, FileText } from "lucide-react"
+import { Deal, DealEmail, DealStage, DealPriority, STAGE_LABELS, PRIORITY_COLORS, INVESTMENT_TYPES, InvestmentType } from "@/lib/acio/types"
+import { X, ExternalLink, Upload, Trash2, Link2, FileText, Bell, Calendar } from "lucide-react"
+import StageProgressBar from "./StageProgressBar"
+import EmailThread from "./EmailThread"
 
 interface DealPanelProps {
   deal: Deal
@@ -13,10 +15,24 @@ interface DealPanelProps {
 
 export default function DealPanel({ deal, onClose, onUpdate, onDelete }: DealPanelProps) {
   const [notes, setNotes] = useState(deal.notes || "")
+  const [companyDescription, setCompanyDescription] = useState(deal.company_description || "")
+  const [valueProp, setValueProp] = useState(deal.value_proposition || "")
   const [emails, setEmails] = useState<DealEmail[]>([])
   const [uploading, setUploading] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [reminderDate, setReminderDate] = useState(deal.reminder_date?.slice(0, 10) || "")
+  const [reminderNote, setReminderNote] = useState(deal.reminder_note || "")
   const debounceRef = useRef<NodeJS.Timeout>(null)
+  const descDebounceRef = useRef<NodeJS.Timeout>(null)
+  const vpDebounceRef = useRef<NodeJS.Timeout>(null)
+
+  useEffect(() => {
+    setNotes(deal.notes || "")
+    setCompanyDescription(deal.company_description || "")
+    setValueProp(deal.value_proposition || "")
+    setReminderDate(deal.reminder_date?.slice(0, 10) || "")
+    setReminderNote(deal.reminder_note || "")
+  }, [deal.id])
 
   useEffect(() => {
     fetch(`/api/acio/deals/${deal.id}/emails`)
@@ -25,31 +41,40 @@ export default function DealPanel({ deal, onClose, onUpdate, onDelete }: DealPan
       .catch(() => {})
   }, [deal.id])
 
-  const saveNotes = useCallback(
-    (value: string) => {
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-      debounceRef.current = setTimeout(async () => {
-        const res = await fetch(`/api/acio/deals/${deal.id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ notes: value }),
-        })
-        if (res.ok) {
-          const updated = await res.json()
-          onUpdate(updated)
-        }
-      }, 800)
-    },
-    [deal.id, onUpdate]
-  )
-
-  async function changeStage(stage: DealStage) {
+  async function patchDeal(fields: Record<string, unknown>) {
     const res = await fetch(`/api/acio/deals/${deal.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ stage }),
+      body: JSON.stringify(fields),
     })
-    if (res.ok) onUpdate(await res.json())
+    if (res.ok) {
+      const updated = await res.json()
+      onUpdate(updated)
+    }
+  }
+
+  function debouncedPatch(ref: React.RefObject<NodeJS.Timeout | null>, fields: Record<string, unknown>) {
+    if (ref.current) clearTimeout(ref.current)
+    ref.current = setTimeout(() => patchDeal(fields), 800)
+  }
+
+  async function changeStage(stage: DealStage) {
+    await patchDeal({ stage })
+  }
+
+  async function changePriority(priority: DealPriority) {
+    await patchDeal({ priority })
+  }
+
+  async function changeInvestmentType(type: string) {
+    await patchDeal({ investment_type: type || null })
+  }
+
+  async function saveReminder() {
+    await patchDeal({
+      reminder_date: reminderDate ? new Date(reminderDate).toISOString() : null,
+      reminder_note: reminderNote || null,
+    })
   }
 
   async function uploadMemo(file: File) {
@@ -73,10 +98,6 @@ export default function DealPanel({ deal, onClose, onUpdate, onDelete }: DealPan
     onDelete(deal.id)
   }
 
-  const gmailLink = deal.source_thread_id
-    ? `https://mail.google.com/mail/u/0/#inbox/${deal.source_thread_id}`
-    : null
-
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
@@ -89,21 +110,31 @@ export default function DealPanel({ deal, onClose, onUpdate, onDelete }: DealPan
         </div>
 
         <div className="px-6 py-4 space-y-6">
-          {/* Stage selector */}
+          {/* Stage progress bar */}
           <div>
             <label className="text-xs text-muted uppercase tracking-wide block mb-2">Stage</label>
-            <div className="flex flex-wrap gap-1.5">
-              {STAGES.map((s) => (
+            <StageProgressBar
+              stage={deal.stage}
+              stageUpdatedAt={deal.stage_updated_at}
+              onStageChange={changeStage}
+            />
+          </div>
+
+          {/* Priority selector */}
+          <div>
+            <label className="text-xs text-muted uppercase tracking-wide block mb-2">Priority</label>
+            <div className="flex gap-1.5">
+              {(["high", "medium", "low"] as DealPriority[]).map((p) => (
                 <button
-                  key={s}
-                  onClick={() => changeStage(s)}
+                  key={p}
+                  onClick={() => changePriority(p)}
                   className={`text-xs px-3 py-1.5 rounded-md border transition-colors ${
-                    deal.stage === s
-                      ? "bg-accent text-white border-accent"
-                      : "border-card-border text-muted hover:text-foreground hover:border-muted"
+                    deal.priority === p
+                      ? PRIORITY_COLORS[p]
+                      : "border-card-border text-muted hover:text-foreground"
                   }`}
                 >
-                  {STAGE_LABELS[s]}
+                  {p === "high" ? "High" : p === "medium" ? "Medium" : "Low"}
                 </button>
               ))}
             </div>
@@ -119,7 +150,78 @@ export default function DealPanel({ deal, onClose, onUpdate, onDelete }: DealPan
               <span className="text-muted text-xs block">Source</span>
               <span className="capitalize">{deal.source.replace("_", " ")}</span>
             </div>
+            <div>
+              <span className="text-muted text-xs block">Investment Type</span>
+              <select
+                value={deal.investment_type || ""}
+                onChange={(e) => changeInvestmentType(e.target.value)}
+                className="bg-background border border-card-border rounded px-2 py-0.5 text-sm text-foreground mt-0.5"
+              >
+                <option value="">—</option>
+                {INVESTMENT_TYPES.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <span className="text-muted text-xs block">Industry</span>
+              <span>{deal.industry || "—"}</span>
+            </div>
           </div>
+
+          {/* Description section */}
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 flex-wrap">
+              {deal.industry && (
+                <span className="text-xs px-2 py-0.5 rounded-full bg-accent/10 text-accent">{deal.industry}</span>
+              )}
+              {deal.investment_type && (
+                <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400">{deal.investment_type}</span>
+              )}
+            </div>
+
+            <div>
+              <label className="text-xs text-muted uppercase tracking-wide block mb-1">Company Description</label>
+              <textarea
+                value={companyDescription}
+                onChange={(e) => {
+                  setCompanyDescription(e.target.value)
+                  debouncedPatch(descDebounceRef, { company_description: e.target.value })
+                }}
+                placeholder="What does this company/fund do?"
+                rows={2}
+                className="w-full bg-card-bg border border-card-border rounded-lg p-2.5 text-sm text-foreground placeholder:text-muted resize-none focus:outline-none focus:border-accent"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs text-muted uppercase tracking-wide block mb-1">Value Proposition</label>
+              <textarea
+                value={valueProp}
+                onChange={(e) => {
+                  setValueProp(e.target.value)
+                  debouncedPatch(vpDebounceRef, { value_proposition: e.target.value })
+                }}
+                placeholder="Why is this relevant to Amitis?"
+                rows={2}
+                className="w-full bg-card-bg border border-card-border rounded-lg p-2.5 text-sm text-foreground placeholder:text-muted resize-none focus:outline-none focus:border-accent"
+              />
+            </div>
+          </div>
+
+          {/* Contact dates */}
+          {(deal.first_contacted_at || deal.last_contacted_at) && (
+            <div className="grid grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="text-muted text-xs block">First Contacted</span>
+                <span>{deal.first_contacted_at ? new Date(deal.first_contacted_at).toLocaleDateString() : "—"}</span>
+              </div>
+              <div>
+                <span className="text-muted text-xs block">Last Contacted</span>
+                <span>{deal.last_contacted_at ? new Date(deal.last_contacted_at).toLocaleDateString() : "—"}</span>
+              </div>
+            </div>
+          )}
 
           {/* Contacts */}
           {deal.key_contacts && deal.key_contacts.length > 0 && (
@@ -139,36 +241,29 @@ export default function DealPanel({ deal, onClose, onUpdate, onDelete }: DealPan
           {/* Email threads */}
           <div>
             <label className="text-xs text-muted uppercase tracking-wide block mb-2">Email Threads</label>
-            {deal.source_subject && (
-              <div className="bg-card-bg border border-card-border rounded-lg p-3 mb-2">
-                <div className="text-sm font-medium">{deal.source_subject}</div>
-                {gmailLink && (
-                  <a
-                    href={gmailLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-accent hover:text-accent-hover inline-flex items-center gap-1 mt-1"
-                  >
-                    View in Gmail <ExternalLink size={12} />
-                  </a>
-                )}
-              </div>
-            )}
-            {emails.map((e) => (
-              <div key={e.id} className="bg-card-bg border border-card-border rounded-lg p-3 mb-2">
-                <div className="text-sm font-medium">{e.subject || "No subject"}</div>
-                {e.snippet && <div className="text-xs text-muted mt-1 line-clamp-2">{e.snippet}</div>}
-                <a
-                  href={`https://mail.google.com/mail/u/0/#inbox/${e.thread_id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-accent hover:text-accent-hover inline-flex items-center gap-1 mt-1"
-                >
-                  View in Gmail <ExternalLink size={12} />
-                </a>
-              </div>
-            ))}
-            <button className="text-xs text-accent hover:text-accent-hover inline-flex items-center gap-1 mt-1">
+            <div className="space-y-2">
+              {deal.source_thread_id && (
+                <EmailThread
+                  dealEmail={{
+                    id: `source-${deal.id}`,
+                    deal_id: deal.id,
+                    thread_id: deal.source_thread_id,
+                    subject: deal.source_subject,
+                    last_message_date: deal.first_seen_at,
+                    snippet: null,
+                    participants: deal.key_contacts?.map((c) => ({ name: c.name, email: c.email })) || null,
+                    created_at: deal.created_at,
+                  }}
+                  dealId={deal.id}
+                />
+              )}
+              {emails
+                .filter((e) => e.thread_id !== deal.source_thread_id)
+                .map((e) => (
+                  <EmailThread key={e.id} dealEmail={e} dealId={deal.id} />
+                ))}
+            </div>
+            <button className="text-xs text-accent hover:text-accent-hover inline-flex items-center gap-1 mt-2">
               <Link2 size={12} /> Link additional thread
             </button>
           </div>
@@ -180,12 +275,50 @@ export default function DealPanel({ deal, onClose, onUpdate, onDelete }: DealPan
               value={notes}
               onChange={(e) => {
                 setNotes(e.target.value)
-                saveNotes(e.target.value)
+                debouncedPatch(debounceRef, { notes: e.target.value })
               }}
               placeholder="Add notes..."
               rows={4}
               className="w-full bg-card-bg border border-card-border rounded-lg p-3 text-sm text-foreground placeholder:text-muted resize-none focus:outline-none focus:border-accent"
             />
+          </div>
+
+          {/* Reminder */}
+          <div>
+            <label className="text-xs text-muted uppercase tracking-wide block mb-2">
+              <Bell size={12} className="inline mr-1" />
+              Reminder
+            </label>
+            <div className="flex gap-2">
+              <div className="flex items-center gap-2 flex-1">
+                <Calendar size={14} className="text-muted shrink-0" />
+                <input
+                  type="date"
+                  value={reminderDate}
+                  onChange={(e) => setReminderDate(e.target.value)}
+                  className="bg-card-bg border border-card-border rounded-md px-2 py-1.5 text-sm text-foreground focus:outline-none focus:border-accent"
+                />
+              </div>
+              <input
+                type="text"
+                value={reminderNote}
+                onChange={(e) => setReminderNote(e.target.value)}
+                placeholder="Reminder note..."
+                className="flex-1 bg-card-bg border border-card-border rounded-md px-2 py-1.5 text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-accent"
+              />
+              <button
+                onClick={saveReminder}
+                className="text-xs px-3 py-1.5 bg-accent text-white rounded-md hover:bg-accent-hover"
+              >
+                Set
+              </button>
+            </div>
+            {deal.reminder_date && (
+              <div className="mt-1.5 text-xs text-muted">
+                {new Date(deal.reminder_date).toLocaleDateString()}
+                {deal.reminder_note && ` — ${deal.reminder_note}`}
+              </div>
+            )}
           </div>
 
           {/* Memo */}

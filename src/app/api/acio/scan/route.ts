@@ -85,6 +85,10 @@ async function runBaselineScan() {
         source_thread_id: threadId,
         source_subject: meta.subject,
         key_contacts: classification.key_contacts,
+        industry: classification.industry || null,
+        investment_type: classification.investment_type || null,
+        company_description: classification.company_description || null,
+        value_proposition: classification.value_proposition || null,
       })
       .select()
       .single()
@@ -159,6 +163,10 @@ async function runLabelScan() {
         source_thread_id: threadId,
         source_subject: meta.subject,
         key_contacts: extraction.key_contacts,
+        industry: extraction.industry || null,
+        investment_type: extraction.investment_type || null,
+        company_description: extraction.company_description || null,
+        value_proposition: extraction.value_proposition || null,
       })
       .select()
       .single()
