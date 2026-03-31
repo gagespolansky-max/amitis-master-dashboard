@@ -6,6 +6,7 @@ import { Deal, DealStage, DealPriority, STAGES, STAGE_LABELS } from "@/lib/acio/
 import DealCard from "./DealCard"
 import DealPanel from "./DealPanel"
 import BaselineReview from "./BaselineReview"
+import MergeDialog from "./MergeDialog"
 import { RefreshCw, Search, LayoutGrid, List, AlertCircle, Bell } from "lucide-react"
 
 type ViewMode = "board" | "table" | "review"
@@ -18,6 +19,7 @@ export default function ACIOBoard() {
   const [search, setSearch] = useState("")
   const [lastScan, setLastScan] = useState<string | null>(null)
   const [priorityFilter, setPriorityFilter] = useState<DealPriority | "all">("all")
+  const [mergeDeals, setMergeDeals] = useState<{ target: Deal; source?: Deal } | null>(null)
 
   const pendingReview = deals.filter((d) => d.status === "pending_review")
   const confirmedDeals = deals.filter((d) => d.status === "confirmed")
@@ -114,6 +116,29 @@ export default function ACIOBoard() {
       )
     )
     await fetchDeals()
+  }
+
+  async function handleMerge(targetId: string, sourceId: string) {
+    const res = await fetch(`/api/acio/deals/${targetId}/merge`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ merge_from_id: sourceId }),
+    })
+    if (res.ok) {
+      const updated = await res.json()
+      // Remove source, update target in state
+      setDeals((prev) => prev.filter((d) => d.id !== sourceId).map((d) => d.id === targetId ? updated : d))
+      if (selectedDeal?.id === sourceId) setSelectedDeal(null)
+      else if (selectedDeal?.id === targetId) setSelectedDeal(updated)
+    }
+  }
+
+  function openMergeFromReview(target: Deal, source: Deal) {
+    setMergeDeals({ target, source })
+  }
+
+  function openMergeFromPanel(target: Deal) {
+    setMergeDeals({ target })
   }
 
   let filteredDeals = confirmedDeals
@@ -245,6 +270,7 @@ export default function ACIOBoard() {
               onConfirm={handleBulkConfirm}
               onDismiss={handleBulkDismiss}
               onFinish={() => setViewMode("board")}
+              onMerge={openMergeFromReview}
             />
           </div>
         ) : viewMode === "table" ? (
@@ -302,6 +328,18 @@ export default function ACIOBoard() {
           onClose={() => setSelectedDeal(null)}
           onUpdate={handleUpdate}
           onDelete={handleDelete}
+          onMerge={openMergeFromPanel}
+        />
+      )}
+
+      {/* Merge dialog */}
+      {mergeDeals && (
+        <MergeDialog
+          target={mergeDeals.target}
+          source={mergeDeals.source}
+          allDeals={deals.filter((d) => d.status !== "dismissed")}
+          onMerge={handleMerge}
+          onClose={() => setMergeDeals(null)}
         />
       )}
     </div>

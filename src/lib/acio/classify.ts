@@ -91,6 +91,53 @@ export async function classifyThread(thread: ThreadMeta): Promise<BaselineClassi
   return JSON.parse(text)
 }
 
+const ENRICH_PROMPT = `You are enriching deal metadata for Amitis Capital's deal tracker.
+You have access to the full email bodies from threads related to this deal.
+
+Given the current deal info and the email messages, return improved JSON (no markdown, no code fences):
+{
+  "company_description": "2-3 sentences describing what this company/fund does, with concrete details from the emails (strategy, AUM, team, track record, etc.)",
+  "value_proposition": "1-2 sentences on why this opportunity is specifically relevant to Amitis Capital — what makes it a fit for an alternatives allocator",
+  "industry": "refined industry/sector classification",
+  "investment_type": "SPV|Fund|Direct|Co-Invest|Other"
+}
+
+Context:
+- Amitis Capital is a hedge fund allocator / family office in the alternatives space
+- They invest in hedge funds, SPVs, co-investments, and direct deals
+- Focus areas include digital assets, macro, systematic, event-driven, and technology
+- Team: Chris Solarz (CIO), Adam Feldheim (Managing Partner), Gage Spolansky (Investment Team)
+
+Write descriptions that would be useful for an investment professional reviewing this deal.
+Be specific — use numbers, names, strategies, and details from the emails.
+If the emails don't contain enough info for a field, keep or improve the existing value.`
+
+export async function enrichDealFromEmails(
+  currentDeal: { company_name: string; company_description: string | null; value_proposition: string | null; industry: string | null; investment_type: string | null },
+  messages: { from_email: string; date: string; body_text: string }[]
+): Promise<{ company_description: string; value_proposition: string; industry: string; investment_type: string }> {
+  // Trim messages to avoid token limits — take most recent 10, truncate bodies
+  const trimmed = messages.slice(-10).map((m) => ({
+    from: m.from_email,
+    date: m.date,
+    body: m.body_text.slice(0, 3000),
+  }))
+
+  const response = await client.messages.create({
+    model: "claude-sonnet-4-20250514",
+    max_tokens: 1024,
+    messages: [
+      {
+        role: "user",
+        content: `${ENRICH_PROMPT}\n\nCurrent deal:\n${JSON.stringify(currentDeal, null, 2)}\n\nEmail messages:\n${JSON.stringify(trimmed, null, 2)}`,
+      },
+    ],
+  })
+
+  const text = response.content[0].type === "text" ? response.content[0].text : ""
+  return JSON.parse(text)
+}
+
 export async function extractDealMetadata(thread: ThreadMeta): Promise<DealExtraction> {
   const response = await client.messages.create({
     model: "claude-sonnet-4-20250514",

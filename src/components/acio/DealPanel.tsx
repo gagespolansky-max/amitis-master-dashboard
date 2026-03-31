@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import { Deal, DealEmail, DealStage, DealPriority, STAGE_LABELS, PRIORITY_COLORS, INVESTMENT_TYPES, InvestmentType } from "@/lib/acio/types"
-import { X, ExternalLink, Upload, Trash2, Link2, FileText, Bell, Calendar } from "lucide-react"
+import { X, ExternalLink, Upload, Trash2, Link2, FileText, Bell, Calendar, Merge, Sparkles, Loader2 } from "lucide-react"
 import StageProgressBar from "./StageProgressBar"
 import EmailThread from "./EmailThread"
 
@@ -11,15 +11,17 @@ interface DealPanelProps {
   onClose: () => void
   onUpdate: (updated: Deal) => void
   onDelete: (id: string) => void
+  onMerge?: (deal: Deal) => void
 }
 
-export default function DealPanel({ deal, onClose, onUpdate, onDelete }: DealPanelProps) {
+export default function DealPanel({ deal, onClose, onUpdate, onDelete, onMerge }: DealPanelProps) {
   const [notes, setNotes] = useState(deal.notes || "")
   const [companyDescription, setCompanyDescription] = useState(deal.company_description || "")
   const [valueProp, setValueProp] = useState(deal.value_proposition || "")
   const [emails, setEmails] = useState<DealEmail[]>([])
   const [uploading, setUploading] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [enriching, setEnriching] = useState(false)
   const [reminderDate, setReminderDate] = useState(deal.reminder_date?.slice(0, 10) || "")
   const [reminderNote, setReminderNote] = useState(deal.reminder_note || "")
   const debounceRef = useRef<NodeJS.Timeout>(null)
@@ -98,15 +100,40 @@ export default function DealPanel({ deal, onClose, onUpdate, onDelete }: DealPan
     onDelete(deal.id)
   }
 
+  async function handleEnrich() {
+    setEnriching(true)
+    try {
+      const res = await fetch(`/api/acio/deals/${deal.id}/enrich`, { method: "POST" })
+      if (res.ok) {
+        const updated = await res.json()
+        setCompanyDescription(updated.company_description || "")
+        setValueProp(updated.value_proposition || "")
+        onUpdate(updated)
+      }
+    } finally {
+      setEnriching(false)
+    }
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative w-full max-w-lg bg-background border-l border-card-border overflow-y-auto">
         <div className="sticky top-0 bg-background border-b border-card-border px-6 py-4 flex items-center justify-between">
           <h2 className="text-lg font-semibold">{deal.company_name}</h2>
-          <button onClick={onClose} className="text-muted hover:text-foreground">
-            <X size={20} />
-          </button>
+          <div className="flex items-center gap-2">
+            {onMerge && (
+              <button
+                onClick={() => onMerge(deal)}
+                className="text-xs px-2.5 py-1.5 text-purple-400 hover:bg-purple-500/20 rounded-md flex items-center gap-1"
+              >
+                <Merge size={14} /> Merge
+              </button>
+            )}
+            <button onClick={onClose} className="text-muted hover:text-foreground">
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         <div className="px-6 py-4 space-y-6">
@@ -171,13 +198,23 @@ export default function DealPanel({ deal, onClose, onUpdate, onDelete }: DealPan
 
           {/* Description section */}
           <div className="space-y-3">
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 flex-wrap">
               {deal.industry && (
                 <span className="text-xs px-2 py-0.5 rounded-full bg-accent/10 text-accent">{deal.industry}</span>
               )}
               {deal.investment_type && (
                 <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400">{deal.investment_type}</span>
               )}
+              </div>
+              <button
+                onClick={handleEnrich}
+                disabled={enriching}
+                className="text-xs px-2.5 py-1.5 text-accent hover:bg-accent/10 rounded-md flex items-center gap-1 disabled:opacity-50"
+              >
+                {enriching ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+                {enriching ? "Enriching..." : "Enrich with AI"}
+              </button>
             </div>
 
             <div>

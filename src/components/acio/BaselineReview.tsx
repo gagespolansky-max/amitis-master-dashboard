@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Deal, DealStage, DealPriority, STAGES, STAGE_LABELS, STAGE_COLORS, PRIORITY_COLORS } from "@/lib/acio/types"
-import { Check, X } from "lucide-react"
+import { Check, X, Merge } from "lucide-react"
 
 interface DealOverrides {
   deal_type?: string
@@ -15,11 +15,12 @@ interface BaselineReviewProps {
   onConfirm: (ids: string[], overrides?: Record<string, DealOverrides>) => void
   onDismiss: (ids: string[]) => void
   onFinish: () => void
+  onMerge?: (target: Deal, source: Deal) => void
 }
 
 const DEAL_TYPES = ["Series A", "Series B", "Series C", "Fund Allocation", "Co-Invest", "Direct", "Seed", "Other"]
 
-export default function BaselineReview({ deals, onConfirm, onDismiss, onFinish }: BaselineReviewProps) {
+export default function BaselineReview({ deals, onConfirm, onDismiss, onFinish, onMerge }: BaselineReviewProps) {
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [overrides, setOverrides] = useState<Record<string, DealOverrides>>({})
 
@@ -58,6 +59,19 @@ export default function BaselineReview({ deals, onConfirm, onDismiss, onFinish }
         <div className="flex gap-2">
           {selected.size > 0 && (
             <>
+              {selected.size === 2 && onMerge && (
+                <button
+                  onClick={() => {
+                    const ids = Array.from(selected)
+                    const target = deals.find((d) => d.id === ids[0])!
+                    const source = deals.find((d) => d.id === ids[1])!
+                    onMerge(target, source)
+                  }}
+                  className="text-sm px-3 py-1.5 bg-purple-500/20 text-purple-400 rounded-md hover:bg-purple-500/30 flex items-center gap-1.5"
+                >
+                  <Merge size={14} /> Merge
+                </button>
+              )}
               <button
                 onClick={() => {
                   onConfirm(Array.from(selected), overrides)
