@@ -14,6 +14,10 @@ const navigation: NavItem[] = [
   {
     label: 'Priorities',
     href: '/priorities',
+    children: [
+      { label: 'Board', href: '/priorities' },
+      { label: 'Gage', href: '/priorities/gage' },
+    ],
   },
   {
     label: 'Portfolio',
