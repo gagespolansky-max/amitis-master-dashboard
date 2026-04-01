@@ -240,11 +240,11 @@ function InitiativeCard({
             <p className="text-sm text-foreground/80">{init.description}</p>
           )}
 
-          {init.requirements && init.requirements.length > 0 && (
+          {init.requirements && (
             <div>
               <div className="text-xs text-muted uppercase tracking-wide mb-1">Requirements</div>
               <ul className="text-xs text-foreground/70 space-y-0.5">
-                {init.requirements.map((r, i) => (
+                {(Array.isArray(init.requirements) ? init.requirements : (() => { try { return JSON.parse(init.requirements as unknown as string) } catch { return [] } })()).map((r: string, i: number) => (
                   <li key={i} className="flex items-start gap-1.5">
                     <span className="text-muted mt-0.5">-</span>
                     <span>{r}</span>
