@@ -43,7 +43,7 @@ async function analyzeScreenshot(base64: string, mediaType: string): Promise<{
 - "summary": A clean 1-2 sentence summary of what this screenshot shows / what's being asked or communicated.
 - "sender": Who sent this message (name), or "" if not a message.
 - "action_items": Array of specific action items or requests for Gage. Empty array if none.
-- "details": Array of notable details — file names, dates mentioned, fund names, amounts, links, attachments referenced. Each should be a short string. Empty array if none.
+- "details": Array of only the most important actionable details — specific file names, specific deadlines/dates, specific dollar amounts, or specific fund/company names that Gage needs to act on. MAX 4 items. Do NOT include generic category words, asset class names, or information already covered in the summary. Empty array if none.
 - "source_app": The app this screenshot is from (e.g. "Slack", "Teams", "Email", "iMessage", "WhatsApp", "Excel", "Web") or "Unknown".
 
 Return ONLY valid JSON, no markdown fences.`,

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 
 export interface ScreenshotEntry {
   id: string
@@ -12,7 +12,7 @@ export interface ScreenshotEntry {
   created_at: string
 }
 
-interface StructuredAnalysis {
+export interface StructuredAnalysis {
   summary: string
   sender: string
   action_items: string[]
@@ -26,7 +26,7 @@ interface OcrCardProps {
   onDelete: (id: string) => void
 }
 
-function tryParseAnalysis(text: string): StructuredAnalysis | null {
+export function tryParseAnalysis(text: string): StructuredAnalysis | null {
   try {
     const parsed = JSON.parse(text)
     if (parsed && typeof parsed.summary === 'string') return parsed
@@ -72,13 +72,84 @@ function SourceBadge({ source }: { source: string }) {
   )
 }
 
-function StructuredContent({ analysis }: { analysis: StructuredAnalysis }) {
+function TagList({
+  tags,
+  onRemove,
+  onAdd,
+}: {
+  tags: string[]
+  onRemove: (index: number) => void
+  onAdd: (tag: string) => void
+}) {
+  const [isAdding, setIsAdding] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const handleAdd = () => {
+    const value = inputRef.current?.value.trim()
+    if (value) {
+      onAdd(value)
+      inputRef.current!.value = ''
+    }
+    setIsAdding(false)
+  }
+
+  if (tags.length === 0 && !isAdding) return null
+
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {tags.map((tag, i) => (
+        <span
+          key={i}
+          className="group/tag inline-flex items-center gap-1 text-xs text-muted bg-white/[0.04] border border-white/[0.06] rounded-md pl-2.5 pr-1.5 py-1 hover:border-white/[0.12] transition-colors"
+        >
+          {tag}
+          <button
+            onClick={() => onRemove(i)}
+            className="text-white/20 hover:text-red-400 transition-colors ml-0.5"
+          >
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </span>
+      ))}
+      {isAdding ? (
+        <input
+          ref={inputRef}
+          autoFocus
+          placeholder="Add tag..."
+          onBlur={handleAdd}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') handleAdd()
+            if (e.key === 'Escape') setIsAdding(false)
+          }}
+          className="text-xs bg-white/5 border border-white/10 rounded-md px-2.5 py-1 text-foreground placeholder:text-muted/40 w-28 outline-none focus:border-accent/40"
+        />
+      ) : (
+        <button
+          onClick={() => setIsAdding(true)}
+          className="text-xs text-white/20 hover:text-muted border border-dashed border-white/[0.08] hover:border-white/[0.15] rounded-md px-2 py-1 transition-colors"
+        >
+          +
+        </button>
+      )}
+    </div>
+  )
+}
+
+function StructuredContent({
+  analysis,
+  onTagRemove,
+  onTagAdd,
+}: {
+  analysis: StructuredAnalysis
+  onTagRemove: (index: number) => void
+  onTagAdd: (tag: string) => void
+}) {
   return (
     <div className="space-y-3">
-      {/* Summary */}
       <p className="text-sm text-foreground/90 leading-relaxed">{analysis.summary}</p>
 
-      {/* Action items */}
       {analysis.action_items.length > 0 && (
         <div className="rounded-lg bg-accent/[0.06] border border-accent/[0.12] px-4 py-3">
           <div className="flex items-center gap-2 mb-2">
@@ -98,19 +169,7 @@ function StructuredContent({ analysis }: { analysis: StructuredAnalysis }) {
         </div>
       )}
 
-      {/* Details */}
-      {analysis.details.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {analysis.details.map((detail, i) => (
-            <span
-              key={i}
-              className="inline-flex items-center text-xs text-muted bg-white/[0.04] border border-white/[0.06] rounded-md px-2.5 py-1"
-            >
-              {detail}
-            </span>
-          ))}
-        </div>
-      )}
+      <TagList tags={analysis.details} onRemove={onTagRemove} onAdd={onTagAdd} />
     </div>
   )
 }
@@ -156,6 +215,18 @@ export default function OcrCard({ entry, onUpdate, onDelete }: OcrCardProps) {
     setDescription(entry.description)
     setDateLabel(entry.date_label)
     setIsEditing(false)
+  }
+
+  const handleTagRemove = (index: number) => {
+    if (!analysis) return
+    const updated = { ...analysis, details: analysis.details.filter((_, i) => i !== index) }
+    onUpdate(entry.id, { extracted_text: JSON.stringify(updated) })
+  }
+
+  const handleTagAdd = (tag: string) => {
+    if (!analysis) return
+    const updated = { ...analysis, details: [...analysis.details, tag] }
+    onUpdate(entry.id, { extracted_text: JSON.stringify(updated) })
   }
 
   return (
@@ -273,7 +344,11 @@ export default function OcrCard({ entry, onUpdate, onDelete }: OcrCardProps) {
               />
             </div>
           ) : analysis ? (
-            <StructuredContent analysis={analysis} />
+            <StructuredContent
+              analysis={analysis}
+              onTagRemove={handleTagRemove}
+              onTagAdd={handleTagAdd}
+            />
           ) : (
             <PlainTextContent text={editedText || entry.extracted_text} />
           )}
