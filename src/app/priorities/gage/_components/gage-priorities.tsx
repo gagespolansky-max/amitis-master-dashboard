@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import ScreenshotDropzone from './screenshot-dropzone'
 import OcrCard, { type ScreenshotEntry } from './ocr-card'
-import { extractText } from '../_lib/ocr'
 
 export default function GagePriorities() {
   const [entries, setEntries] = useState<ScreenshotEntry[]>([])
@@ -21,13 +20,8 @@ export default function GagePriorities() {
   const handleFileDrop = useCallback(async (file: File) => {
     setIsProcessing(true)
     try {
-      // 1. Run OCR
-      const text = await extractText(file)
-
-      // 2. Upload image and save entry via API
       const formData = new FormData()
       formData.append('image', file)
-      formData.append('extracted_text', text)
 
       const res = await fetch('/priorities/gage/api', {
         method: 'POST',

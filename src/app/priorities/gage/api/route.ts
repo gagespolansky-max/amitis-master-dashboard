@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
+import Anthropic from '@anthropic-ai/sdk'
 
 const BUCKET = 'gage-screenshots'
 const TABLE = 'gage_screenshots'
+const anthropic = new Anthropic()
 
 // GET — fetch all entries
 export async function GET() {
@@ -17,41 +19,95 @@ export async function GET() {
   return NextResponse.json({ entries: data })
 }
 
-// POST — upload image + create entry
+async function analyzeScreenshot(base64: string, mediaType: string): Promise<{
+  summary: string
+  sender: string
+  action_items: string[]
+  details: string[]
+  source_app: string
+}> {
+  const response = await anthropic.messages.create({
+    model: 'claude-sonnet-4-20250514',
+    max_tokens: 1024,
+    messages: [
+      {
+        role: 'user',
+        content: [
+          {
+            type: 'image',
+            source: { type: 'base64', media_type: mediaType as 'image/png' | 'image/jpeg' | 'image/webp' | 'image/gif', data: base64 },
+          },
+          {
+            type: 'text',
+            text: `Analyze this screenshot. Return a JSON object with these fields:
+- "summary": A clean 1-2 sentence summary of what this screenshot shows / what's being asked or communicated.
+- "sender": Who sent this message (name), or "" if not a message.
+- "action_items": Array of specific action items or requests for Gage. Empty array if none.
+- "details": Array of notable details — file names, dates mentioned, fund names, amounts, links, attachments referenced. Each should be a short string. Empty array if none.
+- "source_app": The app this screenshot is from (e.g. "Slack", "Teams", "Email", "iMessage", "WhatsApp", "Excel", "Web") or "Unknown".
+
+Return ONLY valid JSON, no markdown fences.`,
+          },
+        ],
+      },
+    ],
+  })
+
+  const text = response.content[0].type === 'text' ? response.content[0].text : ''
+  try {
+    return JSON.parse(text)
+  } catch {
+    return {
+      summary: text,
+      sender: '',
+      action_items: [],
+      details: [],
+      source_app: 'Unknown',
+    }
+  }
+}
+
+// POST — upload image + analyze with Claude vision
 export async function POST(request: NextRequest) {
   const formData = await request.formData()
   const image = formData.get('image') as File | null
-  const extractedText = formData.get('extracted_text') as string
 
   if (!image) {
     return NextResponse.json({ error: 'No image provided' }, { status: 400 })
   }
 
-  // Upload to Supabase Storage
-  const fileName = `${Date.now()}-${image.name}`
-  const buffer = Buffer.from(await image.arrayBuffer())
+  // Convert to base64 for Claude + buffer for storage
+  const arrayBuffer = await image.arrayBuffer()
+  const buffer = Buffer.from(arrayBuffer)
+  const base64 = buffer.toString('base64')
 
-  const { error: uploadError } = await supabase.storage
-    .from(BUCKET)
-    .upload(fileName, buffer, {
-      contentType: image.type,
-      upsert: false,
-    })
+  // Run Claude vision analysis and storage upload in parallel
+  const [analysis, uploadResult] = await Promise.all([
+    analyzeScreenshot(base64, image.type),
+    supabase.storage.from(BUCKET).upload(
+      `${Date.now()}-${image.name}`,
+      buffer,
+      { contentType: image.type, upsert: false }
+    ),
+  ])
 
-  if (uploadError) {
-    return NextResponse.json({ error: uploadError.message }, { status: 500 })
+  if (uploadResult.error) {
+    return NextResponse.json({ error: uploadResult.error.message }, { status: 500 })
   }
 
+  const fileName = uploadResult.data.path
   const { data: urlData } = supabase.storage.from(BUCKET).getPublicUrl(fileName)
 
-  // Insert entry
+  // Store the structured analysis as JSON in extracted_text
+  const structuredText = JSON.stringify(analysis)
+
   const { data, error } = await supabase
     .from(TABLE)
     .insert({
       image_url: urlData.publicUrl,
-      extracted_text: extractedText,
-      edited_text: extractedText,
-      description: '',
+      extracted_text: structuredText,
+      edited_text: '',
+      description: analysis.summary,
       date_label: '',
     })
     .select()
