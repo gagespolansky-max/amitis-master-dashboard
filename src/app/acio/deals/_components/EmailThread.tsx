@@ -2,14 +2,16 @@
 
 import { useState } from "react"
 import { DealEmail, EmailMessage } from "../_lib/types"
-import { ChevronDown, ChevronRight, ExternalLink, Loader2 } from "lucide-react"
+import { ChevronDown, ChevronRight, ExternalLink, Loader2, ArrowRightLeft, GripVertical } from "lucide-react"
 
 interface EmailThreadProps {
   dealEmail: DealEmail
   dealId: string
+  onMove?: (dealEmail: DealEmail) => void
+  showDragHandle?: boolean
 }
 
-export default function EmailThread({ dealEmail, dealId }: EmailThreadProps) {
+export default function EmailThread({ dealEmail, dealId, onMove, showDragHandle }: EmailThreadProps) {
   const [expanded, setExpanded] = useState(false)
   const [messages, setMessages] = useState<EmailMessage[]>([])
   const [loading, setLoading] = useState(false)
@@ -43,38 +45,56 @@ export default function EmailThread({ dealEmail, dealId }: EmailThreadProps) {
   return (
     <div className="bg-card-bg border border-card-border rounded-lg overflow-hidden">
       {/* Thread header */}
-      <button
-        onClick={loadMessages}
-        className="w-full px-3 py-2.5 flex items-center gap-2 hover:bg-card-border/20 transition-colors text-left"
-      >
-        {loading ? (
-          <Loader2 size={14} className="text-muted animate-spin shrink-0" />
-        ) : expanded ? (
-          <ChevronDown size={14} className="text-muted shrink-0" />
-        ) : (
-          <ChevronRight size={14} className="text-muted shrink-0" />
-        )}
-        <div className="flex-1 min-w-0">
-          <div className="text-sm font-medium truncate">{dealEmail.subject || "No subject"}</div>
-          <div className="text-xs text-muted flex gap-2">
-            {dealEmail.participants && (
-              <span>{dealEmail.participants.length} participant{dealEmail.participants.length !== 1 ? "s" : ""}</span>
-            )}
-            {dealEmail.last_message_date && (
-              <span>{new Date(dealEmail.last_message_date).toLocaleDateString()}</span>
-            )}
+      <div className="flex items-center">
+        {showDragHandle && (
+          <div className="pl-2 text-muted/50 hover:text-muted cursor-grab active:cursor-grabbing shrink-0 self-stretch flex items-center">
+            <GripVertical size={14} />
           </div>
-        </div>
-        <a
-          href={gmailLink}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={(e) => e.stopPropagation()}
-          className="text-accent hover:text-accent-hover shrink-0"
+        )}
+        <button
+          onClick={loadMessages}
+          className="flex-1 px-3 py-2.5 flex items-center gap-2 hover:bg-card-border/20 transition-colors text-left min-w-0"
         >
-          <ExternalLink size={14} />
-        </a>
-      </button>
+          {loading ? (
+            <Loader2 size={14} className="text-muted animate-spin shrink-0" />
+          ) : expanded ? (
+            <ChevronDown size={14} className="text-muted shrink-0" />
+          ) : (
+            <ChevronRight size={14} className="text-muted shrink-0" />
+          )}
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-medium truncate">{dealEmail.subject || "No subject"}</div>
+            <div className="text-xs text-muted flex gap-2">
+              {dealEmail.participants && (
+                <span>{dealEmail.participants.length} participant{dealEmail.participants.length !== 1 ? "s" : ""}</span>
+              )}
+              {dealEmail.last_message_date && (
+                <span>{new Date(dealEmail.last_message_date).toLocaleDateString()}</span>
+              )}
+            </div>
+          </div>
+        </button>
+        <div className="flex items-center gap-1 pr-2 shrink-0">
+          {onMove && (
+            <button
+              onClick={(e) => { e.stopPropagation(); onMove(dealEmail) }}
+              className="p-1.5 text-muted hover:text-accent rounded hover:bg-accent/10 transition-colors"
+              title="Move to another deal"
+            >
+              <ArrowRightLeft size={14} />
+            </button>
+          )}
+          <a
+            href={gmailLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="p-1.5 text-accent hover:text-accent-hover"
+          >
+            <ExternalLink size={14} />
+          </a>
+        </div>
+      </div>
 
       {/* Messages list */}
       {expanded && messages.length > 0 && (

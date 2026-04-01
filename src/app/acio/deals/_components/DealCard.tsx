@@ -7,6 +7,7 @@ import StageProgressBar from "./StageProgressBar"
 interface DealCardProps {
   deal: Deal
   onClick: () => void
+  emailDropTarget?: boolean
 }
 
 function timeAgo(dateStr: string): string {
@@ -29,7 +30,7 @@ function reminderStatus(date: string | null): "overdue" | "soon" | "normal" | nu
   return "normal"
 }
 
-export default function DealCard({ deal, onClick }: DealCardProps) {
+export default function DealCard({ deal, onClick, emailDropTarget }: DealCardProps) {
   const primaryContact = deal.key_contacts?.find((c) => c.role === "counterparty") || deal.key_contacts?.[0]
   const dotColor = PRIORITY_DOT_COLORS[deal.priority || "medium"]
   const reminder = reminderStatus(deal.reminder_date)
@@ -37,7 +38,11 @@ export default function DealCard({ deal, onClick }: DealCardProps) {
   return (
     <div
       onClick={onClick}
-      className="bg-card-bg border border-card-border rounded-lg p-3 cursor-pointer hover:border-accent/50 transition-colors"
+      className={`bg-card-bg border rounded-lg p-3 cursor-pointer transition-colors ${
+        emailDropTarget
+          ? "border-accent ring-2 ring-accent/30 bg-accent/5"
+          : "border-card-border hover:border-accent/50"
+      }`}
     >
       <div className="flex items-start justify-between gap-2 mb-1.5">
         <div className="flex items-center gap-1.5 min-w-0">

@@ -93,3 +93,33 @@ export const PRIORITY_DOT_COLORS: Record<DealPriority, string> = {
 }
 
 export const INVESTMENT_TYPES: InvestmentType[] = ["SPV", "Fund", "Direct", "Co-Invest", "Other"]
+
+export const DEAL_TYPES = [
+  "Fund Allocation",
+  "Co-Invest",
+  "Direct",
+  "Series A",
+  "Series B",
+  "Series C",
+  "Seed",
+  "Other",
+]
+
+export const INDUSTRIES = [
+  "Digital Assets",
+  "Fintech",
+  "AI/ML",
+  "Healthcare",
+  "Real Estate",
+  "Energy",
+  "Macro",
+  "Systematic",
+  "Event-Driven",
+  "Multi-Strategy",
+  "Credit",
+  "Technology",
+  "Infrastructure",
+  "Consumer",
+  "Industrials",
+  "Other",
+]

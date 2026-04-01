@@ -8,7 +8,8 @@ import DealPanel from "./DealPanel"
 import BaselineReview from "./BaselineReview"
 import MergeDialog from "./MergeDialog"
 import DedupDialog from "./DedupDialog"
-import { RefreshCw, Search, LayoutGrid, List, AlertCircle, Bell, GitMerge } from "lucide-react"
+import { RefreshCw, Search, LayoutGrid, List, AlertCircle, Bell, GitMerge, Plus } from "lucide-react"
+import NewDealDialog from "./NewDealDialog"
 
 type ViewMode = "board" | "table" | "review"
 
@@ -22,6 +23,7 @@ export default function ACIOBoard() {
   const [priorityFilter, setPriorityFilter] = useState<DealPriority | "all">("all")
   const [mergeDeals, setMergeDeals] = useState<{ target: Deal; source?: Deal } | null>(null)
   const [showDedup, setShowDedup] = useState(false)
+  const [showNewDeal, setShowNewDeal] = useState(false)
 
   const pendingReview = deals.filter((d) => d.status === "pending_review")
   const confirmedDeals = deals.filter((d) => d.status === "confirmed")
@@ -60,6 +62,39 @@ export default function ACIOBoard() {
 
   async function handleDragEnd(result: DropResult) {
     if (!result.destination) return
+
+    // Handle email drops onto deal cards
+    if (result.type === "EMAIL") {
+      const targetDroppableId = result.destination.droppableId
+      if (!targetDroppableId.startsWith("email-drop-") || !selectedDeal) return
+
+      const targetDealId = targetDroppableId.replace("email-drop-", "")
+      if (targetDealId === selectedDeal.id) return // Can't drop on same deal
+
+      const emailId = result.draggableId.replace("email-", "") // "source-abc" or real UUID
+
+      const res = await fetch(`/acio/deals/api/${selectedDeal.id}/emails/move`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          target_deal_id: targetDealId,
+          deal_email_id: emailId,
+        }),
+      })
+
+      if (res.ok) {
+        const allRes = await fetch("/acio/deals/api")
+        if (allRes.ok) {
+          const all = await allRes.json()
+          setDeals(all)
+          const updated = all.find((d: Deal) => d.id === selectedDeal.id)
+          if (updated) setSelectedDeal(updated)
+        }
+      }
+      return
+    }
+
+    // Handle deal stage changes
     const dealId = result.draggableId
     const newStage = result.destination.droppableId as DealStage
 
@@ -128,7 +163,6 @@ export default function ACIOBoard() {
     })
     if (res.ok) {
       const updated = await res.json()
-      // Remove source, update target in state
       setDeals((prev) => prev.filter((d) => d.id !== sourceId).map((d) => d.id === targetId ? updated : d))
       if (selectedDeal?.id === sourceId) setSelectedDeal(null)
       else if (selectedDeal?.id === targetId) setSelectedDeal(updated)
@@ -159,139 +193,145 @@ export default function ACIOBoard() {
   const kanbanStages: DealStage[] = ["sourced", "initial_call", "dd_in_progress", "ic_review", "committed", "passed"]
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Header */}
-      <div className="shrink-0 px-6 py-4 border-b border-card-border flex items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="flex gap-1 text-xs text-muted">
-            {STAGES.filter((s) => s !== "passed").map((s) => (
-              <span key={s} className="px-2 py-0.5 bg-card-bg rounded">
-                {STAGE_LABELS[s]}: {dealsByStage(s).length}
+    <DragDropContext onDragEnd={handleDragEnd}>
+      <div className="h-full flex flex-col">
+        {/* Header */}
+        <div className="shrink-0 px-6 py-4 border-b border-card-border flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="flex gap-1 text-xs text-muted">
+              {STAGES.filter((s) => s !== "passed").map((s) => (
+                <span key={s} className="px-2 py-0.5 bg-card-bg rounded">
+                  {STAGE_LABELS[s]}: {dealsByStage(s).length}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {dueReminders.length > 0 && (
+              <button
+                className="text-xs px-3 py-1.5 bg-yellow-500/20 text-yellow-400 rounded-md hover:bg-yellow-500/30 flex items-center gap-1.5"
+                title={`${dueReminders.length} reminder${dueReminders.length !== 1 ? "s" : ""} due`}
+              >
+                <Bell size={14} /> {dueReminders.length} due
+              </button>
+            )}
+
+            {pendingReview.length > 0 && viewMode !== "review" && (
+              <button
+                onClick={() => setViewMode("review")}
+                className="text-xs px-3 py-1.5 bg-warning/20 text-warning rounded-md hover:bg-warning/30 flex items-center gap-1.5"
+              >
+                <AlertCircle size={14} /> {pendingReview.length} to review
+              </button>
+            )}
+
+            <div className="flex items-center border border-card-border rounded-md overflow-hidden">
+              <button
+                onClick={() => setPriorityFilter("all")}
+                className={`px-2 py-1.5 text-xs ${priorityFilter === "all" ? "bg-accent text-white" : "text-muted hover:text-foreground"}`}
+              >
+                All
+              </button>
+              <button
+                onClick={() => setPriorityFilter("high")}
+                className={`px-2 py-1.5 text-xs ${priorityFilter === "high" ? "bg-red-500/30 text-red-400" : "text-muted hover:text-foreground"}`}
+              >
+                H
+              </button>
+              <button
+                onClick={() => setPriorityFilter("medium")}
+                className={`px-2 py-1.5 text-xs ${priorityFilter === "medium" ? "bg-yellow-500/30 text-yellow-400" : "text-muted hover:text-foreground"}`}
+              >
+                M
+              </button>
+              <button
+                onClick={() => setPriorityFilter("low")}
+                className={`px-2 py-1.5 text-xs ${priorityFilter === "low" ? "bg-zinc-500/30 text-zinc-400" : "text-muted hover:text-foreground"}`}
+              >
+                L
+              </button>
+            </div>
+
+            <div className="relative">
+              <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted" />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search deals..."
+                className="bg-card-bg border border-card-border rounded-md pl-8 pr-3 py-1.5 text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-accent w-48"
+              />
+            </div>
+
+            <div className="flex border border-card-border rounded-md overflow-hidden">
+              <button
+                onClick={() => setViewMode("board")}
+                className={`p-1.5 ${viewMode === "board" ? "bg-accent text-white" : "text-muted hover:text-foreground"}`}
+              >
+                <LayoutGrid size={16} />
+              </button>
+              <button
+                onClick={() => setViewMode("table")}
+                className={`p-1.5 ${viewMode === "table" ? "bg-accent text-white" : "text-muted hover:text-foreground"}`}
+              >
+                <List size={16} />
+              </button>
+            </div>
+
+            <button
+              onClick={() => setShowNewDeal(true)}
+              className="text-sm px-3 py-1.5 text-green-400 border border-green-500/30 rounded-md hover:bg-green-500/20 flex items-center gap-1.5"
+            >
+              <Plus size={14} />
+              New Deal
+            </button>
+
+            <button
+              onClick={() => setShowDedup(true)}
+              className="text-sm px-3 py-1.5 text-purple-400 border border-purple-500/30 rounded-md hover:bg-purple-500/20 flex items-center gap-1.5"
+            >
+              <GitMerge size={14} />
+              Dedup
+            </button>
+
+            <button
+              onClick={handleScan}
+              disabled={scanning}
+              className="text-sm px-3 py-1.5 bg-accent text-white rounded-md hover:bg-accent-hover disabled:opacity-50 flex items-center gap-1.5"
+            >
+              <RefreshCw size={14} className={scanning ? "animate-spin" : ""} />
+              {scanning ? "Scanning..." : "Scan Now"}
+            </button>
+
+            {lastScan && (
+              <span className="text-xs text-muted">
+                Last: {new Date(lastScan).toLocaleTimeString()}
               </span>
-            ))}
+            )}
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          {/* Due reminders badge */}
-          {dueReminders.length > 0 && (
-            <button
-              className="text-xs px-3 py-1.5 bg-yellow-500/20 text-yellow-400 rounded-md hover:bg-yellow-500/30 flex items-center gap-1.5"
-              title={`${dueReminders.length} reminder${dueReminders.length !== 1 ? "s" : ""} due`}
-            >
-              <Bell size={14} /> {dueReminders.length} due
-            </button>
-          )}
-
-          {pendingReview.length > 0 && viewMode !== "review" && (
-            <button
-              onClick={() => setViewMode("review")}
-              className="text-xs px-3 py-1.5 bg-warning/20 text-warning rounded-md hover:bg-warning/30 flex items-center gap-1.5"
-            >
-              <AlertCircle size={14} /> {pendingReview.length} to review
-            </button>
-          )}
-
-          {/* Priority filter */}
-          <div className="flex items-center border border-card-border rounded-md overflow-hidden">
-            <button
-              onClick={() => setPriorityFilter("all")}
-              className={`px-2 py-1.5 text-xs ${priorityFilter === "all" ? "bg-accent text-white" : "text-muted hover:text-foreground"}`}
-            >
-              All
-            </button>
-            <button
-              onClick={() => setPriorityFilter("high")}
-              className={`px-2 py-1.5 text-xs ${priorityFilter === "high" ? "bg-red-500/30 text-red-400" : "text-muted hover:text-foreground"}`}
-            >
-              H
-            </button>
-            <button
-              onClick={() => setPriorityFilter("medium")}
-              className={`px-2 py-1.5 text-xs ${priorityFilter === "medium" ? "bg-yellow-500/30 text-yellow-400" : "text-muted hover:text-foreground"}`}
-            >
-              M
-            </button>
-            <button
-              onClick={() => setPriorityFilter("low")}
-              className={`px-2 py-1.5 text-xs ${priorityFilter === "low" ? "bg-zinc-500/30 text-zinc-400" : "text-muted hover:text-foreground"}`}
-            >
-              L
-            </button>
-          </div>
-
-          <div className="relative">
-            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search deals..."
-              className="bg-card-bg border border-card-border rounded-md pl-8 pr-3 py-1.5 text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-accent w-48"
-            />
-          </div>
-
-          <div className="flex border border-card-border rounded-md overflow-hidden">
-            <button
-              onClick={() => setViewMode("board")}
-              className={`p-1.5 ${viewMode === "board" ? "bg-accent text-white" : "text-muted hover:text-foreground"}`}
-            >
-              <LayoutGrid size={16} />
-            </button>
-            <button
-              onClick={() => setViewMode("table")}
-              className={`p-1.5 ${viewMode === "table" ? "bg-accent text-white" : "text-muted hover:text-foreground"}`}
-            >
-              <List size={16} />
-            </button>
-          </div>
-
-          <button
-            onClick={() => setShowDedup(true)}
-            className="text-sm px-3 py-1.5 text-purple-400 border border-purple-500/30 rounded-md hover:bg-purple-500/20 flex items-center gap-1.5"
-          >
-            <GitMerge size={14} />
-            Dedup
-          </button>
-
-          <button
-            onClick={handleScan}
-            disabled={scanning}
-            className="text-sm px-3 py-1.5 bg-accent text-white rounded-md hover:bg-accent-hover disabled:opacity-50 flex items-center gap-1.5"
-          >
-            <RefreshCw size={14} className={scanning ? "animate-spin" : ""} />
-            {scanning ? "Scanning..." : "Scan Now"}
-          </button>
-
-          {lastScan && (
-            <span className="text-xs text-muted">
-              Last: {new Date(lastScan).toLocaleTimeString()}
-            </span>
-          )}
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="flex-1 overflow-hidden">
-        {viewMode === "review" ? (
-          <div className="p-6 overflow-y-auto h-full">
-            <BaselineReview
-              deals={pendingReview}
-              onConfirm={handleBulkConfirm}
-              onDismiss={handleBulkDismiss}
-              onFinish={() => setViewMode("board")}
-              onMerge={openMergeFromReview}
-            />
-          </div>
-        ) : viewMode === "table" ? (
-          <div className="p-6 overflow-y-auto h-full">
-            <TableView deals={filteredDeals} onSelect={setSelectedDeal} />
-          </div>
-        ) : (
-          <DragDropContext onDragEnd={handleDragEnd}>
+        {/* Content */}
+        <div className="flex-1 overflow-hidden">
+          {viewMode === "review" ? (
+            <div className="p-6 overflow-y-auto h-full">
+              <BaselineReview
+                deals={pendingReview}
+                onConfirm={handleBulkConfirm}
+                onDismiss={handleBulkDismiss}
+                onFinish={() => setViewMode("board")}
+                onMerge={openMergeFromReview}
+              />
+            </div>
+          ) : viewMode === "table" ? (
+            <div className="p-6 overflow-y-auto h-full">
+              <TableView deals={filteredDeals} onSelect={setSelectedDeal} />
+            </div>
+          ) : (
             <div className="flex gap-4 p-4 h-full overflow-x-auto">
               {kanbanStages.map((stage) => (
-                <Droppable key={stage} droppableId={stage}>
+                <Droppable key={stage} droppableId={stage} type="DEAL">
                   {(provided, snapshot) => (
                     <div
                       ref={provided.innerRef}
@@ -309,13 +349,27 @@ export default function ACIOBoard() {
                       <div className="flex-1 overflow-y-auto px-2 pb-2 space-y-2">
                         {dealsByStage(stage).map((deal, index) => (
                           <Draggable key={deal.id} draggableId={deal.id} index={index}>
-                            {(provided) => (
+                            {(dragProvided) => (
                               <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
+                                ref={dragProvided.innerRef}
+                                {...dragProvided.draggableProps}
+                                {...dragProvided.dragHandleProps}
                               >
-                                <DealCard deal={deal} onClick={() => setSelectedDeal(deal)} />
+                                <Droppable droppableId={`email-drop-${deal.id}`} type="EMAIL">
+                                  {(dropProvided, dropSnapshot) => (
+                                    <div
+                                      ref={dropProvided.innerRef}
+                                      {...dropProvided.droppableProps}
+                                    >
+                                      <DealCard
+                                        deal={deal}
+                                        onClick={() => setSelectedDeal(deal)}
+                                        emailDropTarget={dropSnapshot.isDraggingOver}
+                                      />
+                                      <div style={{ display: "none" }}>{dropProvided.placeholder}</div>
+                                    </div>
+                                  )}
+                                </Droppable>
                               </div>
                             )}
                           </Draggable>
@@ -327,42 +381,56 @@ export default function ACIOBoard() {
                 </Droppable>
               ))}
             </div>
-          </DragDropContext>
+          )}
+        </div>
+
+        {/* Slide-out panel */}
+        {selectedDeal && (
+          <DealPanel
+            deal={selectedDeal}
+            allDeals={deals}
+            onClose={() => setSelectedDeal(null)}
+            onUpdate={handleUpdate}
+            onDelete={handleDelete}
+            onMerge={openMergeFromPanel}
+            onEmailMoved={fetchDeals}
+          />
+        )}
+
+        {/* Merge dialog */}
+        {mergeDeals && (
+          <MergeDialog
+            target={mergeDeals.target}
+            source={mergeDeals.source}
+            allDeals={deals.filter((d) => d.status !== "dismissed")}
+            onMerge={handleMerge}
+            onClose={() => setMergeDeals(null)}
+          />
+        )}
+
+        {/* New deal dialog */}
+        {showNewDeal && (
+          <NewDealDialog
+            onClose={() => setShowNewDeal(false)}
+            onCreate={async (newDeal) => {
+              setShowNewDeal(false)
+              await fetchDeals()
+              setSelectedDeal(newDeal)
+            }}
+          />
+        )}
+
+        {/* Dedup dialog */}
+        {showDedup && (
+          <DedupDialog
+            deals={deals}
+            onMerge={handleMerge}
+            onClose={() => setShowDedup(false)}
+            onRefresh={fetchDeals}
+          />
         )}
       </div>
-
-      {/* Slide-out panel */}
-      {selectedDeal && (
-        <DealPanel
-          deal={selectedDeal}
-          onClose={() => setSelectedDeal(null)}
-          onUpdate={handleUpdate}
-          onDelete={handleDelete}
-          onMerge={openMergeFromPanel}
-        />
-      )}
-
-      {/* Merge dialog */}
-      {mergeDeals && (
-        <MergeDialog
-          target={mergeDeals.target}
-          source={mergeDeals.source}
-          allDeals={deals.filter((d) => d.status !== "dismissed")}
-          onMerge={handleMerge}
-          onClose={() => setMergeDeals(null)}
-        />
-      )}
-
-      {/* Dedup dialog */}
-      {showDedup && (
-        <DedupDialog
-          deals={deals}
-          onMerge={handleMerge}
-          onClose={() => setShowDedup(false)}
-          onRefresh={fetchDeals}
-        />
-      )}
-    </div>
+    </DragDropContext>
   )
 }
 

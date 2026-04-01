@@ -1,20 +1,23 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import { Deal, DealEmail, DealStage, DealPriority, STAGE_LABELS, PRIORITY_COLORS, INVESTMENT_TYPES, InvestmentType } from "../_lib/types"
-import { X, ExternalLink, Upload, Trash2, Link2, FileText, Bell, Calendar, Merge, Sparkles, Loader2, Pencil, Check } from "lucide-react"
+import { Deal, DealEmail, DealStage, DealPriority, STAGE_LABELS, PRIORITY_COLORS, INVESTMENT_TYPES, INDUSTRIES, DEAL_TYPES, InvestmentType } from "../_lib/types"
+import { X, ExternalLink, Upload, Trash2, Link2, FileText, Bell, Calendar, Merge, Sparkles, Loader2, Pencil, Check, Search, ArrowRightLeft } from "lucide-react"
+import { Droppable, Draggable } from "@hello-pangea/dnd"
 import StageProgressBar from "./StageProgressBar"
 import EmailThread from "./EmailThread"
 
 interface DealPanelProps {
   deal: Deal
+  allDeals: Deal[]
   onClose: () => void
   onUpdate: (updated: Deal) => void
   onDelete: (id: string) => void
   onMerge?: (deal: Deal) => void
+  onEmailMoved?: () => void
 }
 
-export default function DealPanel({ deal, onClose, onUpdate, onDelete, onMerge }: DealPanelProps) {
+export default function DealPanel({ deal, allDeals, onClose, onUpdate, onDelete, onMerge, onEmailMoved }: DealPanelProps) {
   const [notes, setNotes] = useState(deal.notes || "")
   const [companyDescription, setCompanyDescription] = useState(deal.company_description || "")
   const [valueProp, setValueProp] = useState(deal.value_proposition || "")
@@ -26,10 +29,14 @@ export default function DealPanel({ deal, onClose, onUpdate, onDelete, onMerge }
   const [reminderNote, setReminderNote] = useState(deal.reminder_note || "")
   const [editingName, setEditingName] = useState(false)
   const [nameValue, setNameValue] = useState(deal.company_name)
+  const [movingEmail, setMovingEmail] = useState<DealEmail | null>(null)
+  const [moveSearch, setMoveSearch] = useState("")
+  const [moveLoading, setMoveLoading] = useState(false)
   const nameInputRef = useRef<HTMLInputElement>(null)
   const debounceRef = useRef<NodeJS.Timeout>(null)
   const descDebounceRef = useRef<NodeJS.Timeout>(null)
   const vpDebounceRef = useRef<NodeJS.Timeout>(null)
+  const moveSearchRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     setNotes(deal.notes || "")
@@ -39,14 +46,17 @@ export default function DealPanel({ deal, onClose, onUpdate, onDelete, onMerge }
     setReminderNote(deal.reminder_note || "")
     setNameValue(deal.company_name)
     setEditingName(false)
+    setMovingEmail(null)
+  }, [deal.id])
+
+  const fetchEmails = useCallback(async () => {
+    const r = await fetch(`/acio/deals/api/${deal.id}/emails`)
+    if (r.ok) setEmails(await r.json())
   }, [deal.id])
 
   useEffect(() => {
-    fetch(`/acio/deals/api/${deal.id}/emails`)
-      .then((r) => r.json())
-      .then(setEmails)
-      .catch(() => {})
-  }, [deal.id])
+    fetchEmails().catch(() => {})
+  }, [fetchEmails])
 
   async function patchDeal(fields: Record<string, unknown>) {
     const res = await fetch(`/acio/deals/api/${deal.id}`, {
@@ -120,11 +130,66 @@ export default function DealPanel({ deal, onClose, onUpdate, onDelete, onMerge }
     }
   }
 
+  async function moveEmailToDeal(targetDealId: string) {
+    if (!movingEmail) return
+    setMoveLoading(true)
+    try {
+      const res = await fetch(`/acio/deals/api/${deal.id}/emails/move`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          target_deal_id: targetDealId,
+          thread_id: movingEmail.thread_id,
+          deal_email_id: movingEmail.id,
+        }),
+      })
+      if (res.ok) {
+        setMovingEmail(null)
+        setMoveSearch("")
+        await fetchEmails()
+        // Refresh source deal if source thread was moved
+        if (movingEmail.id.startsWith("source-")) {
+          const dealRes = await fetch(`/acio/deals/api/${deal.id}`)
+          if (dealRes.ok) onUpdate(await dealRes.json())
+        }
+        onEmailMoved?.()
+      }
+    } finally {
+      setMoveLoading(false)
+    }
+  }
+
+  // Build the full list of email items for drag support
+  const allEmailItems: { dealEmail: DealEmail; isSource: boolean }[] = []
+  if (deal.source_thread_id) {
+    allEmailItems.push({
+      isSource: true,
+      dealEmail: {
+        id: `source-${deal.id}`,
+        deal_id: deal.id,
+        thread_id: deal.source_thread_id,
+        subject: deal.source_subject,
+        last_message_date: deal.first_seen_at,
+        snippet: null,
+        participants: deal.key_contacts?.map((c) => ({ name: c.name, email: c.email })) || null,
+        created_at: deal.created_at,
+      },
+    })
+  }
+  emails
+    .filter((e) => e.thread_id !== deal.source_thread_id)
+    .forEach((e) => allEmailItems.push({ isSource: false, dealEmail: e }))
+
+  const moveTargets = allDeals
+    .filter((d) => d.id !== deal.id && d.status !== "dismissed")
+    .filter((d) => !moveSearch || d.company_name.toLowerCase().includes(moveSearch.toLowerCase()))
+    .slice(0, 8)
+
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative w-full max-w-lg bg-background border-l border-card-border overflow-y-auto">
-        <div className="sticky top-0 bg-background border-b border-card-border px-6 py-4 flex items-center justify-between">
+        <div className="sticky top-0 bg-background border-b border-card-border px-6 py-4 flex items-center justify-between z-10">
           <div className="flex items-center gap-2 min-w-0 flex-1 mr-2">
             {editingName ? (
               <form
@@ -217,7 +282,16 @@ export default function DealPanel({ deal, onClose, onUpdate, onDelete, onMerge }
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <span className="text-muted text-xs block">Deal Type</span>
-              <span>{deal.deal_type || "—"}</span>
+              <select
+                value={deal.deal_type || ""}
+                onChange={(e) => patchDeal({ deal_type: e.target.value || null })}
+                className="bg-background border border-card-border rounded px-2 py-0.5 text-sm text-foreground mt-0.5"
+              >
+                <option value="">—</option>
+                {DEAL_TYPES.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
             </div>
             <div>
               <span className="text-muted text-xs block">Source</span>
@@ -238,7 +312,35 @@ export default function DealPanel({ deal, onClose, onUpdate, onDelete, onMerge }
             </div>
             <div>
               <span className="text-muted text-xs block">Industry</span>
-              <span>{deal.industry || "—"}</span>
+              <select
+                value={deal.industry && INDUSTRIES.includes(deal.industry) ? deal.industry : deal.industry ? "__custom" : ""}
+                onChange={(e) => {
+                  if (e.target.value === "__custom") return
+                  patchDeal({ industry: e.target.value || null })
+                }}
+                className="bg-background border border-card-border rounded px-2 py-0.5 text-sm text-foreground mt-0.5"
+              >
+                <option value="">—</option>
+                {INDUSTRIES.map((ind) => (
+                  <option key={ind} value={ind}>{ind}</option>
+                ))}
+                {deal.industry && !INDUSTRIES.includes(deal.industry) && (
+                  <option value="__custom">{deal.industry}</option>
+                )}
+              </select>
+              {deal.industry && !INDUSTRIES.includes(deal.industry) && (
+                <input
+                  type="text"
+                  defaultValue={deal.industry}
+                  onBlur={(e) => {
+                    const v = e.target.value.trim()
+                    if (v && v !== deal.industry) patchDeal({ industry: v })
+                  }}
+                  onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur() }}
+                  className="bg-background border border-card-border rounded px-2 py-0.5 text-sm text-foreground mt-1 w-full focus:outline-none focus:border-accent"
+                  placeholder="Custom industry..."
+                />
+              )}
             </div>
           </div>
 
@@ -325,39 +427,100 @@ export default function DealPanel({ deal, onClose, onUpdate, onDelete, onMerge }
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="text-xs text-muted uppercase tracking-wide">
-                Email Threads ({(deal.source_thread_id ? 1 : 0) + emails.filter((e) => e.thread_id !== deal.source_thread_id).length})
+                Email Threads ({allEmailItems.length})
               </label>
               <button className="text-xs text-accent hover:text-accent-hover inline-flex items-center gap-1">
                 <Link2 size={12} /> Link thread
               </button>
             </div>
-            <div className="space-y-2">
-              {deal.source_thread_id && (
-                <EmailThread
-                  dealEmail={{
-                    id: `source-${deal.id}`,
-                    deal_id: deal.id,
-                    thread_id: deal.source_thread_id,
-                    subject: deal.source_subject,
-                    last_message_date: deal.first_seen_at,
-                    snippet: null,
-                    participants: deal.key_contacts?.map((c) => ({ name: c.name, email: c.email })) || null,
-                    created_at: deal.created_at,
-                  }}
-                  dealId={deal.id}
-                />
-              )}
-              {emails
-                .filter((e) => e.thread_id !== deal.source_thread_id)
-                .map((e) => (
-                  <EmailThread key={e.id} dealEmail={e} dealId={deal.id} />
-                ))}
-              {!deal.source_thread_id && emails.length === 0 && (
-                <div className="text-xs text-muted py-3 text-center bg-card-bg border border-card-border rounded-lg">
-                  No email threads linked to this deal
+
+            {/* Move-to-deal picker */}
+            {movingEmail && (
+              <div className="mb-3 bg-card-bg border border-accent/30 rounded-lg p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm">
+                    <ArrowRightLeft size={14} className="text-accent" />
+                    <span>Move &quot;{movingEmail.subject || "thread"}&quot; to:</span>
+                  </div>
+                  <button
+                    onClick={() => { setMovingEmail(null); setMoveSearch("") }}
+                    className="text-muted hover:text-foreground"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+                <div className="relative">
+                  <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted" />
+                  <input
+                    ref={moveSearchRef}
+                    type="text"
+                    value={moveSearch}
+                    onChange={(e) => setMoveSearch(e.target.value)}
+                    placeholder="Search deals..."
+                    className="w-full bg-background border border-card-border rounded-md pl-8 pr-3 py-1.5 text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-accent"
+                    autoFocus
+                  />
+                </div>
+                <div className="max-h-48 overflow-y-auto space-y-0.5">
+                  {moveTargets.length === 0 ? (
+                    <div className="text-xs text-muted py-2 text-center">No matching deals</div>
+                  ) : (
+                    moveTargets.map((d) => (
+                      <button
+                        key={d.id}
+                        onClick={() => moveEmailToDeal(d.id)}
+                        disabled={moveLoading}
+                        className="w-full text-left px-2.5 py-2 rounded-md text-sm hover:bg-accent/10 transition-colors flex items-center justify-between gap-2 disabled:opacity-50"
+                      >
+                        <span className="truncate">{d.company_name}</span>
+                        <span className="text-xs text-muted shrink-0">{STAGE_LABELS[d.stage]}</span>
+                      </button>
+                    ))
+                  )}
+                </div>
+                {moveLoading && (
+                  <div className="flex items-center gap-2 text-xs text-muted">
+                    <Loader2 size={12} className="animate-spin" /> Moving...
+                  </div>
+                )}
+              </div>
+            )}
+
+            <Droppable droppableId="panel-emails" type="EMAIL" isDropDisabled>
+              {(provided) => (
+                <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-2">
+                  {allEmailItems.map((item, index) => (
+                    <Draggable
+                      key={item.dealEmail.id}
+                      draggableId={`email-${item.dealEmail.id}`}
+                      index={index}
+                    >
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          className={snapshot.isDragging ? "opacity-50" : ""}
+                        >
+                          <EmailThread
+                            dealEmail={item.dealEmail}
+                            dealId={deal.id}
+                            onMove={(de) => { setMovingEmail(de); setMoveSearch(""); setTimeout(() => moveSearchRef.current?.focus(), 50) }}
+                            showDragHandle
+                          />
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                  {allEmailItems.length === 0 && (
+                    <div className="text-xs text-muted py-3 text-center bg-card-bg border border-card-border rounded-lg">
+                      No email threads linked to this deal
+                    </div>
+                  )}
                 </div>
               )}
-            </div>
+            </Droppable>
           </div>
 
           {/* Notes */}
