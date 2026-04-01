@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import PageHeader from '@/components/page-header'
-import EnablementTabs from '@/components/enablement-tabs'
+import EnablementTabs from './_components/enablement-tabs'
 
 interface Suggestion {
   date: string

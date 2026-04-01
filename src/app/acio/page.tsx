@@ -1,5 +1,5 @@
 import PageHeader from '@/components/page-header'
-import ACIOBoard from '@/components/acio/ACIOBoard'
+import ACIOBoard from './_components/ACIOBoard'
 
 export default function ACIOPage() {
   return (

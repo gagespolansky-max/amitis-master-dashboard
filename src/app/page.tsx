@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import PriorityBoard from '@/components/priority-board'
+import PriorityBoard from '@/app/priorities/_components/priority-board'
 
 const workstreams = [
   {

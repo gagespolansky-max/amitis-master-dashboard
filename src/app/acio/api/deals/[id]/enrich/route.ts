@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@/lib/supabase-server"
-import { fetchThreadMessages } from "@/lib/acio/gmail"
-import { enrichDealFromEmails } from "@/lib/acio/classify"
+import { fetchThreadMessages } from "@/app/acio/_lib/gmail"
+import { enrichDealFromEmails } from "@/app/acio/_lib/classify"
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const supabase = createServerClient()

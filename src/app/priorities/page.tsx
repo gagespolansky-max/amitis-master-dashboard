@@ -1,5 +1,5 @@
 import PageHeader from '@/components/page-header'
-import PriorityBoard from '@/components/priority-board'
+import PriorityBoard from './_components/priority-board'
 
 export default function PrioritiesPage() {
   return (

@@ -579,7 +579,7 @@ function SkillDetail({ skill: initialSkill, onBack, installed, catalog }: { skil
   async function runAnalysis() {
     setAnalyzing(true)
     try {
-      const res = await fetch("/api/skills/analyze", {
+      const res = await fetch("/skills/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ skill_md_content: skillMdContent, skill_name: initialSkill.name }),
@@ -598,7 +598,7 @@ function SkillDetail({ skill: initialSkill, onBack, installed, catalog }: { skil
     if (!workflowInput.trim()) return
     setAssessing(true)
     try {
-      const res = await fetch("/api/skills/assess", {
+      const res = await fetch("/skills/api/assess", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ skillName: initialSkill.name, skillDescription: initialSkill.description, workflow: workflowInput }),
@@ -864,7 +864,7 @@ function SkillChat({ skill, catalog, installed }: { skill: CatalogSkill; catalog
     setInput("")
     setStreaming(true)
     try {
-      const res = await fetch("/api/skills/chat", {
+      const res = await fetch("/skills/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -937,7 +937,7 @@ function Development({ proposals, onAdd }: { proposals: Proposal[]; onAdd: (p: O
 
   useEffect(() => {
     setSubmissionsLoading(true)
-    fetch("/api/skills/proposals?type=submission")
+    fetch("/skills/api/proposals?type=submission")
       .then((r) => r.json())
       .then((res) => {
         const data: Submission[] = res.proposals || res || []
@@ -960,7 +960,7 @@ function Development({ proposals, onAdd }: { proposals: Proposal[]; onAdd: (p: O
   async function approveOne(id: string) {
     setSubmissions((prev) => prev.filter((s) => s.id !== id))
     setSelectedIds((prev) => { const next = new Set(prev); next.delete(id); return next })
-    try { await fetch("/api/skills/approve", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ proposal_id: id }) }) } catch {}
+    try { await fetch("/skills/api/approve", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ proposal_id: id }) }) } catch {}
   }
 
   async function rejectOne(id: string) {
@@ -970,14 +970,14 @@ function Development({ proposals, onAdd }: { proposals: Proposal[]; onAdd: (p: O
     if (item) setRejectedSubmissions((prev) => [{ ...item, status: "rejected", rejection_reason: rejectReason }, ...prev])
     setRejectingId(null)
     setRejectReason("")
-    try { await fetch("/api/skills/reject", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ proposal_id: id, reason: rejectReason }) }) } catch {}
+    try { await fetch("/skills/api/reject", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ proposal_id: id, reason: rejectReason }) }) } catch {}
   }
 
   async function bulkApprove() {
     const ids = [...selectedIds]
     setSubmissions((prev) => prev.filter((s) => !selectedIds.has(s.id)))
     setSelectedIds(new Set())
-    try { await fetch("/api/skills/bulk-approve", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ proposal_ids: ids }) }) } catch {}
+    try { await fetch("/skills/api/bulk-approve", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ proposal_ids: ids }) }) } catch {}
   }
 
   function toggleSelect(id: string) {

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@/lib/supabase-server"
-import { searchThreads, fetchThreadMeta } from "@/lib/acio/gmail"
-import { classifyThread, extractDealMetadata } from "@/lib/acio/classify"
+import { searchThreads, fetchThreadMeta } from "@/app/acio/_lib/gmail"
+import { classifyThread, extractDealMetadata } from "@/app/acio/_lib/classify"
 
 const INTERNAL_DOMAINS = ["amitiscapital.com", "theamitisgroup.com"]
 

@@ -1,5 +1,5 @@
 import PageHeader from '@/components/page-header'
-import AIInitiativesBoard from '@/components/ai-initiatives-board'
+import AIInitiativesBoard from './_components/ai-initiatives-board'
 
 export default function AIInitiativesPage() {
   return (

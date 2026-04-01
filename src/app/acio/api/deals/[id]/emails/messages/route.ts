@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@/lib/supabase-server"
-import { fetchThreadMessages } from "@/lib/acio/gmail"
+import { fetchThreadMessages } from "@/app/acio/_lib/gmail"
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id: dealId } = await params
