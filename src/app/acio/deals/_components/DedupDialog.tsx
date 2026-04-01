@@ -165,9 +165,11 @@ export default function DedupDialog({ deals, onMerge, onClose, onRefresh }: Dedu
                       isMerged ? "border-green-500/30 bg-green-500/5" : "border-card-border"
                     }`}
                   >
-                    <button
+                    <div
+                      role="button"
+                      tabIndex={0}
                       onClick={() => setExpandedGroup(isExpanded ? null : i)}
-                      className="w-full px-4 py-3 flex items-center gap-3 hover:bg-card-bg/50 text-left"
+                      className="w-full px-4 py-3 flex items-center gap-3 hover:bg-card-bg/50 text-left cursor-pointer"
                     >
                       {isExpanded ? (
                         <ChevronDown size={14} className="text-muted shrink-0" />
@@ -193,7 +195,7 @@ export default function DedupDialog({ deals, onMerge, onClose, onRefresh }: Dedu
                           Merge
                         </button>
                       )}
-                    </button>
+                    </div>
 
                     {isExpanded && (
                       <div className="px-4 pb-3 pl-10 space-y-1">
