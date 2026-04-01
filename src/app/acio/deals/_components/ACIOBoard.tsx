@@ -7,7 +7,8 @@ import DealCard from "./DealCard"
 import DealPanel from "./DealPanel"
 import BaselineReview from "./BaselineReview"
 import MergeDialog from "./MergeDialog"
-import { RefreshCw, Search, LayoutGrid, List, AlertCircle, Bell } from "lucide-react"
+import DedupDialog from "./DedupDialog"
+import { RefreshCw, Search, LayoutGrid, List, AlertCircle, Bell, GitMerge } from "lucide-react"
 
 type ViewMode = "board" | "table" | "review"
 
@@ -20,6 +21,7 @@ export default function ACIOBoard() {
   const [lastScan, setLastScan] = useState<string | null>(null)
   const [priorityFilter, setPriorityFilter] = useState<DealPriority | "all">("all")
   const [mergeDeals, setMergeDeals] = useState<{ target: Deal; source?: Deal } | null>(null)
+  const [showDedup, setShowDedup] = useState(false)
 
   const pendingReview = deals.filter((d) => d.status === "pending_review")
   const confirmedDeals = deals.filter((d) => d.status === "confirmed")
@@ -245,6 +247,14 @@ export default function ACIOBoard() {
           </div>
 
           <button
+            onClick={() => setShowDedup(true)}
+            className="text-sm px-3 py-1.5 text-purple-400 border border-purple-500/30 rounded-md hover:bg-purple-500/20 flex items-center gap-1.5"
+          >
+            <GitMerge size={14} />
+            Dedup
+          </button>
+
+          <button
             onClick={handleScan}
             disabled={scanning}
             className="text-sm px-3 py-1.5 bg-accent text-white rounded-md hover:bg-accent-hover disabled:opacity-50 flex items-center gap-1.5"
@@ -340,6 +350,16 @@ export default function ACIOBoard() {
           allDeals={deals.filter((d) => d.status !== "dismissed")}
           onMerge={handleMerge}
           onClose={() => setMergeDeals(null)}
+        />
+      )}
+
+      {/* Dedup dialog */}
+      {showDedup && (
+        <DedupDialog
+          deals={deals}
+          onMerge={handleMerge}
+          onClose={() => setShowDedup(false)}
+          onRefresh={fetchDeals}
         />
       )}
     </div>

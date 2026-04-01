@@ -99,8 +99,8 @@ Return JSON only (no markdown): {"match_index": <1-based index or null>, "reason
         return { dealId: matchedDeal.id, confidence: "fuzzy" }
       }
     }
-  } catch {
-    // Fail open — create a new deal rather than risk a bad merge
+  } catch (err) {
+    console.error("[dedup] Haiku fuzzy match failed, creating new deal:", err)
   }
 
   return null

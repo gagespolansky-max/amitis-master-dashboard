@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react"
 import { Deal, DealEmail, DealStage, DealPriority, STAGE_LABELS, PRIORITY_COLORS, INVESTMENT_TYPES, InvestmentType } from "../_lib/types"
-import { X, ExternalLink, Upload, Trash2, Link2, FileText, Bell, Calendar, Merge, Sparkles, Loader2 } from "lucide-react"
+import { X, ExternalLink, Upload, Trash2, Link2, FileText, Bell, Calendar, Merge, Sparkles, Loader2, Pencil, Check } from "lucide-react"
 import StageProgressBar from "./StageProgressBar"
 import EmailThread from "./EmailThread"
 
@@ -24,6 +24,9 @@ export default function DealPanel({ deal, onClose, onUpdate, onDelete, onMerge }
   const [enriching, setEnriching] = useState(false)
   const [reminderDate, setReminderDate] = useState(deal.reminder_date?.slice(0, 10) || "")
   const [reminderNote, setReminderNote] = useState(deal.reminder_note || "")
+  const [editingName, setEditingName] = useState(false)
+  const [nameValue, setNameValue] = useState(deal.company_name)
+  const nameInputRef = useRef<HTMLInputElement>(null)
   const debounceRef = useRef<NodeJS.Timeout>(null)
   const descDebounceRef = useRef<NodeJS.Timeout>(null)
   const vpDebounceRef = useRef<NodeJS.Timeout>(null)
@@ -34,6 +37,8 @@ export default function DealPanel({ deal, onClose, onUpdate, onDelete, onMerge }
     setValueProp(deal.value_proposition || "")
     setReminderDate(deal.reminder_date?.slice(0, 10) || "")
     setReminderNote(deal.reminder_note || "")
+    setNameValue(deal.company_name)
+    setEditingName(false)
   }, [deal.id])
 
   useEffect(() => {
@@ -120,8 +125,49 @@ export default function DealPanel({ deal, onClose, onUpdate, onDelete, onMerge }
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
       <div className="relative w-full max-w-lg bg-background border-l border-card-border overflow-y-auto">
         <div className="sticky top-0 bg-background border-b border-card-border px-6 py-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">{deal.company_name}</h2>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 min-w-0 flex-1 mr-2">
+            {editingName ? (
+              <form
+                className="flex items-center gap-1.5 flex-1 min-w-0"
+                onSubmit={async (e) => {
+                  e.preventDefault()
+                  const trimmed = nameValue.trim()
+                  if (trimmed && trimmed !== deal.company_name) {
+                    await patchDeal({ company_name: trimmed })
+                  }
+                  setEditingName(false)
+                }}
+              >
+                <input
+                  ref={nameInputRef}
+                  value={nameValue}
+                  onChange={(e) => setNameValue(e.target.value)}
+                  onBlur={() => { setNameValue(deal.company_name); setEditingName(false) }}
+                  className="text-lg font-semibold bg-card-bg border border-accent rounded px-2 py-0.5 flex-1 min-w-0 focus:outline-none"
+                  autoFocus
+                />
+                <button
+                  type="submit"
+                  onMouseDown={(e) => e.preventDefault()}
+                  className="text-accent hover:text-accent-hover shrink-0"
+                >
+                  <Check size={18} />
+                </button>
+              </form>
+            ) : (
+              <>
+                <h2 className="text-lg font-semibold truncate">{deal.company_name}</h2>
+                <button
+                  onClick={() => { setNameValue(deal.company_name); setEditingName(true) }}
+                  className="text-muted hover:text-foreground shrink-0"
+                  title="Rename deal"
+                >
+                  <Pencil size={14} />
+                </button>
+              </>
+            )}
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
             {onMerge && (
               <button
                 onClick={() => onMerge(deal)}
@@ -277,7 +323,14 @@ export default function DealPanel({ deal, onClose, onUpdate, onDelete, onMerge }
 
           {/* Email threads */}
           <div>
-            <label className="text-xs text-muted uppercase tracking-wide block mb-2">Email Threads</label>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs text-muted uppercase tracking-wide">
+                Email Threads ({(deal.source_thread_id ? 1 : 0) + emails.filter((e) => e.thread_id !== deal.source_thread_id).length})
+              </label>
+              <button className="text-xs text-accent hover:text-accent-hover inline-flex items-center gap-1">
+                <Link2 size={12} /> Link thread
+              </button>
+            </div>
             <div className="space-y-2">
               {deal.source_thread_id && (
                 <EmailThread
@@ -299,10 +352,12 @@ export default function DealPanel({ deal, onClose, onUpdate, onDelete, onMerge }
                 .map((e) => (
                   <EmailThread key={e.id} dealEmail={e} dealId={deal.id} />
                 ))}
+              {!deal.source_thread_id && emails.length === 0 && (
+                <div className="text-xs text-muted py-3 text-center bg-card-bg border border-card-border rounded-lg">
+                  No email threads linked to this deal
+                </div>
+              )}
             </div>
-            <button className="text-xs text-accent hover:text-accent-hover inline-flex items-center gap-1 mt-2">
-              <Link2 size={12} /> Link additional thread
-            </button>
           </div>
 
           {/* Notes */}
