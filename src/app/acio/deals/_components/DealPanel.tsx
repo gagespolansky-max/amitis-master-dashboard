@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import { Deal, DealEmail, DealStage, DealPriority, STAGE_LABELS, PRIORITY_COLORS, INVESTMENT_TYPES, INDUSTRIES, DEAL_TYPES, InvestmentType } from "../_lib/types"
-import { X, ExternalLink, Upload, Trash2, Link2, FileText, Bell, Calendar, Merge, Sparkles, Loader2, Pencil, Check, Search, ArrowRightLeft } from "lucide-react"
+import { Deal, DealEmail, DealAttachment, DealLink, DealStage, DealPriority, STAGE_LABELS, PRIORITY_COLORS, INVESTMENT_TYPES, INDUSTRIES, DEAL_TYPES, InvestmentType } from "../_lib/types"
+import { X, ExternalLink, Upload, Trash2, Link2, FileText, Bell, Calendar, Merge, Sparkles, Loader2, Pencil, Check, Search, ArrowRightLeft, Paperclip, Download, Plus, Globe } from "lucide-react"
 import { Droppable, Draggable } from "@hello-pangea/dnd"
 import StageProgressBar from "./StageProgressBar"
 import EmailThread from "./EmailThread"
@@ -22,6 +22,12 @@ export default function DealPanel({ deal, allDeals, onClose, onUpdate, onDelete,
   const [companyDescription, setCompanyDescription] = useState(deal.company_description || "")
   const [valueProp, setValueProp] = useState(deal.value_proposition || "")
   const [emails, setEmails] = useState<DealEmail[]>([])
+  const [attachments, setAttachments] = useState<DealAttachment[]>([])
+  const [links, setLinks] = useState<DealLink[]>([])
+  const [addingLink, setAddingLink] = useState(false)
+  const [newLinkUrl, setNewLinkUrl] = useState("")
+  const [newLinkLabel, setNewLinkLabel] = useState("")
+  const [savingLink, setSavingLink] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [enriching, setEnriching] = useState(false)
@@ -47,6 +53,7 @@ export default function DealPanel({ deal, allDeals, onClose, onUpdate, onDelete,
     setNameValue(deal.company_name)
     setEditingName(false)
     setMovingEmail(null)
+    setAddingLink(false)
   }, [deal.id])
 
   const fetchEmails = useCallback(async () => {
@@ -54,9 +61,21 @@ export default function DealPanel({ deal, allDeals, onClose, onUpdate, onDelete,
     if (r.ok) setEmails(await r.json())
   }, [deal.id])
 
+  const fetchAttachments = useCallback(async () => {
+    const r = await fetch(`/acio/deals/api/${deal.id}/attachments`)
+    if (r.ok) setAttachments(await r.json())
+  }, [deal.id])
+
+  const fetchLinks = useCallback(async () => {
+    const r = await fetch(`/acio/deals/api/${deal.id}/links`)
+    if (r.ok) setLinks(await r.json())
+  }, [deal.id])
+
   useEffect(() => {
     fetchEmails().catch(() => {})
-  }, [fetchEmails])
+    fetchAttachments().catch(() => {})
+    fetchLinks().catch(() => {})
+  }, [fetchEmails, fetchAttachments, fetchLinks])
 
   async function patchDeal(fields: Record<string, unknown>) {
     const res = await fetch(`/acio/deals/api/${deal.id}`, {
@@ -157,6 +176,35 @@ export default function DealPanel({ deal, allDeals, onClose, onUpdate, onDelete,
     } finally {
       setMoveLoading(false)
     }
+  }
+
+  async function addLink() {
+    if (!newLinkUrl.trim()) return
+    setSavingLink(true)
+    try {
+      const res = await fetch(`/acio/deals/api/${deal.id}/links`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: newLinkUrl.trim(), label: newLinkLabel.trim() || null }),
+      })
+      if (res.ok) {
+        setNewLinkUrl("")
+        setNewLinkLabel("")
+        setAddingLink(false)
+        await fetchLinks()
+      }
+    } finally {
+      setSavingLink(false)
+    }
+  }
+
+  async function deleteLink(linkId: string) {
+    await fetch(`/acio/deals/api/${deal.id}/links`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: linkId }),
+    })
+    await fetchLinks()
   }
 
   // Build the full list of email items for drag support
@@ -506,6 +554,7 @@ export default function DealPanel({ deal, allDeals, onClose, onUpdate, onDelete,
                             dealEmail={item.dealEmail}
                             dealId={deal.id}
                             onMove={(de) => { setMovingEmail(de); setMoveSearch(""); setTimeout(() => moveSearchRef.current?.focus(), 50) }}
+                            onMessagesLoaded={() => { fetchAttachments(); fetchLinks() }}
                             showDragHandle
                           />
                         </div>
@@ -521,6 +570,144 @@ export default function DealPanel({ deal, allDeals, onClose, onUpdate, onDelete,
                 </div>
               )}
             </Droppable>
+          </div>
+
+          {/* Attachments */}
+          {attachments.length > 0 && (
+            <div>
+              <label className="text-xs text-muted uppercase tracking-wide block mb-2">
+                <Paperclip size={12} className="inline mr-1" />
+                Attachments ({attachments.length})
+              </label>
+              <div className="space-y-1">
+                {attachments.map((att) => (
+                  <a
+                    key={att.id}
+                    href={`/acio/deals/api/${deal.id}/attachments/download?message_id=${encodeURIComponent(att.gmail_message_id)}&attachment_id=${encodeURIComponent(att.gmail_attachment_id)}&filename=${encodeURIComponent(att.filename)}&mime_type=${encodeURIComponent(att.mime_type)}`}
+                    className="flex items-center gap-2.5 px-3 py-2 bg-card-bg border border-card-border rounded-lg hover:border-accent/50 transition-colors group"
+                  >
+                    <FileText size={16} className="text-accent shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm truncate">{att.filename}</div>
+                      <div className="text-xs text-muted">
+                        {att.size < 1024
+                          ? `${att.size} B`
+                          : att.size < 1048576
+                          ? `${(att.size / 1024).toFixed(1)} KB`
+                          : `${(att.size / 1048576).toFixed(1)} MB`}
+                      </div>
+                    </div>
+                    <Download size={14} className="text-muted group-hover:text-accent shrink-0" />
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Links */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs text-muted uppercase tracking-wide">
+                <Globe size={12} className="inline mr-1" />
+                Links ({links.length})
+              </label>
+              <button
+                onClick={() => setAddingLink(!addingLink)}
+                className="text-xs text-accent hover:text-accent-hover inline-flex items-center gap-1"
+              >
+                <Plus size={12} /> Add link
+              </button>
+            </div>
+
+            {addingLink && (
+              <div className="mb-2 bg-card-bg border border-card-border rounded-lg p-3 space-y-2">
+                <input
+                  type="url"
+                  value={newLinkUrl}
+                  onChange={(e) => setNewLinkUrl(e.target.value)}
+                  placeholder="https://..."
+                  className="w-full bg-background border border-card-border rounded-md px-3 py-1.5 text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-accent"
+                  autoFocus
+                  onKeyDown={(e) => { if (e.key === "Enter") addLink() }}
+                />
+                <input
+                  type="text"
+                  value={newLinkLabel}
+                  onChange={(e) => setNewLinkLabel(e.target.value)}
+                  placeholder="Label (optional) — e.g. Data Room, Pitch Deck"
+                  className="w-full bg-background border border-card-border rounded-md px-3 py-1.5 text-sm text-foreground placeholder:text-muted focus:outline-none focus:border-accent"
+                  onKeyDown={(e) => { if (e.key === "Enter") addLink() }}
+                />
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={() => { setAddingLink(false); setNewLinkUrl(""); setNewLinkLabel("") }}
+                    className="text-xs px-3 py-1.5 text-muted hover:text-foreground"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={addLink}
+                    disabled={!newLinkUrl.trim() || savingLink}
+                    className="text-xs px-3 py-1.5 bg-accent text-white rounded-md hover:bg-accent-hover disabled:opacity-50 flex items-center gap-1"
+                  >
+                    {savingLink && <Loader2 size={12} className="animate-spin" />}
+                    Add
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {links.length > 0 ? (
+              <div className="space-y-1">
+                {links.map((link) => (
+                  <div
+                    key={link.id}
+                    className="flex items-center gap-2.5 px-3 py-2 bg-card-bg border border-card-border rounded-lg group"
+                  >
+                    <Globe size={14} className="text-accent shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <a
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-accent hover:text-accent-hover truncate block"
+                      >
+                        {link.label || link.url.replace(/^https?:\/\//, "").slice(0, 50)}
+                      </a>
+                      {link.label && (
+                        <div className="text-xs text-muted truncate">
+                          {link.url.replace(/^https?:\/\//, "").slice(0, 60)}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {link.source === "auto" && (
+                        <span className="text-[10px] text-muted bg-card-border/30 px-1.5 py-0.5 rounded">auto</span>
+                      )}
+                      <button
+                        onClick={() => deleteLink(link.id)}
+                        className="text-muted hover:text-danger opacity-0 group-hover:opacity-100 transition-opacity p-0.5"
+                        title="Remove link"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                      <a
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-muted hover:text-accent p-0.5"
+                      >
+                        <ExternalLink size={12} />
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : !addingLink ? (
+              <div className="text-xs text-muted py-3 text-center bg-card-bg border border-card-border rounded-lg">
+                No links yet — expand email threads to auto-detect, or add manually
+              </div>
+            ) : null}
           </div>
 
           {/* Notes */}

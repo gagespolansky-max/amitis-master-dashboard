@@ -82,6 +82,14 @@ function parseAddresses(raw: string): { name: string; email: string }[] {
   return results
 }
 
+export interface AttachmentMeta {
+  messageId: string
+  attachmentId: string
+  filename: string
+  mimeType: string
+  size: number
+}
+
 export interface ThreadMessage {
   messageId: string
   fromName: string
@@ -90,6 +98,35 @@ export interface ThreadMessage {
   subject: string
   bodyText: string
   snippet: string
+  attachments: AttachmentMeta[]
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function findPartByMime(part: any, mimeType: string): any | undefined {
+  if (part.mimeType === mimeType && !part.parts?.length) return part
+  for (const child of part.parts || []) {
+    const found = findPartByMime(child, mimeType)
+    if (found) return found
+  }
+  return undefined
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function extractAttachments(messageId: string, part: any): AttachmentMeta[] {
+  const results: AttachmentMeta[] = []
+  if (part.filename && part.body?.attachmentId) {
+    results.push({
+      messageId,
+      attachmentId: part.body.attachmentId,
+      filename: part.filename,
+      mimeType: part.mimeType || "application/octet-stream",
+      size: part.body.size || 0,
+    })
+  }
+  for (const child of part.parts || []) {
+    results.push(...extractAttachments(messageId, child))
+  }
+  return results
 }
 
 export async function fetchThreadMessages(threadId: string): Promise<ThreadMessage[]> {
@@ -110,12 +147,12 @@ export async function fetchThreadMessages(threadId: string): Promise<ThreadMessa
     const from = parsed[0] || { name: "", email: "" }
 
     let bodyText = ""
-    if (msg.payload?.parts) {
-      const textPart = msg.payload.parts.find((p) => p.mimeType === "text/plain")
+    if (msg.payload) {
+      const textPart = findPartByMime(msg.payload, "text/plain")
       if (textPart?.body?.data) {
         bodyText = Buffer.from(textPart.body.data, "base64url").toString("utf-8")
       } else {
-        const htmlPart = msg.payload.parts.find((p) => p.mimeType === "text/html")
+        const htmlPart = findPartByMime(msg.payload, "text/html")
         if (htmlPart?.body?.data) {
           bodyText = Buffer.from(htmlPart.body.data, "base64url")
             .toString("utf-8")
@@ -124,9 +161,9 @@ export async function fetchThreadMessages(threadId: string): Promise<ThreadMessa
             .trim()
         }
       }
-    } else if (msg.payload?.body?.data) {
-      bodyText = Buffer.from(msg.payload.body.data, "base64url").toString("utf-8")
     }
+
+    const attachments = msg.payload ? extractAttachments(msg.id || "", msg.payload) : []
 
     messages.push({
       messageId: msg.id || "",
@@ -136,10 +173,21 @@ export async function fetchThreadMessages(threadId: string): Promise<ThreadMessa
       subject: getHeader("Subject"),
       bodyText,
       snippet: msg.snippet || "",
+      attachments,
     })
   }
 
   return messages
+}
+
+export async function fetchAttachmentData(messageId: string, attachmentId: string): Promise<Buffer> {
+  const gmail = getGmailClient()
+  const res = await gmail.users.messages.attachments.get({
+    userId: "me",
+    messageId,
+    id: attachmentId,
+  })
+  return Buffer.from(res.data.data || "", "base64url")
 }
 
 export async function searchThreads(query: string): Promise<string[]> {

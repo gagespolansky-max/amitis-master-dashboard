@@ -8,10 +8,11 @@ interface EmailThreadProps {
   dealEmail: DealEmail
   dealId: string
   onMove?: (dealEmail: DealEmail) => void
+  onMessagesLoaded?: () => void
   showDragHandle?: boolean
 }
 
-export default function EmailThread({ dealEmail, dealId, onMove, showDragHandle }: EmailThreadProps) {
+export default function EmailThread({ dealEmail, dealId, onMove, onMessagesLoaded, showDragHandle }: EmailThreadProps) {
   const [expanded, setExpanded] = useState(false)
   const [messages, setMessages] = useState<EmailMessage[]>([])
   const [loading, setLoading] = useState(false)
@@ -34,6 +35,7 @@ export default function EmailThread({ dealEmail, dealId, onMove, showDragHandle 
         setMessages(data)
         setLoaded(true)
         if (data.length > 0) setExpandedMsgId(data[data.length - 1].id)
+        onMessagesLoaded?.()
       }
     } finally {
       setLoading(false)

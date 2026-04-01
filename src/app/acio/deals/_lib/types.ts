@@ -60,6 +60,28 @@ export interface DealEmail {
   created_at: string
 }
 
+export interface DealAttachment {
+  id: string
+  deal_id: string
+  deal_email_id: string | null
+  gmail_message_id: string
+  gmail_attachment_id: string
+  filename: string
+  mime_type: string
+  size: number
+  created_at: string
+}
+
+export interface DealLink {
+  id: string
+  deal_id: string
+  url: string
+  label: string | null
+  source: "auto" | "manual"
+  gmail_message_id: string | null
+  created_at: string
+}
+
 export const STAGES: DealStage[] = ["sourced", "initial_call", "dd_in_progress", "ic_review", "committed", "passed"]
 
 export const STAGE_LABELS: Record<DealStage, string> = {

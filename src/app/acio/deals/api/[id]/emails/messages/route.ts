@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@/lib/supabase-server"
 import { fetchThreadMessages } from "@/app/acio/deals/_lib/gmail"
+import { extractLinksFromText } from "@/app/acio/deals/_lib/links"
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id: dealId } = await params
@@ -42,6 +43,42 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     if (rows.length > 0) {
       await supabase.from("acio_email_messages").upsert(rows, {
         onConflict: "deal_email_id,message_id",
+      })
+    }
+
+    // Extract and store attachment metadata
+    const attachmentRows = messages.flatMap((m) =>
+      m.attachments.map((a) => ({
+        deal_id: dealId,
+        deal_email_id: dealEmailId.startsWith("source-") ? null : dealEmailId,
+        gmail_message_id: a.messageId,
+        gmail_attachment_id: a.attachmentId,
+        filename: a.filename,
+        mime_type: a.mimeType,
+        size: a.size,
+      }))
+    )
+
+    if (attachmentRows.length > 0) {
+      await supabase.from("acio_email_attachments").upsert(attachmentRows, {
+        onConflict: "deal_id,gmail_message_id,gmail_attachment_id",
+      })
+    }
+
+    // Extract and store links from email bodies
+    const linkRows = messages.flatMap((m) =>
+      extractLinksFromText(m.bodyText).map((link) => ({
+        deal_id: dealId,
+        url: link.url,
+        label: link.label,
+        source: "auto" as const,
+        gmail_message_id: m.messageId,
+      }))
+    )
+
+    if (linkRows.length > 0) {
+      await supabase.from("acio_deal_links").upsert(linkRows, {
+        onConflict: "deal_id,url",
       })
     }
 
