@@ -24,6 +24,7 @@ skill-analytics — Logs skill usage events, reports on usage stats, and syncs n
 
 Architecture
 Next.js App Router with a sidebar-driven layout. All pages live under src/app/. Path alias: @/* → src/*.
+Module structure: Each module colocates its own _components/, _lib/, and api/ directories. Shared components (sidebar, page-header, placeholder-card, doodle-pad) stay in src/components/. Shared lib (supabase.ts, supabase-server.ts) stays in src/lib/. Each module has its own CLAUDE.md — see those for module-specific context.
 Data layer
 Four persistence patterns coexist:
 
@@ -65,7 +66,7 @@ New/modified skills NEVER write directly to skill_catalog. The flow is:
 Skill created/modified on Cowork, Claude Code, or Claude.ai
 skill-analytics (Mode 3) or sync-skills.py writes to skill_proposals with type='submission', status='pending_review'
 Admin reviews in Skills Hub Development tab → approves or rejects
-Approved skills move to skill_catalog via POST /api/skills/approve
+Approved skills move to skill_catalog via POST /skills/api/approve
 
 Fund returns pipeline — two parallel paths
 Pipeline 1 (source of truth — Cowork fund-returns skill):
@@ -81,15 +82,12 @@ Same fund may send gross one week and net the next
 Confidence hierarchy: investor_statement (3) > eom (2) > mtd (1)
 
 Page/workstream map
-RouteStatusWhat it does/ActiveDashboard overview + priority board/prioritiesActiveAI-ranked Kanban (drag-drop via @hello-pangea/dnd)/skillsActiveSkills Hub — Skills In Use, Marketplace (deep detail + embedded Claude), Development (submissions + proposals), Eval History/portfolio/fund-returnsActiveIframes the separate fund-returns-dashboard (port 5050)/operations/enablementActiveTabbed: Daily Quiz, Architecture Lab, Notes, Weekly Reports/operations/ai-initiativesActiveAI initiative tracker — clickable cards with detail views, status progression, linked skills/portfolio/fund-accountingScopingSupabase schema designed, tables created. Next: wire dashboard to read from Supabase, build reconciliation dot./investor-relationsComing soonOne-pagers, newsletters, LP materials, X post scheduling/researchComing soonFund vetting, deal evaluation/acioIn progressACIO deal pipeline (under_review/invested/passed), investment memos. Components being absorbed from standalone ~/acio/ app.
-Key components
+RouteStatusWhat it does/ActiveDashboard overview + priority board/prioritiesActiveAI-ranked Kanban (drag-drop via @hello-pangea/dnd)/skillsActiveSkills Hub — Skills In Use, Marketplace (deep detail + embedded Claude), Development (submissions + proposals), Eval History/portfolio/fund-returnsActiveIframes the separate fund-returns-dashboard (port 5050)/operations/enablementActiveTabbed: Daily Quiz, Architecture Lab, Notes, Weekly Reports/operations/ai-initiativesActiveAI initiative tracker — clickable cards with detail views, status progression, linked skills/portfolio/fund-accountingScopingSupabase schema designed, tables created. Next: wire dashboard to read from Supabase, build reconciliation dot./investor-relationsComing soonOne-pagers, newsletters, LP materials, X post scheduling/researchComing soonFund vetting, deal evaluation/acioIn progressACIO deal pipeline (under_review/invested/passed), investment memos. Fully colocated with _components/, _lib/, api/.
+Shared components (src/components/)
 
 sidebar.tsx — Main navigation with expandable groups, active-state tracking
-Skills Hub (/skills) — Skill management with marketplace, embedded Claude advisor, approval pipeline, eval history
-priority-board.tsx — Kanban with 3 columns (This Week / This Month / On Deck), pinning, drag-drop, auto-saves to API
-quiz-portal.tsx — Quiz engine with localStorage learner profile
-architecture-lab.tsx — Agentic architecture challenges with stress testing and grading
-workflow-builder.tsx — 6-step guided workflow automation wizard
+page-header.tsx — Reusable page header with title, description, status badge
+placeholder-card.tsx — "Coming soon" placeholder
 doodle-pad.tsx — Draggable floating notepad with topic tagging, localStorage
 
 External dependencies
@@ -114,7 +112,8 @@ Conventions
 
 "Coming soon" pages use the PlaceholderCard component
 New workstreams get a sidebar entry in sidebar.tsx and a route under src/app/
-Lab/quiz types are defined in src/lib/ (lab-types.ts, quiz-data.ts, workflow-types.ts)
+New modules colocate api/, _components/, and _lib/ inside their app directory with a CLAUDE.md
+API routes live inside each module (e.g., /skills/api/approve, /operations/enablement/lab/api/generate)
 When making enablement suggestions during sessions, also call log-suggestion.py so they persist to the dashboard
 When explaining technical concepts, offer to log them via the learning-log skill
 After meaningful architecture changes, generate a docs update block via the project-docs-updater skill
