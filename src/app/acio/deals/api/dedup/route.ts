@@ -14,7 +14,8 @@ interface DealRow {
   company_description: string | null
   value_proposition: string | null
   industry: string | null
-  investment_type: string | null
+  vehicle: string | null
+  company_stage: string | null
   notes: string | null
   priority: string
 }
@@ -37,7 +38,7 @@ export async function POST(req: NextRequest) {
 
   const { data: deals, error } = await supabase
     .from("acio_deals")
-    .select("id, company_name, stage, status, updated_at, key_contacts, company_description, value_proposition, industry, investment_type, notes, priority")
+    .select("id, company_name, stage, status, updated_at, key_contacts, company_description, value_proposition, industry, vehicle, company_stage, notes, priority")
     .not("status", "eq", "dismissed")
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
@@ -168,7 +169,8 @@ async function mergeDeal(
     company_description: target.company_description || source.company_description || null,
     value_proposition: target.value_proposition || source.value_proposition || null,
     industry: target.industry || source.industry || null,
-    investment_type: target.investment_type || source.investment_type || null,
+    vehicle: target.vehicle || source.vehicle || null,
+    company_stage: target.company_stage || source.company_stage || null,
     updated_at: new Date().toISOString(),
   }
 

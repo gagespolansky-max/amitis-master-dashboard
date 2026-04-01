@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Deal, DealStage, DealPriority, STAGE_LABELS, STAGES, INVESTMENT_TYPES, INDUSTRIES, DEAL_TYPES } from "../_lib/types"
+import { Deal, DealStage, DealPriority, STAGE_LABELS, STAGES, INDUSTRIES, DEAL_TYPES, VEHICLES, COMPANY_STAGES } from "../_lib/types"
 import { X, Loader2 } from "lucide-react"
 
 interface NewDealDialogProps {
@@ -13,7 +13,8 @@ export default function NewDealDialog({ onClose, onCreate }: NewDealDialogProps)
   const [companyName, setCompanyName] = useState("")
   const [dealType, setDealType] = useState("")
   const [industry, setIndustry] = useState("")
-  const [investmentType, setInvestmentType] = useState("")
+  const [vehicle, setVehicle] = useState("")
+  const [companyStage, setCompanyStage] = useState("")
   const [stage, setStage] = useState<DealStage>("sourced")
   const [priority, setPriority] = useState<DealPriority>("medium")
   const [notes, setNotes] = useState("")
@@ -32,7 +33,8 @@ export default function NewDealDialog({ onClose, onCreate }: NewDealDialogProps)
           company_name: companyName.trim(),
           deal_type: dealType || null,
           industry: industry || null,
-          investment_type: investmentType || null,
+          vehicle: vehicle || null,
+          company_stage: companyStage || null,
           stage,
           priority,
           notes: notes || null,
@@ -80,12 +82,12 @@ export default function NewDealDialog({ onClose, onCreate }: NewDealDialogProps)
               <label className="text-xs text-muted uppercase tracking-wide block mb-1">Deal Type</label>
               <select
                 value={dealType}
-                onChange={(e) => setDealType(e.target.value)}
+                onChange={(e) => { setDealType(e.target.value); if (e.target.value === "fund_allocation") { setVehicle(""); setCompanyStage("") } }}
                 className="w-full bg-card-bg border border-card-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-accent"
               >
                 <option value="">—</option>
                 {DEAL_TYPES.map((t) => (
-                  <option key={t} value={t}>{t}</option>
+                  <option key={t.value} value={t.value}>{t.label}</option>
                 ))}
               </select>
             </div>
@@ -104,20 +106,38 @@ export default function NewDealDialog({ onClose, onCreate }: NewDealDialogProps)
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs text-muted uppercase tracking-wide block mb-1">Investment Type</label>
-              <select
-                value={investmentType}
-                onChange={(e) => setInvestmentType(e.target.value)}
-                className="w-full bg-card-bg border border-card-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-accent"
-              >
-                <option value="">—</option>
-                {INVESTMENT_TYPES.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
+          {dealType && dealType !== "fund_allocation" && (
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-muted uppercase tracking-wide block mb-1">Vehicle</label>
+                <select
+                  value={vehicle}
+                  onChange={(e) => setVehicle(e.target.value)}
+                  className="w-full bg-card-bg border border-card-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-accent"
+                >
+                  <option value="">—</option>
+                  {VEHICLES.map((v) => (
+                    <option key={v.value} value={v.value}>{v.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-muted uppercase tracking-wide block mb-1">Company Stage</label>
+                <select
+                  value={companyStage}
+                  onChange={(e) => setCompanyStage(e.target.value)}
+                  className="w-full bg-card-bg border border-card-border rounded-lg px-3 py-2 text-sm text-foreground focus:outline-none focus:border-accent"
+                >
+                  <option value="">—</option>
+                  {COMPANY_STAGES.map((s) => (
+                    <option key={s.value} value={s.value}>{s.label}</option>
+                  ))}
+                </select>
+              </div>
             </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-xs text-muted uppercase tracking-wide block mb-1">Stage</label>
               <select

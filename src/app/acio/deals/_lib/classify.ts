@@ -5,11 +5,12 @@ const client = new Anthropic()
 
 export interface DealExtraction {
   company_name: string
-  deal_type: string
+  deal_type: "fund_allocation" | "co_invest" | "direct" | null
+  vehicle: "spv" | "direct_equity" | "safe_convertible" | null
+  company_stage: "seed" | "series_a" | "series_b" | "series_c_plus" | null
   suggested_stage: string
   key_contacts: { name: string; email: string; role: string }[]
   industry: string | null
-  investment_type: "SPV" | "Fund" | "Direct" | "Co-Invest" | "Other" | null
   company_description: string | null
   value_proposition: string | null
 }
@@ -26,15 +27,29 @@ Return JSON (no markdown, no code fences):
 {
   "is_deal": true/false,
   "company_name": "extracted company or fund name",
-  "deal_type": "Series A|Series B|Series C|Fund Allocation|Co-Invest|Direct|Seed|Other",
+  "deal_type": "fund_allocation|co_invest|direct" or null,
+  "vehicle": "spv|direct_equity|safe_convertible" or null,
+  "company_stage": "seed|series_a|series_b|series_c_plus" or null,
   "suggested_stage": "sourced|initial_call|dd_in_progress|ic_review|committed|passed",
   "key_contacts": [{"name": "...", "email": "...", "role": "counterparty|internal|advisor"}],
   "industry": "sector/industry (e.g. Fintech, Healthcare, AI/ML, Real Estate, Energy, etc.)",
-  "investment_type": "SPV|Fund|Direct|Co-Invest|Other",
   "company_description": "1-2 sentence description of the company/fund and what they do",
   "value_proposition": "1 sentence on why this is relevant to Amitis Capital",
   "reasoning": "one sentence explanation"
 }
+
+deal_type categories:
+- fund_allocation: Allocating to an external hedge fund, fund of funds, or managed account
+- co_invest: Co-investing alongside a GP into a specific company/deal
+- direct: Direct investment into a company (equity, SPV, SAFE, etc.)
+
+vehicle (only for co_invest or direct):
+- spv: Special purpose vehicle
+- direct_equity: Direct equity stake
+- safe_convertible: SAFE note or convertible instrument
+
+company_stage (only for co_invest or direct):
+- seed, series_a, series_b, series_c_plus
 
 Context:
 - Amitis Capital team: Chris Solarz (CIO), Adam Feldheim (Managing Partner), Gage Spolansky (Investment Team), Monica Monajem, Noel Teow
@@ -55,14 +70,19 @@ an investment opportunity by the user — do NOT question whether it's a deal.
 Return JSON (no markdown, no code fences):
 {
   "company_name": "the company or fund being evaluated",
-  "deal_type": "Series A|Series B|Series C|Fund Allocation|Co-Invest|Direct|Seed|Other",
+  "deal_type": "fund_allocation|co_invest|direct" or null,
+  "vehicle": "spv|direct_equity|safe_convertible" or null,
+  "company_stage": "seed|series_a|series_b|series_c_plus" or null,
   "suggested_stage": "sourced|initial_call|dd_in_progress|ic_review|committed|passed",
   "key_contacts": [{"name": "...", "email": "...", "role": "counterparty|internal|advisor"}],
   "industry": "sector/industry (e.g. Fintech, Healthcare, AI/ML, Real Estate, Energy, etc.)",
-  "investment_type": "SPV|Fund|Direct|Co-Invest|Other",
   "company_description": "1-2 sentence description of the company/fund and what they do",
   "value_proposition": "1 sentence on why this is relevant to Amitis Capital"
 }
+
+deal_type: fund_allocation (allocating to a fund), co_invest (alongside a GP), direct (direct into a company)
+vehicle (only for co_invest/direct): spv, direct_equity, safe_convertible
+company_stage (only for co_invest/direct): seed, series_a, series_b, series_c_plus
 
 Determine the stage based on conversation progression:
 - sourced: Just an intro, pitch received, or first contact
@@ -99,8 +119,14 @@ Given the current deal info and the email messages, return improved JSON (no mar
   "company_description": "2-3 sentences describing what this company/fund does, with concrete details from the emails (strategy, AUM, team, track record, etc.)",
   "value_proposition": "1-2 sentences on why this opportunity is specifically relevant to Amitis Capital — what makes it a fit for an alternatives allocator",
   "industry": "refined industry/sector classification",
-  "investment_type": "SPV|Fund|Direct|Co-Invest|Other"
+  "deal_type": "fund_allocation|co_invest|direct" or null,
+  "vehicle": "spv|direct_equity|safe_convertible" or null,
+  "company_stage": "seed|series_a|series_b|series_c_plus" or null
 }
+
+deal_type: fund_allocation (allocating to a fund), co_invest (alongside a GP), direct (direct into a company)
+vehicle (only for co_invest/direct): spv, direct_equity, safe_convertible
+company_stage (only for co_invest/direct): seed, series_a, series_b, series_c_plus
 
 Context:
 - Amitis Capital is a hedge fund allocator / family office in the alternatives space
@@ -113,9 +139,9 @@ Be specific — use numbers, names, strategies, and details from the emails.
 If the emails don't contain enough info for a field, keep or improve the existing value.`
 
 export async function enrichDealFromEmails(
-  currentDeal: { company_name: string; company_description: string | null; value_proposition: string | null; industry: string | null; investment_type: string | null },
+  currentDeal: { company_name: string; company_description: string | null; value_proposition: string | null; industry: string | null; deal_type: string | null; vehicle: string | null; company_stage: string | null },
   messages: { from_email: string; date: string; body_text: string }[]
-): Promise<{ company_description: string; value_proposition: string; industry: string; investment_type: string }> {
+): Promise<{ company_description: string; value_proposition: string; industry: string; deal_type: string | null; vehicle: string | null; company_stage: string | null }> {
   // Trim messages to avoid token limits — take most recent 10, truncate bodies
   const trimmed = messages.slice(-10).map((m) => ({
     from: m.from_email,

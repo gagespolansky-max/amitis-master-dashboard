@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Deal, DealStage, DealPriority, STAGES, STAGE_LABELS, STAGE_COLORS, PRIORITY_COLORS } from "../_lib/types"
+import { Deal, DealStage, DealPriority, STAGES, STAGE_LABELS, STAGE_COLORS, PRIORITY_COLORS, DEAL_TYPES, VEHICLE_LABELS, COMPANY_STAGE_LABELS } from "../_lib/types"
 import { Check, X, Merge } from "lucide-react"
 
 interface DealOverrides {
@@ -17,8 +17,6 @@ interface BaselineReviewProps {
   onFinish: () => void
   onMerge?: (target: Deal, source: Deal) => void
 }
-
-const DEAL_TYPES = ["Series A", "Series B", "Series C", "Fund Allocation", "Co-Invest", "Direct", "Seed", "Other"]
 
 export default function BaselineReview({ deals, onConfirm, onDismiss, onFinish, onMerge }: BaselineReviewProps) {
   const [selected, setSelected] = useState<Set<string>>(new Set())
@@ -146,8 +144,11 @@ export default function BaselineReview({ deals, onConfirm, onDismiss, onFinish, 
                     {deal.industry && (
                       <span className="px-1.5 py-0.5 bg-accent/10 text-accent rounded">{deal.industry}</span>
                     )}
-                    {deal.investment_type && (
-                      <span className="px-1.5 py-0.5 bg-purple-500/10 text-purple-400 rounded">{deal.investment_type}</span>
+                    {deal.vehicle && (
+                      <span className="px-1.5 py-0.5 bg-purple-500/10 text-purple-400 rounded">{VEHICLE_LABELS[deal.vehicle]}</span>
+                    )}
+                    {deal.company_stage && (
+                      <span className="px-1.5 py-0.5 bg-cyan-500/10 text-cyan-400 rounded">{COMPANY_STAGE_LABELS[deal.company_stage]}</span>
                     )}
                   </div>
                 )}
@@ -165,7 +166,7 @@ export default function BaselineReview({ deals, onConfirm, onDismiss, onFinish, 
                 >
                   <option value="">—</option>
                   {DEAL_TYPES.map((t) => (
-                    <option key={t} value={t}>{t}</option>
+                    <option key={t.value} value={t.value}>{t.label}</option>
                   ))}
                 </select>
               </div>

@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect, useRef, useCallback } from "react"
-import { Deal, DealEmail, DealAttachment, DealLink, DealStage, DealPriority, STAGE_LABELS, PRIORITY_COLORS, INVESTMENT_TYPES, INDUSTRIES, DEAL_TYPES, InvestmentType } from "../_lib/types"
-import { X, ExternalLink, Upload, Trash2, Link2, FileText, Bell, Calendar, Merge, Sparkles, Loader2, Pencil, Check, Search, ArrowRightLeft, Paperclip, Download, Plus, Globe } from "lucide-react"
+import { Deal, DealEmail, DealAttachment, DealLink, DealStage, DealPriority, STAGE_LABELS, PRIORITY_COLORS, INDUSTRIES, DEAL_TYPES, VEHICLES, COMPANY_STAGES, DEAL_TYPE_LABELS, VEHICLE_LABELS, COMPANY_STAGE_LABELS } from "../_lib/types"
+import { X, ExternalLink, Upload, Trash2, Link2, FileText, Bell, Calendar, Merge, Sparkles, Loader2, Pencil, Check, Search, ArrowRightLeft, Paperclip, Plus, Globe } from "lucide-react"
 import { Droppable, Draggable } from "@hello-pangea/dnd"
 import StageProgressBar from "./StageProgressBar"
 import EmailThread from "./EmailThread"
@@ -100,10 +100,6 @@ export default function DealPanel({ deal, allDeals, onClose, onUpdate, onDelete,
 
   async function changePriority(priority: DealPriority) {
     await patchDeal({ priority })
-  }
-
-  async function changeInvestmentType(type: string) {
-    await patchDeal({ investment_type: type || null })
   }
 
   async function saveReminder() {
@@ -337,7 +333,7 @@ export default function DealPanel({ deal, allDeals, onClose, onUpdate, onDelete,
               >
                 <option value="">—</option>
                 {DEAL_TYPES.map((t) => (
-                  <option key={t} value={t}>{t}</option>
+                  <option key={t.value} value={t.value}>{t.label}</option>
                 ))}
               </select>
             </div>
@@ -345,19 +341,36 @@ export default function DealPanel({ deal, allDeals, onClose, onUpdate, onDelete,
               <span className="text-muted text-xs block">Source</span>
               <span className="capitalize">{deal.source.replace("_", " ")}</span>
             </div>
-            <div>
-              <span className="text-muted text-xs block">Investment Type</span>
-              <select
-                value={deal.investment_type || ""}
-                onChange={(e) => changeInvestmentType(e.target.value)}
-                className="bg-background border border-card-border rounded px-2 py-0.5 text-sm text-foreground mt-0.5"
-              >
-                <option value="">—</option>
-                {INVESTMENT_TYPES.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
-            </div>
+            {deal.deal_type && deal.deal_type !== "fund_allocation" && (
+              <>
+                <div>
+                  <span className="text-muted text-xs block">Vehicle</span>
+                  <select
+                    value={deal.vehicle || ""}
+                    onChange={(e) => patchDeal({ vehicle: e.target.value || null })}
+                    className="bg-background border border-card-border rounded px-2 py-0.5 text-sm text-foreground mt-0.5"
+                  >
+                    <option value="">—</option>
+                    {VEHICLES.map((v) => (
+                      <option key={v.value} value={v.value}>{v.label}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <span className="text-muted text-xs block">Company Stage</span>
+                  <select
+                    value={deal.company_stage || ""}
+                    onChange={(e) => patchDeal({ company_stage: e.target.value || null })}
+                    className="bg-background border border-card-border rounded px-2 py-0.5 text-sm text-foreground mt-0.5"
+                  >
+                    <option value="">—</option>
+                    {COMPANY_STAGES.map((s) => (
+                      <option key={s.value} value={s.value}>{s.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
             <div>
               <span className="text-muted text-xs block">Industry</span>
               <select
@@ -399,8 +412,11 @@ export default function DealPanel({ deal, allDeals, onClose, onUpdate, onDelete,
               {deal.industry && (
                 <span className="text-xs px-2 py-0.5 rounded-full bg-accent/10 text-accent">{deal.industry}</span>
               )}
-              {deal.investment_type && (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400">{deal.investment_type}</span>
+              {deal.vehicle && (
+                <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400">{VEHICLE_LABELS[deal.vehicle]}</span>
+              )}
+              {deal.company_stage && (
+                <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400">{COMPANY_STAGE_LABELS[deal.company_stage]}</span>
               )}
               </div>
               <button
@@ -573,36 +589,41 @@ export default function DealPanel({ deal, allDeals, onClose, onUpdate, onDelete,
           </div>
 
           {/* Attachments */}
-          {attachments.length > 0 && (
-            <div>
-              <label className="text-xs text-muted uppercase tracking-wide block mb-2">
-                <Paperclip size={12} className="inline mr-1" />
-                Attachments ({attachments.length})
-              </label>
-              <div className="space-y-1">
-                {attachments.map((att) => (
-                  <a
-                    key={att.id}
-                    href={`/acio/deals/api/${deal.id}/attachments/download?message_id=${encodeURIComponent(att.gmail_message_id)}&attachment_id=${encodeURIComponent(att.gmail_attachment_id)}&filename=${encodeURIComponent(att.filename)}&mime_type=${encodeURIComponent(att.mime_type)}`}
-                    className="flex items-center gap-2.5 px-3 py-2 bg-card-bg border border-card-border rounded-lg hover:border-accent/50 transition-colors group"
-                  >
-                    <FileText size={16} className="text-accent shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm truncate">{att.filename}</div>
-                      <div className="text-xs text-muted">
-                        {att.size < 1024
-                          ? `${att.size} B`
-                          : att.size < 1048576
-                          ? `${(att.size / 1024).toFixed(1)} KB`
-                          : `${(att.size / 1048576).toFixed(1)} MB`}
+          {(() => {
+            const filtered = attachments.filter((att) => !(/^image\d{3}\.(png|jpe?g|gif|bmp)$/i.test(att.filename)))
+            return filtered.length > 0 ? (
+              <div>
+                <label className="text-xs text-muted uppercase tracking-wide block mb-2">
+                  <Paperclip size={12} className="inline mr-1" />
+                  Attachments ({filtered.length})
+                </label>
+                <div className="space-y-1">
+                  {filtered.map((att) => (
+                    <a
+                      key={att.id}
+                      href={`https://mail.google.com/mail/u/0/#inbox/${att.gmail_message_id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2.5 px-3 py-2 bg-card-bg border border-card-border rounded-lg hover:border-accent/50 transition-colors group"
+                    >
+                      <FileText size={16} className="text-accent shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm truncate">{att.filename}</div>
+                        <div className="text-xs text-muted">
+                          {att.size < 1024
+                            ? `${att.size} B`
+                            : att.size < 1048576
+                            ? `${(att.size / 1024).toFixed(1)} KB`
+                            : `${(att.size / 1048576).toFixed(1)} MB`}
+                        </div>
                       </div>
-                    </div>
-                    <Download size={14} className="text-muted group-hover:text-accent shrink-0" />
-                  </a>
-                ))}
+                      <ExternalLink size={14} className="text-muted group-hover:text-accent shrink-0" />
+                    </a>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            ) : null
+          })()}
 
           {/* Links */}
           <div>

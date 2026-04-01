@@ -6,12 +6,16 @@ export type DealSource = "baseline_scan" | "label"
 
 export type DealPriority = "high" | "medium" | "low"
 
-export type InvestmentType = "SPV" | "Fund" | "Direct" | "Co-Invest" | "Other"
+export type DealType = "fund_allocation" | "co_invest" | "direct"
+
+export type Vehicle = "spv" | "direct_equity" | "safe_convertible"
+
+export type CompanyStage = "seed" | "series_a" | "series_b" | "series_c_plus"
 
 export interface Deal {
   id: string
   company_name: string
-  deal_type: string | null
+  deal_type: DealType | null
   stage: DealStage
   status: DealStatus
   source: DealSource
@@ -23,7 +27,8 @@ export interface Deal {
   memo_filename: string | null
   priority: DealPriority
   industry: string | null
-  investment_type: InvestmentType | null
+  vehicle: Vehicle | null
+  company_stage: CompanyStage | null
   company_description: string | null
   value_proposition: string | null
   reminder_date: string | null
@@ -114,18 +119,43 @@ export const PRIORITY_DOT_COLORS: Record<DealPriority, string> = {
   low: "bg-zinc-500",
 }
 
-export const INVESTMENT_TYPES: InvestmentType[] = ["SPV", "Fund", "Direct", "Co-Invest", "Other"]
-
-export const DEAL_TYPES = [
-  "Fund Allocation",
-  "Co-Invest",
-  "Direct",
-  "Series A",
-  "Series B",
-  "Series C",
-  "Seed",
-  "Other",
+export const DEAL_TYPES: { value: DealType; label: string }[] = [
+  { value: "fund_allocation", label: "Fund Allocation" },
+  { value: "co_invest", label: "Co-Invest" },
+  { value: "direct", label: "Direct" },
 ]
+
+export const VEHICLES: { value: Vehicle; label: string }[] = [
+  { value: "spv", label: "SPV" },
+  { value: "direct_equity", label: "Direct Equity" },
+  { value: "safe_convertible", label: "SAFE / Convertible" },
+]
+
+export const COMPANY_STAGES: { value: CompanyStage; label: string }[] = [
+  { value: "seed", label: "Seed" },
+  { value: "series_a", label: "Series A" },
+  { value: "series_b", label: "Series B" },
+  { value: "series_c_plus", label: "Series C+" },
+]
+
+export const DEAL_TYPE_LABELS: Record<DealType, string> = {
+  fund_allocation: "Fund Allocation",
+  co_invest: "Co-Invest",
+  direct: "Direct",
+}
+
+export const VEHICLE_LABELS: Record<Vehicle, string> = {
+  spv: "SPV",
+  direct_equity: "Direct Equity",
+  safe_convertible: "SAFE / Convertible",
+}
+
+export const COMPANY_STAGE_LABELS: Record<CompanyStage, string> = {
+  seed: "Seed",
+  series_a: "Series A",
+  series_b: "Series B",
+  series_c_plus: "Series C+",
+}
 
 export const INDUSTRIES = [
   "Digital Assets",

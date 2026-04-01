@@ -86,7 +86,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       company_description: deal.company_description,
       value_proposition: deal.value_proposition,
       industry: deal.industry,
-      investment_type: deal.investment_type,
+      deal_type: deal.deal_type,
+      vehicle: deal.vehicle,
+      company_stage: deal.company_stage,
     },
     allMessages
   )
@@ -98,7 +100,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       company_description: enriched.company_description,
       value_proposition: enriched.value_proposition,
       industry: enriched.industry,
-      investment_type: enriched.investment_type,
+      deal_type: enriched.deal_type,
+      vehicle: enriched.vehicle,
+      company_stage: enriched.company_stage,
       updated_at: new Date().toISOString(),
     })
     .eq("id", dealId)

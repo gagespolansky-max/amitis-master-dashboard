@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Deal, STAGE_LABELS, PRIORITY_COLORS } from "../_lib/types"
+import { Deal, STAGE_LABELS, PRIORITY_COLORS, VEHICLE_LABELS, COMPANY_STAGE_LABELS } from "../_lib/types"
 import { X, ArrowRight, Search, Loader2 } from "lucide-react"
 
 interface MergeDialogProps {
@@ -50,7 +50,8 @@ export default function MergeDialog({ target, source: initialSource, allDeals, o
               {deal.priority}
             </span>
             {deal.industry && <span className="text-xs text-muted">{deal.industry}</span>}
-            {deal.investment_type && <span className="text-xs text-muted">{deal.investment_type}</span>}
+            {deal.vehicle && <span className="text-xs text-muted">{VEHICLE_LABELS[deal.vehicle]}</span>}
+            {deal.company_stage && <span className="text-xs text-muted">{COMPANY_STAGE_LABELS[deal.company_stage]}</span>}
           </div>
 
           {deal.company_description && (

@@ -38,7 +38,8 @@ export async function POST(req: NextRequest) {
       notes: body.notes || null,
       priority: body.priority || "medium",
       industry: body.industry || null,
-      investment_type: body.investment_type || null,
+      vehicle: body.vehicle || null,
+      company_stage: body.company_stage || null,
       company_description: body.company_description || null,
       value_proposition: body.value_proposition || null,
     })

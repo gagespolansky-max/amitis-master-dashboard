@@ -17,11 +17,18 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (body.memo_url !== undefined) updates.memo_url = body.memo_url
   if (body.memo_filename !== undefined) updates.memo_filename = body.memo_filename
   if (body.company_name !== undefined) updates.company_name = body.company_name
-  if (body.deal_type !== undefined) updates.deal_type = body.deal_type
+  if (body.deal_type !== undefined) {
+    updates.deal_type = body.deal_type
+    if (body.deal_type === "fund_allocation") {
+      updates.vehicle = null
+      updates.company_stage = null
+    }
+  }
   if (body.key_contacts !== undefined) updates.key_contacts = body.key_contacts
   if (body.priority !== undefined) updates.priority = body.priority
   if (body.industry !== undefined) updates.industry = body.industry
-  if (body.investment_type !== undefined) updates.investment_type = body.investment_type
+  if (body.vehicle !== undefined) updates.vehicle = body.vehicle
+  if (body.company_stage !== undefined) updates.company_stage = body.company_stage
   if (body.company_description !== undefined) updates.company_description = body.company_description
   if (body.value_proposition !== undefined) updates.value_proposition = body.value_proposition
   if (body.reminder_date !== undefined) updates.reminder_date = body.reminder_date

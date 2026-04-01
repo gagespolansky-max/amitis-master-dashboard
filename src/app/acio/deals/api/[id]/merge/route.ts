@@ -56,7 +56,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     company_description: target.company_description || source.company_description || null,
     value_proposition: target.value_proposition || source.value_proposition || null,
     industry: target.industry || source.industry || null,
-    investment_type: target.investment_type || source.investment_type || null,
+    vehicle: target.vehicle || source.vehicle || null,
+    company_stage: target.company_stage || source.company_stage || null,
     updated_at: new Date().toISOString(),
   }
 

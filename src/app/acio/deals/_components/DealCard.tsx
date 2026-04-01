@@ -1,6 +1,6 @@
 "use client"
 
-import { Deal, STAGE_COLORS, PRIORITY_DOT_COLORS } from "../_lib/types"
+import { Deal, STAGE_COLORS, PRIORITY_DOT_COLORS, DEAL_TYPE_LABELS, VEHICLE_LABELS, COMPANY_STAGE_LABELS } from "../_lib/types"
 import { FileText, Mail, Bell } from "lucide-react"
 import StageProgressBar from "./StageProgressBar"
 
@@ -75,7 +75,17 @@ export default function DealCard({ deal, onClick, emailDropTarget }: DealCardPro
       <div className="flex items-center gap-1.5 flex-wrap mb-2">
         {deal.deal_type && (
           <span className={`text-xs px-2 py-0.5 rounded-full ${STAGE_COLORS[deal.stage]}`}>
-            {deal.deal_type}
+            {DEAL_TYPE_LABELS[deal.deal_type]}
+          </span>
+        )}
+        {deal.vehicle && (
+          <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400">
+            {VEHICLE_LABELS[deal.vehicle]}
+          </span>
+        )}
+        {deal.company_stage && (
+          <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400">
+            {COMPANY_STAGE_LABELS[deal.company_stage]}
           </span>
         )}
         {deal.industry && (

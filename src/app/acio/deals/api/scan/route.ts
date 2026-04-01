@@ -103,7 +103,8 @@ async function runBaselineScan() {
         source_subject: meta.subject,
         key_contacts: classification.key_contacts,
         industry: classification.industry || null,
-        investment_type: classification.investment_type || null,
+        vehicle: classification.vehicle || null,
+        company_stage: classification.company_stage || null,
         company_description: classification.company_description || null,
         value_proposition: classification.value_proposition || null,
       })
@@ -200,7 +201,8 @@ async function runLabelScan() {
         source_subject: meta.subject,
         key_contacts: extraction.key_contacts,
         industry: extraction.industry || null,
-        investment_type: extraction.investment_type || null,
+        vehicle: extraction.vehicle || null,
+        company_stage: extraction.company_stage || null,
         company_description: extraction.company_description || null,
         value_proposition: extraction.value_proposition || null,
       })

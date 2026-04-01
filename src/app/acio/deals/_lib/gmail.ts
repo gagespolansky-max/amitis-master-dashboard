@@ -111,17 +111,27 @@ function findPartByMime(part: any, mimeType: string): any | undefined {
   return undefined
 }
 
+// Inline signature images to filter out
+const INLINE_IMAGE_PATTERN = /^image\d{3}\.(png|jpe?g|gif|bmp)$/i
+
+function isSignatureAttachment(filename: string, mimeType: string, size: number): boolean {
+  if (!mimeType.startsWith("image/")) return false
+  if (INLINE_IMAGE_PATTERN.test(filename)) return true
+  // Tiny images (< 100KB) with no meaningful name are likely signature/logo
+  if (size < 100_000 && /^(logo|banner|icon|signature|footer|header)\b/i.test(filename)) return true
+  return false
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function extractAttachments(messageId: string, part: any): AttachmentMeta[] {
   const results: AttachmentMeta[] = []
   if (part.filename && part.body?.attachmentId) {
-    results.push({
-      messageId,
-      attachmentId: part.body.attachmentId,
-      filename: part.filename,
-      mimeType: part.mimeType || "application/octet-stream",
-      size: part.body.size || 0,
-    })
+    const filename = part.filename as string
+    const mimeType = (part.mimeType || "application/octet-stream") as string
+    const size = (part.body.size || 0) as number
+    if (!isSignatureAttachment(filename, mimeType, size)) {
+      results.push({ messageId, attachmentId: part.body.attachmentId, filename, mimeType, size })
+    }
   }
   for (const child of part.parts || []) {
     results.push(...extractAttachments(messageId, child))

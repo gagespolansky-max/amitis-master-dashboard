@@ -125,7 +125,7 @@ export async function linkThreadToExistingDeal(
   // 2. Fetch current deal to merge into
   const { data: deal } = await supabase
     .from("acio_deals")
-    .select("key_contacts, company_description, value_proposition, industry, investment_type, stage")
+    .select("key_contacts, company_description, value_proposition, industry, vehicle, company_stage, stage")
     .eq("id", dealId)
     .single()
 
@@ -160,8 +160,11 @@ export async function linkThreadToExistingDeal(
   if (!deal.industry && extraction.industry) {
     updates.industry = extraction.industry
   }
-  if (!deal.investment_type && extraction.investment_type) {
-    updates.investment_type = extraction.investment_type
+  if (!deal.vehicle && extraction.vehicle) {
+    updates.vehicle = extraction.vehicle
+  }
+  if (!deal.company_stage && extraction.company_stage) {
+    updates.company_stage = extraction.company_stage
   }
 
   // 5. Advance stage if new extraction suggests a more advanced stage (never downgrade)
