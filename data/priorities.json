@@ -2,36 +2,43 @@
   "this_week": [
     {
       "id": "tw-1",
-      "title": "Join Amitis Capital/Nexa Teams meeting",
-      "description": "Attend scheduled Microsoft Teams meeting with Matt Dion regarding Amitis Capital/Nexa opportunity.",
+      "title": "Address 16 overdue tasks in Attio CRM",
+      "description": "Review and complete overdue follow-ups including Sergio Chaverri and Louis Najem contacts.",
       "source": "email",
       "urgency": "high"
     },
     {
       "id": "tw-2",
-      "title": "Schedule Thursday call with Adam Feldheim",
-      "description": "Coordinate 1pm London time call next Thursday with Adam and include Gage in the meeting invite.",
+      "title": "Download DDQ data room materials",
+      "description": "Access Orangedox data room forwarded by Chris Solarz for due diligence review.",
       "source": "email",
       "urgency": "high"
     },
     {
       "id": "tw-3",
-      "title": "Register for FOX Family Advisor Training by April 8th",
-      "description": "Complete registration before April 8th deadline to receive $300 early-bird discount.",
+      "title": "Send Amitis fund performance materials to Issac Septon",
+      "description": "Provide performance data and letters requested by CIO at 247 Lookout for emerging fund manager evaluation.",
       "source": "email",
-      "urgency": "medium"
+      "urgency": "high"
     },
     {
       "id": "tw-4",
-      "title": "Review VanEck Digital Assets Alpha Fund updated PPM",
-      "description": "Analyze the April 2026 PPM and supplement materials received from Securitize Fund Services.",
+      "title": "Send latest Amitis deck to Michael Stanley",
+      "description": "Provide updated materials for digital assets fund of funds research and schedule follow-up call.",
       "source": "email",
       "urgency": "medium"
     },
     {
       "id": "tw-5",
-      "title": "Follow up on March 1 USD subscription completion",
-      "description": "Ensure Boris receives amended subscription form from Charlotte for MAP to GA switch completion.",
+      "title": "Fix Attio workflow for marketing distribution",
+      "description": "Resolve failed workflow blocking prospect addition to marketing distribution list.",
+      "source": "email",
+      "urgency": "medium"
+    },
+    {
+      "id": "tw-6",
+      "title": "Follow up on Radiant update commitment",
+      "description": "Ensure promised next week update to Lionel on Radiant investment is delivered.",
       "source": "email",
       "urgency": "medium"
     }
@@ -39,48 +46,34 @@
   "this_month": [
     {
       "id": "tm-1",
-      "title": "File ACDAM 2025 audited financial statements",
-      "description": "Process and record the completed audited FS that Charlotte confirmed were signed off and uploaded to investor portal.",
+      "title": "Complete NAV Fund Services onboarding process",
+      "description": "Coordinate with accounting team following 2025 audit completion to finalize fund administration setup.",
       "source": "email",
       "urgency": "high"
     },
     {
       "id": "tm-2",
-      "title": "Review new macro charts and marketing materials",
-      "description": "Examine the January 2026 macro charts PPT that Chris edited and was shared via Dropbox last week.",
+      "title": "Process 2025 audited financial statements",
+      "description": "Review completed ACDAM audit and coordinate any remaining administrative tasks with Oakbridge.",
       "source": "email",
-      "urgency": "low"
-    },
-    {
-      "id": "tm-3",
-      "title": "Evaluate Family Office Wealth Forum Florida invitation",
-      "description": "Consider attending the April 20th Palm Beach exclusive family office event from 1640 Society.",
-      "source": "email",
-      "urgency": "low"
+      "urgency": "medium"
     }
   ],
   "on_deck": [
     {
       "id": "od-1",
-      "title": "Explore additional opportunities with Amitis Capital",
-      "description": "Develop strategy for potential investment opportunities discussed in email thread with Adam Feldheim and Peter Bennett.",
+      "title": "Evaluate Volt Carbon Technologies opportunity",
+      "description": "Review forwarded materials on carbon technology investment opportunity from John Grzymala.",
       "source": "email",
       "urgency": "medium"
     },
     {
       "id": "od-2",
-      "title": "Assess Newhedge Bitcoin analytics platform",
-      "description": "Evaluate the new Bitcoin CAGR, AVIV ratio, and transfer volume metrics for potential integration into investment analysis.",
-      "source": "email",
-      "urgency": "low"
-    },
-    {
-      "id": "od-3",
-      "title": "Review ACIO Sync meeting notes and action items",
-      "description": "Follow up on items mentioned in the Notion workspace from recent sync meeting with Tactiq and team.",
-      "source": "email",
+      "title": "Research digital assets fund of funds space",
+      "description": "Conduct competitive analysis and positioning research following Michael Stanley's interest.",
+      "source": "inferred",
       "urgency": "low"
     }
   ],
-  "last_refreshed": "2026-03-31T22:19:59.185160"
+  "last_refreshed": "2026-04-01T13:01:23.450435"
 }

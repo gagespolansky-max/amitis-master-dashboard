@@ -29,6 +29,7 @@ const navigation: NavItem[] = [
     children: [
       { label: 'One Pagers', href: '/investor-relations/one-pagers' },
       { label: 'Market Newsletters', href: '/investor-relations/newsletters' },
+      { label: 'X Posts', href: '/investor-relations/x-posts' },
     ],
   },
   {
@@ -39,7 +40,7 @@ const navigation: NavItem[] = [
     label: 'ACIO',
     href: '/acio',
     children: [
-      { label: 'Deal Pipeline', href: '/acio' },
+      { label: 'Deal Pipeline', href: '/acio/deals' },
       { label: 'Investment Memos', href: '/acio/investment-memos' },
     ],
   },
@@ -53,6 +54,7 @@ const navigation: NavItem[] = [
     children: [
       { label: 'AI Initiatives', href: '/operations/ai-initiatives' },
       { label: 'Enablement', href: '/operations/enablement' },
+      { label: 'Learning Log', href: '/operations/enablement/learning-log' },
     ],
   },
 ]
