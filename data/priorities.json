@@ -2,36 +2,36 @@
   "this_week": [
     {
       "id": "tw-1",
-      "title": "Prepare for Pareto Capital Partners call",
-      "description": "Prep for confirmed meeting with Ettore Paratore scheduled for Wednesday April 1st at 10am EDT.",
+      "title": "Join Amitis Capital/Nexa Teams meeting",
+      "description": "Attend scheduled Microsoft Teams meeting with Matt Dion regarding Amitis Capital/Nexa opportunity.",
       "source": "email",
       "urgency": "high"
     },
     {
       "id": "tw-2",
-      "title": "Coordinate Thursday meeting with Peter Bennett",
-      "description": "Set up 1pm London meeting next Thursday including Gage in invites as confirmed by Adam Feldheim.",
+      "title": "Schedule Thursday call with Adam Feldheim",
+      "description": "Coordinate 1pm London time call next Thursday with Adam and include Gage in the meeting invite.",
       "source": "email",
       "urgency": "high"
     },
     {
       "id": "tw-3",
-      "title": "Review Board Meeting materials for Amitis Capital",
-      "description": "Review attached draft audited financial statements, audit report, and related documents for the General Partner board meeting.",
+      "title": "Register for FOX Family Advisor Training by April 8th",
+      "description": "Complete registration before April 8th deadline to receive $300 early-bird discount.",
       "source": "email",
-      "urgency": "high"
+      "urgency": "medium"
     },
     {
       "id": "tw-4",
-      "title": "Follow up on Oakbridge Group meeting coordination",
-      "description": "Coordinate meeting with Chris Bowden and Peter from Oakbridge following introductions and expressed interest to meet.",
+      "title": "Review VanEck Digital Assets Alpha Fund updated PPM",
+      "description": "Analyze the April 2026 PPM and supplement materials received from Securitize Fund Services.",
       "source": "email",
       "urgency": "medium"
     },
     {
       "id": "tw-5",
-      "title": "Review Edge Capital mid-March position report",
-      "description": "Analyze the mid-March position report and February statement update received from Edge Capital Fund.",
+      "title": "Follow up on March 1 USD subscription completion",
+      "description": "Ensure Boris receives amended subscription form from Charlotte for MAP to GA switch completion.",
       "source": "email",
       "urgency": "medium"
     }
@@ -39,48 +39,48 @@
   "this_month": [
     {
       "id": "tm-1",
-      "title": "Finalize Amitis Capital audited financial statements",
-      "description": "Complete review and approval process for the audited financial statements and related audit documentation.",
+      "title": "File ACDAM 2025 audited financial statements",
+      "description": "Process and record the completed audited FS that Charlotte confirmed were signed off and uploaded to investor portal.",
       "source": "email",
       "urgency": "high"
     },
     {
       "id": "tm-2",
-      "title": "Attend Ligo Partners Family Office webinar",
-      "description": "Participate in the April 16th 6-7pm BST webinar forwarded by Monica from Ligo Partners.",
+      "title": "Review new macro charts and marketing materials",
+      "description": "Examine the January 2026 macro charts PPT that Chris edited and was shared via Dropbox last week.",
       "source": "email",
-      "urgency": "medium"
+      "urgency": "low"
     },
     {
       "id": "tm-3",
-      "title": "Complete Edge Capital fund performance analysis",
-      "description": "Conduct thorough analysis of Edge Capital's fund performance based on mid-March position report and recent statements.",
+      "title": "Evaluate Family Office Wealth Forum Florida invitation",
+      "description": "Consider attending the April 20th Palm Beach exclusive family office event from 1640 Society.",
       "source": "email",
-      "urgency": "medium"
+      "urgency": "low"
     }
   ],
   "on_deck": [
     {
       "id": "od-1",
-      "title": "Develop Additional Opportunities strategy with Peter Bennett",
-      "description": "Continue strategic discussions on additional opportunities once the current big transaction is completed.",
+      "title": "Explore additional opportunities with Amitis Capital",
+      "description": "Develop strategy for potential investment opportunities discussed in email thread with Adam Feldheim and Peter Bennett.",
       "source": "email",
       "urgency": "medium"
     },
     {
       "id": "od-2",
-      "title": "Establish Oakbridge Group partnership framework",
-      "description": "Develop formal partnership or collaboration framework following initial meetings with Chris Bowden and Peter.",
+      "title": "Assess Newhedge Bitcoin analytics platform",
+      "description": "Evaluate the new Bitcoin CAGR, AVIV ratio, and transfer volume metrics for potential integration into investment analysis.",
       "source": "email",
       "urgency": "low"
     },
     {
       "id": "od-3",
-      "title": "Evaluate Pareto Capital Partners investment opportunities",
-      "description": "Assess potential investment or collaboration opportunities following the scheduled meeting with Ettore Paratore.",
+      "title": "Review ACIO Sync meeting notes and action items",
+      "description": "Follow up on items mentioned in the Notion workspace from recent sync meeting with Tactiq and team.",
       "source": "email",
       "urgency": "low"
     }
   ],
-  "last_refreshed": "2026-03-31T12:26:01.494229"
+  "last_refreshed": "2026-03-31T22:19:59.185160"
 }
