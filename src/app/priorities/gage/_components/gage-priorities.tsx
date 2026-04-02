@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import ScreenshotDropzone from './screenshot-dropzone'
+import ManualAddForm from './manual-add-form'
 import OcrCard, { type ScreenshotEntry, tryParseAnalysis } from './ocr-card'
 
 function PeopleSummary({ entries }: { entries: ScreenshotEntry[] }) {
@@ -56,6 +57,18 @@ export default function GagePriorities() {
       .finally(() => setIsLoading(false))
   }, [])
 
+  const handleManualAdd = useCallback(async (entry: { summary: string; sender: string; source_app: string; action_items: string[] }) => {
+    const res = await fetch('/priorities/gage/api', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(entry),
+    })
+    const { entry: newEntry } = await res.json()
+    if (newEntry) {
+      setEntries((prev) => [newEntry, ...prev])
+    }
+  }, [])
+
   const handleFileDrop = useCallback(async (file: File) => {
     setIsProcessing(true)
     try {
@@ -104,6 +117,7 @@ export default function GagePriorities() {
   return (
     <div className="space-y-6">
       <ScreenshotDropzone onFileDropped={handleFileDrop} isProcessing={isProcessing} />
+      <ManualAddForm onAdd={handleManualAdd} />
 
       {isLoading ? (
         <div className="text-center py-8">

@@ -10,7 +10,7 @@ export type DealType = "fund_allocation" | "co_invest" | "direct"
 
 export type Vehicle = "spv" | "direct_equity" | "safe_convertible"
 
-export type CompanyStage = "seed" | "series_a" | "series_b" | "series_c_plus"
+export type CompanyStage = "pre_seed" | "seed" | "series_a" | "series_b" | "series_c_plus"
 
 export interface Deal {
   id: string
@@ -132,6 +132,7 @@ export const VEHICLES: { value: Vehicle; label: string }[] = [
 ]
 
 export const COMPANY_STAGES: { value: CompanyStage; label: string }[] = [
+  { value: "pre_seed", label: "Pre-Seed" },
   { value: "seed", label: "Seed" },
   { value: "series_a", label: "Series A" },
   { value: "series_b", label: "Series B" },
@@ -151,6 +152,7 @@ export const VEHICLE_LABELS: Record<Vehicle, string> = {
 }
 
 export const COMPANY_STAGE_LABELS: Record<CompanyStage, string> = {
+  pre_seed: "Pre-Seed",
   seed: "Seed",
   series_a: "Series A",
   series_b: "Series B",

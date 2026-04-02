@@ -3,42 +3,35 @@
     {
       "id": "tw-1",
       "title": "Address 16 overdue tasks in Attio CRM",
-      "description": "Review and complete overdue follow-ups including Sergio Chaverri and Louis Najem contacts.",
+      "description": "Follow up on overdue tasks including Sergio Chaverri email connection and Louis Najem follow-up from November 2025.",
       "source": "email",
       "urgency": "high"
     },
     {
       "id": "tw-2",
-      "title": "Download DDQ data room materials",
-      "description": "Access Orangedox data room forwarded by Chris Solarz for due diligence review.",
+      "title": "Schedule call with Michael Stanley (GCMLP)",
+      "description": "Coordinate call between 12:30pm-4pm ET and prepare latest Amitis materials/deck for digital assets fund review.",
       "source": "email",
       "urgency": "high"
     },
     {
       "id": "tw-3",
-      "title": "Send Amitis fund performance materials to Issac Septon",
-      "description": "Provide performance data and letters requested by CIO at 247 Lookout for emerging fund manager evaluation.",
+      "title": "Download DDQ data room materials",
+      "description": "Access and download materials from Orangedox data room as requested by Chris Solarz.",
       "source": "email",
       "urgency": "high"
     },
     {
       "id": "tw-4",
-      "title": "Send latest Amitis deck to Michael Stanley",
-      "description": "Provide updated materials for digital assets fund of funds research and schedule follow-up call.",
+      "title": "Send performance materials to Issac Septon",
+      "description": "Provide fund performance data or letters to CIO at 247lookout regarding emerging fund manager John Salemi.",
       "source": "email",
       "urgency": "medium"
     },
     {
       "id": "tw-5",
-      "title": "Fix Attio workflow for marketing distribution",
-      "description": "Resolve failed workflow blocking prospect addition to marketing distribution list.",
-      "source": "email",
-      "urgency": "medium"
-    },
-    {
-      "id": "tw-6",
-      "title": "Follow up on Radiant update commitment",
-      "description": "Ensure promised next week update to Lionel on Radiant investment is delivered.",
+      "title": "Respond to AYU network introduction",
+      "description": "Follow up with Chicago founder of Buoyant Ventures energy tech venture fund for potential collaboration.",
       "source": "email",
       "urgency": "medium"
     }
@@ -46,15 +39,22 @@
   "this_month": [
     {
       "id": "tm-1",
-      "title": "Complete NAV Fund Services onboarding process",
-      "description": "Coordinate with accounting team following 2025 audit completion to finalize fund administration setup.",
+      "title": "Review March 2026 investor statement",
+      "description": "Analyze Eltican Neutron SP BTC investment statement from NAV Fund Services for Amitis Digital Assets fund.",
       "source": "email",
       "urgency": "high"
     },
     {
       "id": "tm-2",
-      "title": "Process 2025 audited financial statements",
-      "description": "Review completed ACDAM audit and coordinate any remaining administrative tasks with Oakbridge.",
+      "title": "Attend Oakbridge bi-weekly catch-up",
+      "description": "Participate in scheduled bi-weekly meeting between Oakbridge and Amitis for fund administration matters.",
+      "source": "email",
+      "urgency": "medium"
+    },
+    {
+      "id": "tm-3",
+      "title": "Review Pareto Capital Partners Centurion materials",
+      "description": "Evaluate $300M FX arbitrage and $10M crypto arbitrage managed account opportunity from Pareto.",
       "source": "email",
       "urgency": "medium"
     }
@@ -62,18 +62,18 @@
   "on_deck": [
     {
       "id": "od-1",
-      "title": "Evaluate Volt Carbon Technologies opportunity",
-      "description": "Review forwarded materials on carbon technology investment opportunity from John Grzymala.",
+      "title": "Consider India Finance Minister private event",
+      "description": "Evaluate attending Opal Group's private conversation with Nirmala Sitharaman about India investment opportunities.",
       "source": "email",
-      "urgency": "medium"
+      "urgency": "low"
     },
     {
       "id": "od-2",
-      "title": "Research digital assets fund of funds space",
-      "description": "Conduct competitive analysis and positioning research following Michael Stanley's interest.",
-      "source": "inferred",
+      "title": "Attend OpenClaw on Nebius webinar",
+      "description": "Participate in registered Workshop webinar on running OpenClaw technology platform on Nebius infrastructure.",
+      "source": "email",
       "urgency": "low"
     }
   ],
-  "last_refreshed": "2026-04-01T13:01:23.450435"
+  "last_refreshed": "2026-04-02T09:14:31.227468"
 }

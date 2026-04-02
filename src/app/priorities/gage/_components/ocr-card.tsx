@@ -60,6 +60,9 @@ const SOURCE_COLORS: Record<string, string> = {
   WhatsApp: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
   Excel: 'bg-green-600/10 text-green-500 border-green-600/20',
   Web: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
+  Manual: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
+  Phone: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
+  'In Person': 'bg-amber-500/10 text-amber-400 border-amber-500/20',
 }
 
 function SourceBadge({ source }: { source: string }) {
@@ -275,12 +278,14 @@ export default function OcrCard({ entry, onUpdate, onDelete }: OcrCardProps) {
           )}
         </div>
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button
-            onClick={() => setShowImage(!showImage)}
-            className="text-xs text-muted hover:text-foreground transition-colors px-2.5 py-1.5 rounded-lg hover:bg-white/5"
-          >
-            {showImage ? 'Hide' : 'Show'} image
-          </button>
+          {entry.image_url && (
+            <button
+              onClick={() => setShowImage(!showImage)}
+              className="text-xs text-muted hover:text-foreground transition-colors px-2.5 py-1.5 rounded-lg hover:bg-white/5"
+            >
+              {showImage ? 'Hide' : 'Show'} image
+            </button>
+          )}
           {isEditing ? (
             <>
               <button

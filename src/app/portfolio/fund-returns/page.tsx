@@ -1,4 +1,5 @@
 import PageHeader from '@/components/page-header'
+import FundStatusBar from './_components/fund-status-bar'
 
 export default function FundReturnsPage() {
   const dashboardUrl = process.env.FUND_RETURNS_URL || 'http://localhost:5050'
@@ -10,6 +11,8 @@ export default function FundReturnsPage() {
         description="Performance tracking from underlying fund allocations. Powered by your existing Fund Returns Dashboard."
         status="in-progress"
       />
+
+      <FundStatusBar dashboardUrl={dashboardUrl} />
 
       <div className="rounded-xl border border-card-border bg-card-bg overflow-hidden">
         <div className="flex items-center justify-between px-4 py-3 border-b border-card-border">

@@ -29,7 +29,7 @@ Return JSON (no markdown, no code fences):
   "company_name": "extracted company or fund name",
   "deal_type": "fund_allocation|co_invest|direct" or null,
   "vehicle": "spv|direct_equity|safe_convertible" or null,
-  "company_stage": "seed|series_a|series_b|series_c_plus" or null,
+  "company_stage": "pre_seed|seed|series_a|series_b|series_c_plus" or null,
   "suggested_stage": "sourced|initial_call|dd_in_progress|ic_review|committed|passed",
   "key_contacts": [{"name": "...", "email": "...", "role": "counterparty|internal|advisor"}],
   "industry": "sector/industry (e.g. Fintech, Healthcare, AI/ML, Real Estate, Energy, etc.)",
@@ -49,7 +49,7 @@ vehicle (only for co_invest or direct):
 - safe_convertible: SAFE note or convertible instrument
 
 company_stage (only for co_invest or direct):
-- seed, series_a, series_b, series_c_plus
+- pre_seed, seed, series_a, series_b, series_c_plus
 
 Context:
 - Amitis Capital team: Chris Solarz (CIO), Adam Feldheim (Managing Partner), Gage Spolansky (Investment Team), Monica Monajem, Noel Teow
@@ -72,7 +72,7 @@ Return JSON (no markdown, no code fences):
   "company_name": "the company or fund being evaluated",
   "deal_type": "fund_allocation|co_invest|direct" or null,
   "vehicle": "spv|direct_equity|safe_convertible" or null,
-  "company_stage": "seed|series_a|series_b|series_c_plus" or null,
+  "company_stage": "pre_seed|seed|series_a|series_b|series_c_plus" or null,
   "suggested_stage": "sourced|initial_call|dd_in_progress|ic_review|committed|passed",
   "key_contacts": [{"name": "...", "email": "...", "role": "counterparty|internal|advisor"}],
   "industry": "sector/industry (e.g. Fintech, Healthcare, AI/ML, Real Estate, Energy, etc.)",
@@ -121,7 +121,7 @@ Given the current deal info and the email messages, return improved JSON (no mar
   "industry": "refined industry/sector classification",
   "deal_type": "fund_allocation|co_invest|direct" or null,
   "vehicle": "spv|direct_equity|safe_convertible" or null,
-  "company_stage": "seed|series_a|series_b|series_c_plus" or null
+  "company_stage": "pre_seed|seed|series_a|series_b|series_c_plus" or null
 }
 
 deal_type: fund_allocation (allocating to a fund), co_invest (alongside a GP), direct (direct into a company)

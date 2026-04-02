@@ -5,7 +5,7 @@ Iframes the Flask fund-returns-dashboard (port 5050) for performance tracking.
 ## Owns
 
 - **page.tsx:** Iframe wrapper pointing to `FUND_RETURNS_URL` env var (default localhost:5050)
-- No owned components, API routes, or lib files
+- **_components/fund-status-bar.tsx:** Client component fetching `/api/fund-configs` from Flask dashboard, shows fund chips above iframe
 
 ## Status
 

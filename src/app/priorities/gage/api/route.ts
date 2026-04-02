@@ -67,8 +67,46 @@ Return ONLY valid JSON, no markdown fences.`,
   }
 }
 
-// POST — upload image + analyze with Claude vision
+// POST — upload image + analyze with Claude vision, OR manual entry (JSON body)
 export async function POST(request: NextRequest) {
+  const contentType = request.headers.get('content-type') || ''
+
+  // Manual entry — JSON body, no image
+  if (contentType.includes('application/json')) {
+    const body = await request.json()
+    const { summary, sender, source_app, action_items } = body
+
+    if (!summary?.trim()) {
+      return NextResponse.json({ error: 'Summary is required' }, { status: 400 })
+    }
+
+    const structuredText = JSON.stringify({
+      summary: summary.trim(),
+      sender: sender?.trim() || '',
+      action_items: action_items || [],
+      details: [],
+      source_app: source_app || 'Manual',
+    })
+
+    const { data, error } = await supabase
+      .from(TABLE)
+      .insert({
+        image_url: '',
+        extracted_text: structuredText,
+        edited_text: '',
+        description: summary.trim(),
+        date_label: '',
+      })
+      .select()
+      .single()
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+    return NextResponse.json({ entry: data })
+  }
+
+  // Screenshot entry — FormData with image
   const formData = await request.formData()
   const image = formData.get('image') as File | null
 
