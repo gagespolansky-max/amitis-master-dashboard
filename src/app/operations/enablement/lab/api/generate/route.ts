@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
-import { ARCHITECTURE_PRINCIPLES, INDUSTRIES } from '../../_lib/lab-types'
+import { ARCHITECTURE_PRINCIPLES, INDUSTRIES, ChallengeSchema } from '../../_lib/lab-types'
+import { parseAIResponse, extractTextFromResponse } from '@/lib/ai-parse'
 
 const client = new Anthropic()
 
@@ -80,21 +81,16 @@ Return JSON only, no markdown fencing:
       }],
     })
 
-    // Extract text from response (may contain multiple content blocks with web search)
-    const textBlocks = response.content.filter(b => b.type === 'text')
-    const text = textBlocks.map(b => (b as { type: 'text'; text: string }).text).join('').trim()
-
-    let cleaned = text
-    if (cleaned.startsWith('```')) {
-      cleaned = cleaned.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '')
+    const text = extractTextFromResponse(response)
+    const parsed = parseAIResponse(text, ChallengeSchema)
+    const challenge = {
+      ...parsed,
+      id: `lab-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      size,
+      generatedAt: new Date().toISOString(),
     }
 
-    const parsed = JSON.parse(cleaned)
-    parsed.id = `lab-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
-    parsed.size = size
-    parsed.generatedAt = new Date().toISOString()
-
-    return NextResponse.json(parsed)
+    return NextResponse.json(challenge)
   } catch (error) {
     console.error('Lab generation error:', error)
     return NextResponse.json({ error: 'Failed to generate challenge' }, { status: 500 })

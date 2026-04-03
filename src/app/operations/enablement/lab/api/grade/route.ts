@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
-import { ARCHITECTURE_PRINCIPLES } from '../../_lib/lab-types'
+import { ARCHITECTURE_PRINCIPLES, DesignGradeSchema } from '../../_lib/lab-types'
+import { parseAIResponse, extractTextFromResponse } from '@/lib/ai-parse'
 
 const client = new Anthropic()
 
@@ -62,13 +63,9 @@ Return JSON only, no markdown fencing:
       }],
     })
 
-    const text = (response.content[0] as { type: string; text: string }).text.trim()
-    let cleaned = text
-    if (cleaned.startsWith('```')) {
-      cleaned = cleaned.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '')
-    }
-
-    return NextResponse.json(JSON.parse(cleaned))
+    const text = extractTextFromResponse(response)
+    const grade = parseAIResponse(text, DesignGradeSchema)
+    return NextResponse.json(grade)
   } catch (error) {
     console.error('Lab grading error:', error)
     return NextResponse.json({

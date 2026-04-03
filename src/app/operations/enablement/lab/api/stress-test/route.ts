@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
-import { ARCHITECTURE_PRINCIPLES } from '../../_lib/lab-types'
+import { ARCHITECTURE_PRINCIPLES, StressScenarioSchema, StressGradeSchema } from '../../_lib/lab-types'
+import { parseAIResponse, extractTextFromResponse } from '@/lib/ai-parse'
 
 const client = new Anthropic()
 
@@ -49,13 +50,9 @@ Return JSON only, no markdown fencing:
         }],
       })
 
-      const text = (response.content[0] as { type: string; text: string }).text.trim()
-      let cleaned = text
-      if (cleaned.startsWith('```')) {
-        cleaned = cleaned.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '')
-      }
-
-      return NextResponse.json({ scenarios: JSON.parse(cleaned) })
+      const text = extractTextFromResponse(response)
+      const scenarios_parsed = parseAIResponse(text, StressScenarioSchema)
+      return NextResponse.json({ scenarios: scenarios_parsed })
     }
 
     if (action === 'grade') {
@@ -88,13 +85,9 @@ Return JSON only, no markdown fencing:
         }],
       })
 
-      const text = (response.content[0] as { type: string; text: string }).text.trim()
-      let cleaned = text
-      if (cleaned.startsWith('```')) {
-        cleaned = cleaned.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '')
-      }
-
-      return NextResponse.json({ grades: JSON.parse(cleaned) })
+      const text = extractTextFromResponse(response)
+      const grades = parseAIResponse(text, StressGradeSchema)
+      return NextResponse.json({ grades })
     }
 
     return NextResponse.json({ error: 'Invalid action' }, { status: 400 })

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
-import { ARCHITECTURE_PRINCIPLES, DIAGRAM_STANDARDS } from '../../_lib/lab-types'
+import { ARCHITECTURE_PRINCIPLES, DIAGRAM_STANDARDS, FlashChallengeSchema } from '../../_lib/lab-types'
+import { parseAIResponse, extractTextFromResponse } from '@/lib/ai-parse'
 
 const client = new Anthropic()
 
@@ -44,19 +45,15 @@ The diagram must be complete SVG following the visual standards. Questions shoul
       }],
     })
 
-    const textBlocks = response.content.filter(b => b.type === 'text')
-    const text = textBlocks.map(b => (b as { type: 'text'; text: string }).text).join('').trim()
-
-    let cleaned = text
-    if (cleaned.startsWith('```')) {
-      cleaned = cleaned.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '')
+    const text = extractTextFromResponse(response)
+    const parsed = parseAIResponse(text, FlashChallengeSchema)
+    const flash = {
+      ...parsed,
+      id: `flash-${Date.now()}`,
+      generatedAt: new Date().toISOString(),
     }
 
-    const parsed = JSON.parse(cleaned)
-    parsed.id = `flash-${Date.now()}`
-    parsed.generatedAt = new Date().toISOString()
-
-    return NextResponse.json(parsed)
+    return NextResponse.json(flash)
   } catch (error) {
     console.error('Flash review error:', error)
     return NextResponse.json({ error: 'Failed to generate flash review' }, { status: 500 })

@@ -1,8 +1,21 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@/lib/supabase-server"
 import Anthropic from "@anthropic-ai/sdk"
+import { z } from "zod"
+import { parseAIResponse, extractTextFromResponse } from "@/lib/ai-parse"
 
 const client = new Anthropic()
+
+const InitiativeSchema = z.object({
+  title: z.string(),
+  summary: z.string(),
+  description: z.string(),
+  status: z.enum(["idea", "scoping", "in_progress", "testing", "shipped"]).default("idea"),
+  priority: z.enum(["high", "medium", "low"]).default("medium"),
+  category: z.string(),
+  business_segment: z.string(),
+  requirements: z.array(z.string()).default([]),
+})
 
 export async function GET() {
   const supabase = createServerClient()
@@ -69,8 +82,8 @@ User input: "${input}"`,
     ],
   })
 
-  const text = response.content[0].type === "text" ? response.content[0].text : ""
-  const parsed = JSON.parse(text)
+  const text = extractTextFromResponse(response)
+  const parsed = parseAIResponse(text, InitiativeSchema)
 
   const { data, error } = await supabase
     .from("ai_initiatives")

@@ -1,24 +1,13 @@
 import Anthropic from "@anthropic-ai/sdk"
 import type { ThreadMeta } from "./gmail"
+import { safeParseAIResponse, extractTextFromResponse } from "@/lib/ai-parse"
+import { BaselineClassificationSchema, DealExtractionSchema, EnrichmentResponseSchema } from "./types"
+import type { z } from "zod"
 
 const client = new Anthropic()
 
-export interface DealExtraction {
-  company_name: string
-  deal_type: "fund_allocation" | "co_invest" | "direct" | null
-  vehicle: "spv" | "direct_equity" | "safe_convertible" | null
-  company_stage: "seed" | "series_a" | "series_b" | "series_c_plus" | null
-  suggested_stage: string
-  key_contacts: { name: string; email: string; role: string }[]
-  industry: string | null
-  company_description: string | null
-  value_proposition: string | null
-}
-
-export interface BaselineClassification extends DealExtraction {
-  is_deal: boolean
-  reasoning: string
-}
+export type DealExtraction = z.infer<typeof DealExtractionSchema>
+export type BaselineClassification = z.infer<typeof BaselineClassificationSchema>
 
 const BASELINE_PROMPT = `You are classifying email threads for an investment fund (Amitis Capital / ACDAM).
 Determine if each thread represents an investment opportunity being evaluated BY Amitis.
@@ -107,8 +96,13 @@ export async function classifyThread(thread: ThreadMeta): Promise<BaselineClassi
     ],
   })
 
-  const text = response.content[0].type === "text" ? response.content[0].text : ""
-  return JSON.parse(text)
+  const text = extractTextFromResponse(response)
+  const result = safeParseAIResponse(text, BaselineClassificationSchema)
+  if (!result.success) {
+    console.error("classifyThread parse error:", result.error)
+    throw new Error(`Failed to parse classification response: ${result.error}`)
+  }
+  return result.data
 }
 
 const ENRICH_PROMPT = `You are enriching deal metadata for Amitis Capital's deal tracker.
@@ -141,7 +135,7 @@ If the emails don't contain enough info for a field, keep or improve the existin
 export async function enrichDealFromEmails(
   currentDeal: { company_name: string; company_description: string | null; value_proposition: string | null; industry: string | null; deal_type: string | null; vehicle: string | null; company_stage: string | null },
   messages: { from_email: string; date: string; body_text: string }[]
-): Promise<{ company_description: string; value_proposition: string; industry: string; deal_type: string | null; vehicle: string | null; company_stage: string | null }> {
+): Promise<z.infer<typeof EnrichmentResponseSchema>> {
   // Trim messages to avoid token limits — take most recent 10, truncate bodies
   const trimmed = messages.slice(-10).map((m) => ({
     from: m.from_email,
@@ -160,8 +154,13 @@ export async function enrichDealFromEmails(
     ],
   })
 
-  const text = response.content[0].type === "text" ? response.content[0].text : ""
-  return JSON.parse(text)
+  const text = extractTextFromResponse(response)
+  const result = safeParseAIResponse(text, EnrichmentResponseSchema)
+  if (!result.success) {
+    console.error("enrichDealFromEmails parse error:", result.error)
+    throw new Error(`Failed to parse enrichment response: ${result.error}`)
+  }
+  return result.data
 }
 
 export async function extractDealMetadata(thread: ThreadMeta): Promise<DealExtraction> {
@@ -176,6 +175,11 @@ export async function extractDealMetadata(thread: ThreadMeta): Promise<DealExtra
     ],
   })
 
-  const text = response.content[0].type === "text" ? response.content[0].text : ""
-  return JSON.parse(text)
+  const text = extractTextFromResponse(response)
+  const result = safeParseAIResponse(text, DealExtractionSchema)
+  if (!result.success) {
+    console.error("extractDealMetadata parse error:", result.error)
+    throw new Error(`Failed to parse deal metadata response: ${result.error}`)
+  }
+  return result.data
 }

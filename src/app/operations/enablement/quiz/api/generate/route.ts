@@ -1,7 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { z } from 'zod'
+import { parseAIResponse, extractTextFromResponse } from '@/lib/ai-parse'
 
 const client = new Anthropic()
+
+const QuizQuestionSchema = z.array(z.object({
+  id: z.string(),
+  topic: z.string(),
+  difficulty: z.enum(['easy', 'medium', 'hard']),
+  question: z.string(),
+  options: z.array(z.string()),
+  correctIndex: z.number(),
+  explanation: z.string(),
+}))
 
 export async function POST(request: NextRequest) {
   try {
@@ -68,14 +80,9 @@ Return JSON array only. No markdown fencing, no commentary:
       ],
     })
 
-    const text = (response.content[0] as { type: string; text: string }).text.trim()
-    let cleaned = text
-    if (cleaned.startsWith('```')) {
-      cleaned = cleaned.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '')
-    }
-    const parsed = JSON.parse(cleaned)
-
-    return NextResponse.json({ questions: parsed })
+    const text = extractTextFromResponse(response)
+    const questions = parseAIResponse(text, QuizQuestionSchema)
+    return NextResponse.json({ questions })
   } catch (error) {
     console.error('Generation error:', error)
     return NextResponse.json({ questions: [] }, { status: 200 })

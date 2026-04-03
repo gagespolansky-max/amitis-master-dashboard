@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
-import { ARCHITECTURE_PRINCIPLES, DIAGRAM_STANDARDS } from '../../_lib/lab-types'
+import { ARCHITECTURE_PRINCIPLES, DIAGRAM_STANDARDS, DecomposeResponseSchema, ToolingResponseSchema, RecommendResponseSchema } from '../../_lib/lab-types'
+import { parseAIResponse, extractTextFromResponse, stripMarkdownFences } from '@/lib/ai-parse'
 
 const client = new Anthropic()
 
@@ -57,7 +58,7 @@ Respond conversationally:
 Format with clear numbering so the user can answer each question.`
         }],
       })
-      return NextResponse.json({ response: (response.content[0] as { type: string; text: string }).text })
+      return NextResponse.json({ response: extractTextFromResponse(response) })
     }
 
     // ── Step 2: Decompose ───────────────────────────────────
@@ -94,10 +95,9 @@ Return JSON only, no markdown fencing:
 }`
         }],
       })
-      const text = (response.content[0] as { type: string; text: string }).text.trim()
-      let cleaned = text
-      if (cleaned.startsWith('```')) cleaned = cleaned.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '')
-      return NextResponse.json(JSON.parse(cleaned))
+      const text = extractTextFromResponse(response)
+      const decomposition = parseAIResponse(text, DecomposeResponseSchema)
+      return NextResponse.json(decomposition)
     }
 
     // ── Step 3: Recommend Tooling ────────────────────────────
@@ -156,11 +156,9 @@ Return JSON only, no markdown fencing:
 }`
         }],
       })
-      const textBlocks = response.content.filter(b => b.type === 'text')
-      const text = textBlocks.map(b => (b as { type: 'text'; text: string }).text).join('').trim()
-      let cleaned = text
-      if (cleaned.startsWith('```')) cleaned = cleaned.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '')
-      return NextResponse.json(JSON.parse(cleaned))
+      const text = extractTextFromResponse(response)
+      const tooling = parseAIResponse(text, ToolingResponseSchema)
+      return NextResponse.json(tooling)
     }
 
     // ── Step 4: Recommend Architecture ──────────────────────
@@ -208,11 +206,9 @@ Return JSON only, no markdown fencing:
 }`
         }],
       })
-      const textBlocks = response.content.filter(b => b.type === 'text')
-      const text = textBlocks.map(b => (b as { type: 'text'; text: string }).text).join('').trim()
-      let cleaned = text
-      if (cleaned.startsWith('```')) cleaned = cleaned.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '')
-      return NextResponse.json(JSON.parse(cleaned))
+      const text = extractTextFromResponse(response)
+      const recommendation = parseAIResponse(text, RecommendResponseSchema)
+      return NextResponse.json(recommendation)
     }
 
     // ── Diagram ─────────────────────────────────────────────
@@ -242,8 +238,7 @@ Show tool names on every node. This teaches the user where the LLM is vs isn't i
 Return ONLY SVG code. Start with <svg, end with </svg>.`
         }],
       })
-      let svg = (response.content[0] as { type: string; text: string }).text.trim()
-      if (svg.startsWith('```')) svg = svg.replace(/^```(?:svg|xml)?\n?/, '').replace(/\n?```$/, '')
+      let svg = stripMarkdownFences(extractTextFromResponse(response))
       const svgStart = svg.indexOf('<svg')
       if (svgStart > 0) svg = svg.slice(svgStart)
       const svgEnd = svg.lastIndexOf('</svg>')
@@ -290,8 +285,7 @@ For file manipulation: exact library and approach.
 Format with clear markdown headers and code blocks.`
         }],
       })
-      const textBlocks = response.content.filter(b => b.type === 'text')
-      const text = textBlocks.map(b => (b as { type: 'text'; text: string }).text).join('')
+      const text = extractTextFromResponse(response)
       return NextResponse.json({ plan: text })
     }
 
@@ -320,7 +314,7 @@ Write "What you just learned" (3-4 paragraphs):
 Be specific, not generic.`
         }],
       })
-      return NextResponse.json({ lesson: (response.content[0] as { type: string; text: string }).text })
+      return NextResponse.json({ lesson: extractTextFromResponse(response) })
     }
 
     return NextResponse.json({ error: 'Invalid step' }, { status: 400 })
