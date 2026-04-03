@@ -16,6 +16,8 @@ export default function ContextTreeView({ onSwitchToDirectory }: ContextTreeView
   const [error, setError] = useState<string | null>(null)
   const [selectedNode, setSelectedNode] = useState<ContextNode | null>(null)
   const [viewMode, setViewMode] = useState<"chart" | "list">("chart")
+  const [dataSource, setDataSource] = useState<"local" | "cache" | null>(null)
+  const [lastSynced, setLastSynced] = useState<string | null>(null)
   const [zoom, setZoom] = useState(0.75)
   const [pan, setPan] = useState({ x: 40, y: 20 })
   const [isDragging, setIsDragging] = useState(false)
@@ -32,7 +34,9 @@ export default function ContextTreeView({ onSwitchToDirectory }: ContextTreeView
         return res.json()
       })
       .then((data) => {
-        setTree(data)
+        setTree(data.tree)
+        setDataSource(data.source)
+        setLastSynced(data.updatedAt)
         setLoading(false)
       })
       .catch((err) => {
@@ -141,6 +145,11 @@ export default function ContextTreeView({ onSwitchToDirectory }: ContextTreeView
         <div className="flex items-center gap-4">
           <span className="text-sm font-medium">Context Inheritance Tree</span>
           <span className="text-xs text-muted">{totalFiles} files</span>
+          {dataSource === "cache" && lastSynced && (
+            <span className="text-[10px] text-muted/60">
+              Last synced: {new Date(lastSynced).toLocaleDateString()} {new Date(lastSynced).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+            </span>
+          )}
 
           {/* View mode toggle */}
           <div className="flex rounded-md border border-white/[0.08] overflow-hidden">

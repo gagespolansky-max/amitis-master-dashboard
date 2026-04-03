@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import fs from "fs"
 import path from "path"
 import os from "os"
+import { createServerClient } from "@/lib/supabase-server"
 
 interface ContextNode {
   filePath: string
@@ -149,7 +150,7 @@ function buildTree(claudeMdFiles: string[], projectRoot: string, projectName: st
   return nodes
 }
 
-export async function GET() {
+function scanLocalTree(): ContextNode[] {
   const homeDir = os.homedir()
   const tree: ContextNode[] = []
 
@@ -203,5 +204,55 @@ export async function GET() {
     tree.push(...projectNodes)
   }
 
-  return NextResponse.json(tree)
+  return tree
+}
+
+function hasLocalFilesystem(): boolean {
+  try {
+    const homeDir = os.homedir()
+    return fs.existsSync(path.join(homeDir, ".claude"))
+  } catch {
+    return false
+  }
+}
+
+async function cacheToSupabase(tree: ContextNode[]) {
+  try {
+    const supabase = createServerClient()
+    await supabase
+      .from("context_tree_cache")
+      .upsert({ id: "singleton", tree_json: tree, updated_at: new Date().toISOString() })
+  } catch {
+    // Cache write is best-effort — don't fail the request
+  }
+}
+
+async function readFromCache(): Promise<{ tree: ContextNode[]; updatedAt: string | null }> {
+  try {
+    const supabase = createServerClient()
+    const { data } = await supabase
+      .from("context_tree_cache")
+      .select("tree_json, updated_at")
+      .eq("id", "singleton")
+      .single()
+    if (data) {
+      return { tree: data.tree_json as ContextNode[], updatedAt: data.updated_at }
+    }
+  } catch {
+    // Cache read failed
+  }
+  return { tree: [], updatedAt: null }
+}
+
+export async function GET() {
+  if (hasLocalFilesystem()) {
+    // Local: scan filesystem, cache to Supabase, return fresh data
+    const tree = scanLocalTree()
+    cacheToSupabase(tree) // fire-and-forget
+    return NextResponse.json({ tree, source: "local", updatedAt: new Date().toISOString() })
+  }
+
+  // Vercel: read from Supabase cache
+  const { tree, updatedAt } = await readFromCache()
+  return NextResponse.json({ tree, source: "cache", updatedAt })
 }
