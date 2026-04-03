@@ -1,19 +1,15 @@
-# Fund Returns — CLAUDE.md
+# Fund Returns
 
-Iframes the Flask fund-returns-dashboard (port 5050) for performance tracking.
+## What this module does
+Displays fund returns extracted by the daily cron job (`~/fund-return-dashboard/src/cron_runner.py`). Read-only data view with manual verification toggle.
 
-## Owns
+## Supabase tables owned
+- `fund_returns` — one row per fund per month, with verification state
 
-- **page.tsx:** Iframe wrapper pointing to `FUND_RETURNS_URL` env var (default localhost:5050)
-- **_components/fund-status-bar.tsx:** Client component fetching `/api/fund-configs` from Flask dashboard, shows fund chips above iframe
+## Supabase Storage
+- `fund-return-audits` bucket — audit PDFs and email screenshots
 
-## Status
+## API routes
+- `POST /portfolio/fund-returns/api/verify` — toggle verified status on a record
 
-In progress.
-
-## Connections
-
-- Reads from fund-return-dashboard (Flask, separate repo at ~/fund-return-dashboard/)
-- This is Pipeline 2 (display only) — Gmail → Notion → Flask dashboard → iframe here
-- Reconciliation green/red dot compares Pipeline 2 values against Pipeline 1 (Portfolio Model)
-- Portfolio Model is the canonical source of truth; this page only displays, never writes
+## Status: Active

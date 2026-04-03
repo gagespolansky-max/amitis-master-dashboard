@@ -1,39 +1,27 @@
+import { createServerClient } from '@/lib/supabase-server'
 import PageHeader from '@/components/page-header'
-import FundStatusBar from './_components/fund-status-bar'
+import ReturnsTable from './_components/returns-table'
+import type { FundReturn } from './_lib/types'
 
-export default function FundReturnsPage() {
-  const dashboardUrl = process.env.FUND_RETURNS_URL || 'http://localhost:5050'
+export default async function FundReturnsPage() {
+  const supabase = createServerClient()
+  const { data, error } = await supabase
+    .from('fund_returns')
+    .select('*')
+    .order('return_month', { ascending: false })
+    .order('fund_name', { ascending: true })
+
+  const returns: FundReturn[] = data || []
 
   return (
     <div>
       <PageHeader
         title="Fund Returns"
-        description="Performance tracking from underlying fund allocations. Powered by your existing Fund Returns Dashboard."
-        status="in-progress"
+        description="Automated daily extraction from Gmail. Review and verify."
+        status="active"
       />
-
-      <FundStatusBar dashboardUrl={dashboardUrl} />
-
-      <div className="rounded-xl border border-card-border bg-card-bg overflow-hidden">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-card-border">
-          <p className="text-xs text-muted">
-            Connected to Fund Returns Dashboard
-          </p>
-          <a
-            href={dashboardUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-accent hover:text-accent-hover transition-colors"
-          >
-            Open in new tab
-          </a>
-        </div>
-        <iframe
-          src={dashboardUrl}
-          className="w-full border-0"
-          style={{ height: 'calc(100vh - 220px)' }}
-          title="Fund Returns Dashboard"
-        />
+      <div className="mt-6">
+        <ReturnsTable initialData={returns} />
       </div>
     </div>
   )
