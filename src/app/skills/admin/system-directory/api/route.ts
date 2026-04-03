@@ -150,7 +150,15 @@ function scanDirectory(
   return entries
 }
 
-export async function GET() {
+function hasLocalFilesystem(): boolean {
+  try {
+    return fs.existsSync(path.join(os.homedir(), ".claude"))
+  } catch {
+    return false
+  }
+}
+
+async function scanAndBuildEntries(): Promise<DirectoryEntry[]> {
   const homeDir = os.homedir()
   const allRaw: RawEntry[] = []
 
@@ -224,5 +232,43 @@ export async function GET() {
     return a.name.localeCompare(b.name)
   })
 
+  return entries
+}
+
+async function cacheDirectoryToSupabase(entries: DirectoryEntry[]) {
+  try {
+    const supabase = createServerClient()
+    await supabase
+      .from("context_tree_cache")
+      .upsert({ id: "directory", tree_json: entries, updated_at: new Date().toISOString() })
+  } catch {
+    // Best-effort
+  }
+}
+
+async function readDirectoryFromCache(): Promise<DirectoryEntry[]> {
+  try {
+    const supabase = createServerClient()
+    const { data } = await supabase
+      .from("context_tree_cache")
+      .select("tree_json")
+      .eq("id", "directory")
+      .single()
+    if (data) return data.tree_json as DirectoryEntry[]
+  } catch {
+    // Cache read failed
+  }
+  return []
+}
+
+export async function GET() {
+  if (hasLocalFilesystem()) {
+    const entries = await scanAndBuildEntries()
+    cacheDirectoryToSupabase(entries) // fire-and-forget
+    return NextResponse.json(entries)
+  }
+
+  // Vercel: read from cache
+  const entries = await readDirectoryFromCache()
   return NextResponse.json(entries)
 }
