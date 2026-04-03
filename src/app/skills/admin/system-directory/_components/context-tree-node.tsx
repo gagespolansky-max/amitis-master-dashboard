@@ -2,16 +2,24 @@
 
 import { useState } from "react"
 
+interface SkillFile {
+  name: string
+  path: string
+  content: string
+}
+
 interface ContextNode {
   filePath: string
   shortPath: string
   summary: string
+  content: string
   project: string
   depth: number
   children: ContextNode[]
   agents: string[]
   skills: string[]
   rules: string[]
+  skillFiles: Record<string, SkillFile[]>
 }
 
 interface ContextTreeNodeProps {

@@ -4,16 +4,24 @@ import path from "path"
 import os from "os"
 import { createServerClient } from "@/lib/supabase-server"
 
+interface SkillFile {
+  name: string
+  path: string
+  content: string
+}
+
 interface ContextNode {
   filePath: string
   shortPath: string
   summary: string
+  content: string
   project: string
   depth: number
   children: ContextNode[]
   agents: string[]
   skills: string[]
   rules: string[]
+  skillFiles: Record<string, SkillFile[]>
 }
 
 function extractSummary(content: string): string {
@@ -108,6 +116,47 @@ function getAgentsAndSkills(projectPath: string): { agents: string[]; skills: st
   return { agents, skills }
 }
 
+function scanSkillFiles(skillsDir: string): Record<string, SkillFile[]> {
+  const result: Record<string, SkillFile[]> = {}
+  if (!fs.existsSync(skillsDir)) return result
+
+  try {
+    const dirs = fs.readdirSync(skillsDir, { withFileTypes: true }).filter((d) => d.isDirectory())
+    for (const d of dirs) {
+      const skillDir = path.join(skillsDir, d.name)
+      const files: SkillFile[] = []
+      try {
+        const entries = fs.readdirSync(skillDir, { withFileTypes: true })
+        for (const entry of entries) {
+          if (entry.isFile()) {
+            let content = ""
+            try {
+              content = fs.readFileSync(path.join(skillDir, entry.name), "utf-8")
+            } catch { /* skip binary or unreadable */ }
+            files.push({ name: entry.name, path: path.join(skillDir, entry.name), content })
+          } else if (entry.isDirectory()) {
+            // One level deep for scripts/ subdirs
+            try {
+              const subEntries = fs.readdirSync(path.join(skillDir, entry.name), { withFileTypes: true })
+              for (const sub of subEntries) {
+                if (!sub.isFile()) continue
+                let content = ""
+                try {
+                  content = fs.readFileSync(path.join(skillDir, entry.name, sub.name), "utf-8")
+                } catch { /* skip */ }
+                files.push({ name: `${entry.name}/${sub.name}`, path: path.join(skillDir, entry.name, sub.name), content })
+              }
+            } catch { /* skip */ }
+          }
+        }
+      } catch { /* skip */ }
+      if (files.length > 0) result[d.name] = files
+    }
+  } catch { /* skip */ }
+
+  return result
+}
+
 function buildTree(claudeMdFiles: string[], projectRoot: string, projectName: string): ContextNode[] {
   const sorted = claudeMdFiles.sort((a, b) => a.split(path.sep).length - b.split(path.sep).length)
   const nodes: ContextNode[] = []
@@ -124,12 +173,14 @@ function buildTree(claudeMdFiles: string[], projectRoot: string, projectName: st
       filePath,
       shortPath: relative,
       summary: extractSummary(content),
+      content,
       project: projectName,
       depth,
       children: [],
       agents: [],
       skills: [],
       rules: [],
+      skillFiles: {},
     })
   }
 
@@ -172,16 +223,20 @@ function scanLocalTree(): ContextNode[] {
       } catch { /* skip */ }
     }
 
+    const globalSkillFiles = scanSkillFiles(globalSkills)
+
     tree.push({
       filePath: globalClaudeMd,
       shortPath: "~/.claude/CLAUDE.md",
       summary: extractSummary(content),
+      content,
       project: "global",
       depth: 0,
       children: [],
       agents: [],
       skills,
       rules: globalRules.map((r) => path.basename(r)),
+      skillFiles: globalSkillFiles,
     })
   }
 
@@ -195,10 +250,13 @@ function scanLocalTree(): ContextNode[] {
     const { agents, skills } = getAgentsAndSkills(project.path)
     const projectRules = findRulesFiles(path.join(project.path, ".claude"))
 
+    const projectSkillFiles = scanSkillFiles(path.join(project.path, ".claude", "skills"))
+
     if (projectNodes.length > 0) {
       projectNodes[0].agents = agents
       projectNodes[0].skills = skills
       projectNodes[0].rules = projectRules.map((r) => path.basename(r))
+      projectNodes[0].skillFiles = projectSkillFiles
     }
 
     tree.push(...projectNodes)
