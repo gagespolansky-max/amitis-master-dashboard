@@ -4,12 +4,12 @@ Browse and search technical concepts captured during work sessions.
 
 ## Owns
 
-- **page.tsx:** Coming-soon placeholder
+- **page.tsx:** Live page with LearningLogTab component
 - **Supabase table:** `learning_log` (read-only from this UI — writes come from the learning-log skill)
 
 ## Status
 
-Coming soon.
+Active.
 
 ## Connections
 
