@@ -2,6 +2,8 @@ import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import "./globals.css"
 import Sidebar from "@/components/sidebar"
+import SidebarLayout from "@/components/sidebar-layout"
+import MainContent from "@/components/main-content"
 import DoodlePad from "@/components/doodle-pad"
 
 const geistSans = Geist({
@@ -27,12 +29,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}>
       <body className="min-h-full">
-        <Sidebar />
-        <main className="ml-[var(--sidebar-width)] min-h-screen">
-          <div className="px-8 py-8 max-w-7xl">
-            {children}
-          </div>
-        </main>
+        <SidebarLayout>
+          <Sidebar />
+          <MainContent>{children}</MainContent>
+        </SidebarLayout>
         <DoodlePad />
       </body>
     </html>

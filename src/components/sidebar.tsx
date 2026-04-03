@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState } from 'react'
+import { useSidebar } from './sidebar-layout'
 
 interface NavItem {
   label: string
@@ -51,6 +52,10 @@ const navigation: NavItem[] = [
   {
     label: 'Skills Hub',
     href: '/skills',
+    children: [
+      { label: 'Hub', href: '/skills' },
+      { label: 'Admin', href: '/skills/admin/system-directory' },
+    ],
   },
   {
     label: 'Operations',
@@ -65,6 +70,7 @@ const navigation: NavItem[] = [
 
 export default function Sidebar() {
   const pathname = usePathname()
+  const { collapsed, toggle } = useSidebar()
   const [expanded, setExpanded] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {}
     navigation.forEach((item) => {
@@ -75,7 +81,7 @@ export default function Sidebar() {
     return initial
   })
 
-  function toggle(href: string) {
+  function toggleNav(href: string) {
     setExpanded((prev) => ({ ...prev, [href]: !prev[href] }))
   }
 
@@ -84,71 +90,102 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="fixed left-0 top-0 bottom-0 w-[var(--sidebar-width)] bg-sidebar-bg border-r border-sidebar-border flex flex-col z-10">
-      <div className="h-[var(--header-height)] flex items-center px-5 border-b border-sidebar-border">
-        <h1 className="text-base font-semibold tracking-tight">Master Dashboard</h1>
-      </div>
-
-      <nav className="flex-1 overflow-y-auto py-3 px-3">
-        {navigation.map((item) => (
-          <div key={item.href} className="mb-1">
-            {item.children ? (
-              <>
-                <button
-                  onClick={() => toggle(item.href)}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    isActive(item.href)
-                      ? 'text-white bg-white/5'
-                      : 'text-muted hover:text-foreground hover:bg-white/5'
-                  }`}
-                >
-                  {item.label}
-                  <svg
-                    className={`w-4 h-4 transition-transform ${expanded[item.href] ? 'rotate-90' : ''}`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-                {expanded[item.href] && (
-                  <div className="ml-3 mt-1 space-y-0.5">
-                    {item.children.map((child) => (
-                      <Link
-                        key={child.href}
-                        href={child.href}
-                        className={`block px-3 py-1.5 rounded-md text-sm transition-colors ${
-                          pathname === child.href
-                            ? 'text-accent font-medium'
-                            : 'text-muted hover:text-foreground'
-                        }`}
-                      >
-                        {child.label}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </>
-            ) : (
-              <Link
-                href={item.href}
-                className={`block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isActive(item.href)
-                    ? 'text-white bg-white/5'
-                    : 'text-muted hover:text-foreground hover:bg-white/5'
-                }`}
-              >
-                {item.label}
-              </Link>
-            )}
+    <aside
+      className={`fixed left-0 top-0 bottom-0 bg-sidebar-bg border-r border-sidebar-border flex flex-col z-10 transition-all duration-200 ${
+        collapsed ? 'w-12' : 'w-[var(--sidebar-width)]'
+      }`}
+    >
+      <div className="h-[var(--header-height)] flex items-center border-b border-sidebar-border shrink-0">
+        {collapsed ? (
+          <button
+            onClick={toggle}
+            className="w-full flex items-center justify-center py-2 text-muted hover:text-foreground transition-colors"
+            title="Expand sidebar"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+            </svg>
+          </button>
+        ) : (
+          <div className="flex items-center justify-between w-full px-5">
+            <h1 className="text-base font-semibold tracking-tight">Master Dashboard</h1>
+            <button
+              onClick={toggle}
+              className="text-muted hover:text-foreground transition-colors"
+              title="Collapse sidebar"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7M19 19l-7-7 7-7" />
+              </svg>
+            </button>
           </div>
-        ))}
-      </nav>
-
-      <div className="px-5 py-3 border-t border-sidebar-border">
-        <p className="text-xs text-muted">v0.1.0</p>
+        )}
       </div>
+
+      {!collapsed && (
+        <>
+          <nav className="flex-1 overflow-y-auto py-3 px-3">
+            {navigation.map((item) => (
+              <div key={item.href} className="mb-1">
+                {item.children ? (
+                  <>
+                    <button
+                      onClick={() => toggleNav(item.href)}
+                      className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        isActive(item.href)
+                          ? 'text-white bg-white/5'
+                          : 'text-muted hover:text-foreground hover:bg-white/5'
+                      }`}
+                    >
+                      {item.label}
+                      <svg
+                        className={`w-4 h-4 transition-transform ${expanded[item.href] ? 'rotate-90' : ''}`}
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                    {expanded[item.href] && (
+                      <div className="ml-3 mt-1 space-y-0.5">
+                        {item.children.map((child) => (
+                          <Link
+                            key={child.href}
+                            href={child.href}
+                            className={`block px-3 py-1.5 rounded-md text-sm transition-colors ${
+                              pathname === child.href
+                                ? 'text-accent font-medium'
+                                : 'text-muted hover:text-foreground'
+                            }`}
+                          >
+                            {child.label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <Link
+                    href={item.href}
+                    className={`block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      isActive(item.href)
+                        ? 'text-white bg-white/5'
+                        : 'text-muted hover:text-foreground hover:bg-white/5'
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                )}
+              </div>
+            ))}
+          </nav>
+
+          <div className="px-5 py-3 border-t border-sidebar-border">
+            <p className="text-xs text-muted">v0.1.0</p>
+          </div>
+        </>
+      )}
     </aside>
   )
 }
