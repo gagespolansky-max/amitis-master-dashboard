@@ -4,6 +4,7 @@ import { useState } from 'react'
 import QuizPortal from '../quiz/_components/quiz-portal'
 import ArchitectureLab from '../lab/_components/architecture-lab'
 import NotesTab from './notes-tab'
+import LearningLogTab from '../learning-log/_components/learning-log-tab'
 
 interface Suggestion {
   date: string
@@ -37,7 +38,7 @@ const statusIcons: Record<string, string> = {
 }
 
 export default function EnablementTabs({ pending, reports }: EnablementTabsProps) {
-  const [tab, setTab] = useState<'quiz' | 'lab' | 'notes' | 'reports'>('quiz')
+  const [tab, setTab] = useState<'quiz' | 'lab' | 'notes' | 'learning-log' | 'reports'>('quiz')
 
   return (
     <div>
@@ -68,6 +69,14 @@ export default function EnablementTabs({ pending, reports }: EnablementTabsProps
           Notes
         </button>
         <button
+          onClick={() => setTab('learning-log')}
+          className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
+            tab === 'learning-log' ? 'bg-accent text-white' : 'text-muted hover:text-foreground'
+          }`}
+        >
+          Learning Log
+        </button>
+        <button
           onClick={() => setTab('reports')}
           className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${
             tab === 'reports' ? 'bg-accent text-white' : 'text-muted hover:text-foreground'
@@ -90,6 +99,9 @@ export default function EnablementTabs({ pending, reports }: EnablementTabsProps
 
       {/* Notes tab */}
       {tab === 'notes' && <NotesTab />}
+
+      {/* Learning Log tab */}
+      {tab === 'learning-log' && <LearningLogTab />}
 
       {/* Reports tab */}
       {tab === 'reports' && (
