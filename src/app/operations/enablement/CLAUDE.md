@@ -1,12 +1,12 @@
 # Enablement Hub — CLAUDE.md
 
-Tabbed learning hub: Daily Quiz, Architecture Lab, Notes, Weekly Reports. Parent module for quiz/ and lab/ sub-modules.
+Tabbed learning hub: Daily Quiz, Architecture Lab, Learning Log, Notes, Weekly Reports. Parent module for quiz/, lab/, and learning-log/ sub-modules.
 
 ## Owns
 
 - **_components/:** enablement-tabs, notes-tab
 - **page.tsx:** Reads `data/weekly-reports.json` and `data/suggestions.json` for reports/suggestions tabs
-- **Children:** quiz/, lab/ (each has own CLAUDE.md)
+- **Children:** quiz/, lab/, learning-log/ (each has own CLAUDE.md)
 
 ## Status
 
