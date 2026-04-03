@@ -75,7 +75,7 @@ export default function UsageSection({ entryName }: UsageSectionProps) {
   if (!data || data.totalUses === 0) {
     return (
       <div className="text-xs text-muted py-2">
-        Run <code className="bg-background px-1 py-0.5 rounded border border-card-border">/skill-analytics</code> after using this skill to start tracking
+        No usage recorded yet — usage is tracked automatically when this skill runs.
       </div>
     )
   }

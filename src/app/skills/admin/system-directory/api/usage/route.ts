@@ -28,9 +28,9 @@ export async function GET(request: NextRequest) {
 
     const { data: usageRows } = await supabase
       .from("skill_usage")
-      .select("id, triggered_at, outcome, duration_ms, context")
+      .select("id, used_at, outcome, duration_seconds, notes, project")
       .eq("skill_id", skillRow.id)
-      .order("triggered_at", { ascending: false })
+      .order("used_at", { ascending: false })
       .limit(10)
 
     const invocations = usageRows || []
@@ -56,13 +56,13 @@ export async function GET(request: NextRequest) {
       totalUses: totalUses || 0,
       successCount: successCount || 0,
       failureCount: failureCount || 0,
-      lastUsed: invocations.length > 0 ? invocations[0].triggered_at : null,
+      lastUsed: invocations.length > 0 ? invocations[0].used_at : null,
       recentInvocations: invocations.map((row) => ({
         id: row.id,
-        timestamp: row.triggered_at,
+        timestamp: row.used_at,
         outcome: row.outcome,
-        notes: row.context || "",
-        project: "",
+        notes: row.notes || "",
+        project: row.project || "",
       })),
     })
   } catch {
