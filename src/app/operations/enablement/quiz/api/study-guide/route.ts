@@ -1,7 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { z } from 'zod'
+import { parseAIResponse, extractTextFromResponse } from '@/lib/ai-parse'
 
 const client = new Anthropic()
+
+const StudyGuideSchema = z.object({
+  mastered: z.array(z.object({ topic: z.string(), note: z.string() })).default([]),
+  focusAreas: z.array(z.object({
+    topic: z.string(),
+    gap: z.string(),
+    exercise: z.string(),
+    keyConcept: z.string(),
+  })).default([]),
+  patterns: z.array(z.string()).default([]),
+  weeklyChallenge: z.object({
+    title: z.string(),
+    description: z.string(),
+    estimatedTime: z.string().default(''),
+  }),
+})
 
 export async function POST(request: NextRequest) {
   try {
@@ -50,14 +68,9 @@ Return JSON only, no markdown:
       ],
     })
 
-    const text = (response.content[0] as { type: string; text: string }).text.trim()
-    let cleaned = text
-    if (cleaned.startsWith('```')) {
-      cleaned = cleaned.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '')
-    }
-    const parsed = JSON.parse(cleaned)
-
-    return NextResponse.json(parsed)
+    const text = extractTextFromResponse(response)
+    const guide = parseAIResponse(text, StudyGuideSchema)
+    return NextResponse.json(guide)
   } catch (error) {
     console.error('Study guide error:', error)
     return NextResponse.json({ error: 'Failed to generate study guide' }, { status: 500 })

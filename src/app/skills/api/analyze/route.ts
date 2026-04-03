@@ -1,7 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { z } from 'zod'
+import { safeParseAIResponse, extractTextFromResponse } from '@/lib/ai-parse'
 
 const client = new Anthropic()
+
+const SkillAnalysisSchema = z.object({
+  strengths: z.array(z.string()).default([]),
+  weaknesses: z.array(z.string()).default([]),
+  amitis_fit: z.object({
+    readiness: z.enum(['ready', 'needs_customization', 'not_applicable']).default('needs_customization'),
+    assessment: z.string().default(''),
+  }),
+})
 
 export async function POST(request: NextRequest) {
   try {
@@ -25,20 +36,15 @@ ${skill_md_content || `No SKILL.md content available. Analyze based on the skill
       }],
     })
 
-    const text = response.content.map((b) => b.type === 'text' ? b.text : '').join('')
-    // Strip markdown fences if present
-    const cleaned = text.replace(/^```(?:json)?\s*\n?/i, '').replace(/\n?```\s*$/i, '').trim()
-
-    try {
-      const analysis = JSON.parse(cleaned)
-      return NextResponse.json(analysis)
-    } catch {
-      return NextResponse.json({
-        strengths: ['Analysis generated but could not be parsed'],
-        weaknesses: ['Try again or check the SKILL.md content'],
-        amitis_fit: { readiness: 'needs_customization', assessment: text.slice(0, 300) },
-      })
-    }
+    const text = extractTextFromResponse(response)
+    const result = safeParseAIResponse(text, SkillAnalysisSchema)
+    if (result.success) return NextResponse.json(result.data)
+    console.error('Skill analysis parse error:', result.error)
+    return NextResponse.json({
+      strengths: ['Analysis generated but could not be parsed'],
+      weaknesses: ['Try again or check the SKILL.md content'],
+      amitis_fit: { readiness: 'needs_customization' as const, assessment: text.slice(0, 300) },
+    })
   } catch (error) {
     console.error('Skills analyze error:', error)
     return NextResponse.json(

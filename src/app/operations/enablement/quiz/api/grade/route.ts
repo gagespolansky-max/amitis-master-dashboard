@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
+import { z } from 'zod'
+import { parseAIResponse, extractTextFromResponse } from '@/lib/ai-parse'
 
 const client = new Anthropic()
+
+const GradeResultSchema = z.object({
+  score: z.number(),
+  feedback: z.string(),
+})
 
 export async function POST(request: NextRequest) {
   try {
@@ -42,10 +49,8 @@ Return JSON only, no markdown fencing:
       ],
     })
 
-    const text = (response.content[0] as { type: string; text: string }).text.trim()
-    const cleaned = text.startsWith('```') ? text.split('\n', 1)[1]?.split('```')[0] || text : text
-    const parsed = JSON.parse(cleaned)
-
+    const text = extractTextFromResponse(response)
+    const parsed = parseAIResponse(text, GradeResultSchema)
     return NextResponse.json({ score: parsed.score, feedback: parsed.feedback, topic })
   } catch (error) {
     console.error('Grading error:', error)

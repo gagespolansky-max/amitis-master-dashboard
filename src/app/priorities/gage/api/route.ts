@@ -1,10 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import Anthropic from '@anthropic-ai/sdk'
+import { z } from 'zod'
+import { safeParseAIResponse } from '@/lib/ai-parse'
 
 const BUCKET = 'gage-screenshots'
 const TABLE = 'gage_screenshots'
 const anthropic = new Anthropic()
+
+const ScreenshotAnalysisSchema = z.object({
+  summary: z.string(),
+  sender: z.string().default(''),
+  action_items: z.array(z.string()).default([]),
+  details: z.array(z.string()).default([]),
+  source_app: z.string().default('Unknown'),
+})
+
+const ManualAddSchema = z.object({
+  summary: z.string().min(1, 'Summary is required'),
+  sender: z.string().optional(),
+  source_app: z.string().optional(),
+  action_items: z.array(z.string()).optional(),
+})
 
 // GET — fetch all entries
 export async function GET() {
@@ -54,16 +71,15 @@ Return ONLY valid JSON, no markdown fences.`,
   })
 
   const text = response.content[0].type === 'text' ? response.content[0].text : ''
-  try {
-    return JSON.parse(text)
-  } catch {
-    return {
-      summary: text,
-      sender: '',
-      action_items: [],
-      details: [],
-      source_app: 'Unknown',
-    }
+  const result = safeParseAIResponse(text, ScreenshotAnalysisSchema)
+  if (result.success) return result.data
+  console.error('Screenshot analysis parse error:', result.error)
+  return {
+    summary: text,
+    sender: '',
+    action_items: [],
+    details: [],
+    source_app: 'Unknown',
   }
 }
 
@@ -73,12 +89,12 @@ export async function POST(request: NextRequest) {
 
   // Manual entry — JSON body, no image
   if (contentType.includes('application/json')) {
-    const body = await request.json()
-    const { summary, sender, source_app, action_items } = body
-
-    if (!summary?.trim()) {
-      return NextResponse.json({ error: 'Summary is required' }, { status: 400 })
+    const raw = await request.json()
+    const parsed = ManualAddSchema.safeParse(raw)
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.issues[0]?.message || 'Invalid input' }, { status: 400 })
     }
+    const { summary, sender, source_app, action_items } = parsed.data
 
     const structuredText = JSON.stringify({
       summary: summary.trim(),

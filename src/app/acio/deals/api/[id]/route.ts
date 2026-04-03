@@ -1,10 +1,17 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@/lib/supabase-server"
+import { DealPatchSchema } from "../../_lib/types"
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const supabase = createServerClient()
   const { id } = await params
-  const body = await req.json()
+  const raw = await req.json()
+
+  const parsed = DealPatchSchema.safeParse(raw)
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.message }, { status: 400 })
+  }
+  const body = parsed.data
 
   const updates: Record<string, unknown> = { updated_at: new Date().toISOString() }
 

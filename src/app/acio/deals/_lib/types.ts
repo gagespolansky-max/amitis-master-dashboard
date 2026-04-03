@@ -1,3 +1,5 @@
+import { z } from 'zod'
+
 export type DealStage = "sourced" | "initial_call" | "dd_in_progress" | "ic_review" | "committed" | "passed"
 
 export type DealStatus = "pending_review" | "confirmed" | "dismissed"
@@ -11,6 +13,64 @@ export type DealType = "fund_allocation" | "co_invest" | "direct"
 export type Vehicle = "spv" | "direct_equity" | "safe_convertible"
 
 export type CompanyStage = "pre_seed" | "seed" | "series_a" | "series_b" | "series_c_plus"
+
+// --- Zod schemas for Claude response validation ---
+
+const DealTypeEnum = z.enum(["fund_allocation", "co_invest", "direct"])
+const VehicleEnum = z.enum(["spv", "direct_equity", "safe_convertible"])
+const CompanyStageEnum = z.enum(["pre_seed", "seed", "series_a", "series_b", "series_c_plus"])
+const DealStageEnum = z.enum(["sourced", "initial_call", "dd_in_progress", "ic_review", "committed", "passed"])
+
+const KeyContactSchema = z.object({
+  name: z.string(),
+  email: z.string(),
+  role: z.string(),
+})
+
+export const DealExtractionSchema = z.object({
+  company_name: z.string(),
+  deal_type: DealTypeEnum.nullable().default(null),
+  vehicle: VehicleEnum.nullable().default(null),
+  company_stage: CompanyStageEnum.nullable().default(null),
+  suggested_stage: z.string().default("sourced"),
+  key_contacts: z.array(KeyContactSchema).default([]),
+  industry: z.string().nullable().default(null),
+  company_description: z.string().nullable().default(null),
+  value_proposition: z.string().nullable().default(null),
+})
+
+export const BaselineClassificationSchema = DealExtractionSchema.extend({
+  is_deal: z.boolean(),
+  reasoning: z.string().default(""),
+})
+
+export const EnrichmentResponseSchema = z.object({
+  company_description: z.string(),
+  value_proposition: z.string(),
+  industry: z.string(),
+  deal_type: DealTypeEnum.nullable().default(null),
+  vehicle: VehicleEnum.nullable().default(null),
+  company_stage: CompanyStageEnum.nullable().default(null),
+})
+
+export const DealPatchSchema = z.object({
+  stage: DealStageEnum.optional(),
+  status: z.enum(["pending_review", "confirmed", "dismissed"]).optional(),
+  notes: z.string().nullable().optional(),
+  memo_url: z.string().nullable().optional(),
+  memo_filename: z.string().nullable().optional(),
+  company_name: z.string().optional(),
+  deal_type: DealTypeEnum.nullable().optional(),
+  key_contacts: z.array(KeyContactSchema).nullable().optional(),
+  priority: z.enum(["high", "medium", "low"]).optional(),
+  industry: z.string().nullable().optional(),
+  vehicle: VehicleEnum.nullable().optional(),
+  company_stage: CompanyStageEnum.nullable().optional(),
+  company_description: z.string().nullable().optional(),
+  value_proposition: z.string().nullable().optional(),
+  reminder_date: z.string().nullable().optional(),
+  reminder_note: z.string().nullable().optional(),
+})
 
 export interface Deal {
   id: string

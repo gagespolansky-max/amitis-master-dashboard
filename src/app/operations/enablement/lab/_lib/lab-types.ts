@@ -1,3 +1,5 @@
+import { z } from 'zod'
+
 export type ChallengeSize = 'flash' | 'quick' | 'standard' | 'deep'
 
 export interface AgentDesign {
@@ -167,6 +169,110 @@ CONNECTIONS:
 - Error/fallback: dotted red, annotated with fallback behavior
 
 Include: title, model tiers on every agent, at least one error path, and a legend.`
+
+// --- Zod schemas for Claude response validation ---
+
+export const DesignGradeSchema = z.object({
+  architecturePattern: z.number().default(0),
+  modelTierSelection: z.number().default(0),
+  toolRouting: z.number().default(0),
+  delegationClarity: z.number().default(0),
+  humanInTheLoop: z.number().default(0),
+  memoryStrategy: z.number().default(0),
+  overall: z.number().default(0),
+  feedback: z.string().default(''),
+  anthropicComparison: z.string().default(''),
+})
+
+export const ChallengeSchema = z.object({
+  scenario: z.string(),
+  constraints: z.object({
+    tokenBudget: z.string(),
+    latencyTarget: z.string(),
+    compliance: z.string(),
+  }),
+  availableTools: z.array(z.string()),
+  evaluationCriteria: z.array(z.string()),
+  referenceSolution: z.object({
+    architecture: z.string(),
+    reasoning: z.string(),
+    antiPatterns: z.string(),
+    agents: z.array(z.object({
+      name: z.string(),
+      modelTier: z.string(),
+      tools: z.array(z.string()),
+      role: z.string(),
+    })),
+    delegationProtocol: z.string(),
+    humanCheckpoints: z.string(),
+    memoryStrategy: z.string(),
+  }),
+})
+
+export const FlashChallengeSchema = z.object({
+  scenario: z.string(),
+  diagramSvg: z.string(),
+  questions: z.array(z.object({
+    question: z.string(),
+    options: z.array(z.string()),
+    correctIndex: z.number(),
+    explanation: z.string(),
+  })),
+})
+
+export const StressScenarioSchema = z.array(z.object({
+  id: z.string(),
+  scenario: z.string(),
+  referenceAnswer: z.object({
+    whatBreaks: z.string(),
+    rootCause: z.string(),
+    fix: z.string(),
+  }),
+}))
+
+export const StressGradeSchema = z.array(z.object({
+  diagnosticAccuracy: z.number(),
+  fixQuality: z.number(),
+  feedback: z.string(),
+}))
+
+export const DecomposeResponseSchema = z.object({
+  steps: z.array(z.object({
+    number: z.number(),
+    description: z.string(),
+    type: z.string(),
+    typeEmoji: z.string().default(''),
+    difficulty: z.string(),
+    llmAppropriate: z.string(),
+    reasoning: z.string(),
+  })),
+  narrative: z.string(),
+})
+
+export const ToolingResponseSchema = z.object({
+  narrative: z.string(),
+  tools: z.array(z.object({
+    step: z.string(),
+    tool: z.string(),
+    whatItIs: z.string().default(''),
+    whyThisTool: z.string().default(''),
+    alternatives: z.string().default(''),
+    buildVsRuntime: z.string().default(''),
+    connections: z.string().default(''),
+    learnMore: z.string().default(''),
+  })),
+})
+
+export const RecommendResponseSchema = z.object({
+  solutionType: z.string(),
+  recommendation: z.string(),
+  architectureComponents: z.array(z.object({
+    name: z.string(),
+    type: z.string(),
+    tool: z.string().default(''),
+    step: z.string().default(''),
+  })),
+})
 
 export const INDUSTRIES = [
   'Financial services', 'Healthcare', 'Legal', 'E-commerce',
