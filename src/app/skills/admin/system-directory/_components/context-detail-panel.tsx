@@ -27,7 +27,7 @@ export default function ContextDetailPanel({
     setExpandedSkills((prev) => ({ ...prev, [name]: !prev[name] }))
   }
 
-  const skillFileEntries = Object.entries(node.skillFiles || {})
+  const skillInfoEntries = Object.entries(node.skillFiles || {})
 
   return (
     <div className="p-5 overflow-y-auto h-full">
@@ -102,55 +102,118 @@ export default function ContextDetailPanel({
         </div>
       )}
 
-      {/* Skill Files */}
-      {skillFileEntries.length > 0 && (
+      {/* Skill Details */}
+      {skillInfoEntries.length > 0 && (
         <div className="mb-4 pt-4 border-t border-card-border">
           <div className="text-[10px] uppercase tracking-wider text-muted mb-2">
-            Skill Files
+            Skill Details
           </div>
-          <div className="space-y-1.5">
-            {skillFileEntries.map(([skillName, files]) => (
-              <div key={skillName}>
-                <button
-                  onClick={() => toggleSkill(skillName)}
-                  className="flex items-center gap-1.5 w-full text-left text-xs font-mono text-foreground hover:text-accent-hover transition-colors py-1"
-                >
-                  <svg
-                    className={`w-3 h-3 text-muted transition-transform ${expandedSkills[skillName] ? "rotate-90" : ""}`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
+          <div className="space-y-3">
+            {skillInfoEntries.map(([skillName, info]) => {
+              const rel = info.relationships
+              const hasRelationships = rel.files.length > 0 || rel.tables.length > 0 || rel.invokes.length > 0 || rel.services.length > 0
+              return (
+                <div key={skillName} className="border border-card-border rounded-lg overflow-hidden">
+                  <button
+                    onClick={() => toggleSkill(skillName)}
+                    className="flex items-center gap-1.5 w-full text-left text-xs font-mono px-3 py-2 hover:bg-white/[0.03] transition-colors"
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
-                  </svg>
-                  <span className="text-warning/80">{skillName}/</span>
-                  <span className="text-muted text-[10px]">{files.length} files</span>
-                </button>
-                {expandedSkills[skillName] && (
-                  <div className="ml-4 space-y-0.5 mt-0.5">
-                    {files.map((file) => (
-                      <div key={file.path}>
-                        <button
-                          onClick={() => setExpandedFile(expandedFile === file.path ? null : file.path)}
-                          className={`text-[11px] font-mono py-0.5 px-1.5 rounded w-full text-left transition-colors ${
-                            expandedFile === file.path
-                              ? "bg-accent/10 text-accent-hover"
-                              : "text-foreground/70 hover:text-foreground hover:bg-white/[0.03]"
-                          }`}
-                        >
-                          {file.name}
-                        </button>
-                        {expandedFile === file.path && (
-                          <pre className="text-[10px] font-mono text-foreground/70 bg-background border border-card-border rounded-md p-2 mt-1 mb-2 ml-1 overflow-auto max-h-[300px] whitespace-pre-wrap break-words">
-                            {file.content || "(empty)"}
-                          </pre>
-                        )}
+                    <svg
+                      className={`w-3 h-3 text-muted transition-transform shrink-0 ${expandedSkills[skillName] ? "rotate-90" : ""}`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                    </svg>
+                    <span className="text-warning/80 font-medium">{skillName}</span>
+                    <span className="text-muted text-[10px]">{info.files.length} files</span>
+                  </button>
+                  {expandedSkills[skillName] && (
+                    <div className="px-3 pb-3 space-y-3">
+                      {/* Relationships */}
+                      {hasRelationships && (
+                        <div className="space-y-2">
+                          {rel.files.length > 0 && (
+                            <div>
+                              <div className="text-[9px] uppercase tracking-wider text-muted/60 mb-1">Touches files</div>
+                              <div className="flex flex-wrap gap-1">
+                                {rel.files.map((f) => (
+                                  <code key={f} className="text-[10px] bg-blue-500/10 text-blue-400 px-1.5 py-0.5 rounded border border-blue-500/20">
+                                    {f}
+                                  </code>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {rel.tables.length > 0 && (
+                            <div>
+                              <div className="text-[9px] uppercase tracking-wider text-muted/60 mb-1">Tables</div>
+                              <div className="flex flex-wrap gap-1">
+                                {rel.tables.map((t) => (
+                                  <code key={t} className="text-[10px] bg-green-500/10 text-green-400 px-1.5 py-0.5 rounded border border-green-500/20">
+                                    {t}
+                                  </code>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {rel.invokes.length > 0 && (
+                            <div>
+                              <div className="text-[9px] uppercase tracking-wider text-muted/60 mb-1">Invokes</div>
+                              <div className="flex flex-wrap gap-1">
+                                {rel.invokes.map((s) => (
+                                  <code key={s} className="text-[10px] bg-accent/10 text-accent-hover px-1.5 py-0.5 rounded border border-accent/20">
+                                    /{s}
+                                  </code>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {rel.services.length > 0 && (
+                            <div>
+                              <div className="text-[9px] uppercase tracking-wider text-muted/60 mb-1">Services</div>
+                              <div className="flex flex-wrap gap-1">
+                                {rel.services.map((s) => (
+                                  <code key={s} className="text-[10px] bg-orange-500/10 text-orange-400 px-1.5 py-0.5 rounded border border-orange-500/20">
+                                    {s}
+                                  </code>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {/* Files */}
+                      <div>
+                        <div className="text-[9px] uppercase tracking-wider text-muted/60 mb-1">Skill files</div>
+                        <div className="space-y-0.5">
+                          {info.files.map((file) => (
+                            <div key={file.path}>
+                              <button
+                                onClick={() => setExpandedFile(expandedFile === file.path ? null : file.path)}
+                                className={`text-[11px] font-mono py-0.5 px-1.5 rounded w-full text-left transition-colors ${
+                                  expandedFile === file.path
+                                    ? "bg-accent/10 text-accent-hover"
+                                    : "text-foreground/70 hover:text-foreground hover:bg-white/[0.03]"
+                                }`}
+                              >
+                                {file.name}
+                              </button>
+                              {expandedFile === file.path && (
+                                <pre className="text-[10px] font-mono text-foreground/70 bg-background border border-card-border rounded-md p-2 mt-1 mb-2 ml-1 overflow-auto max-h-[300px] whitespace-pre-wrap break-words">
+                                  {file.content || "(empty)"}
+                                </pre>
+                              )}
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
         </div>
       )}

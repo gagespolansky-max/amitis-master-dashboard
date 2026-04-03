@@ -8,6 +8,18 @@ interface SkillFile {
   content: string
 }
 
+interface SkillRelationships {
+  files: string[]
+  tables: string[]
+  invokes: string[]
+  services: string[]
+}
+
+interface SkillInfo {
+  files: SkillFile[]
+  relationships: SkillRelationships
+}
+
 interface ContextNode {
   filePath: string
   shortPath: string
@@ -19,7 +31,7 @@ interface ContextNode {
   agents: string[]
   skills: string[]
   rules: string[]
-  skillFiles: Record<string, SkillFile[]>
+  skillFiles: Record<string, SkillInfo>
 }
 
 interface ContextTreeNodeProps {

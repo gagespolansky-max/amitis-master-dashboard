@@ -10,6 +10,18 @@ interface SkillFile {
   content: string
 }
 
+interface SkillRelationships {
+  files: string[]       // file paths it reads/writes (config/funds.py, src/gmail_scanner.py)
+  tables: string[]      // Supabase tables (skill_usage, learning_log)
+  invokes: string[]     // other skills/agents it calls (/skill-name)
+  services: string[]    // external services (Gmail, Supabase, Notion, Anthropic)
+}
+
+interface SkillInfo {
+  files: SkillFile[]
+  relationships: SkillRelationships
+}
+
 interface ContextNode {
   filePath: string
   shortPath: string
@@ -21,7 +33,7 @@ interface ContextNode {
   agents: string[]
   skills: string[]
   rules: string[]
-  skillFiles: Record<string, SkillFile[]>
+  skillFiles: Record<string, SkillInfo>
 }
 
 function extractSummary(content: string): string {
@@ -116,8 +128,87 @@ function getAgentsAndSkills(projectPath: string): { agents: string[]; skills: st
   return { agents, skills }
 }
 
-function scanSkillFiles(skillsDir: string): Record<string, SkillFile[]> {
-  const result: Record<string, SkillFile[]> = {}
+function parseRelationships(content: string): SkillRelationships {
+  const files: string[] = []
+  const tables: string[] = []
+  const invokes: string[] = []
+  const services: string[] = []
+
+  // Extract file paths: backtick-wrapped paths with extensions
+  const filePattern = /`([a-zA-Z0-9_\-./]+\.(py|ts|tsx|js|jsx|json|md|yaml|yml|sh|sql|css|html))`/g
+  let match
+  while ((match = filePattern.exec(content)) !== null) {
+    const f = match[1]
+    // Skip common non-file references
+    // Skip self-references and overly generic names
+    if (!f.includes(" ") && f !== "SKILL.md" && f !== "patterns.md" && !files.includes(f)) {
+      files.push(f)
+    }
+  }
+
+  // Extract Supabase table references
+  const tablePatterns = [
+    /`(\w+)`\s+table/gi,
+    /table[s]?[:\s]+`(\w+)`/gi,
+    /from\s+`?(\w+)`?/gi,
+    /into\s+`?(\w+)`?/gi,
+    /\*\*Tables?:\*\*[^*]*`(\w+)`/gi,
+  ]
+  const knownTables = new Set([
+    "skills", "skill_usage", "skill_catalog", "skill_evals", "skill_versions", "skill_proposals",
+    "learning_log", "ai_initiatives", "funds", "fund_returns", "fund_allocations", "reconciliation_log",
+    "acio_deals", "deal_notes", "context_tree_cache",
+  ])
+  for (const pattern of tablePatterns) {
+    while ((match = pattern.exec(content)) !== null) {
+      const t = match[1].toLowerCase()
+      if (knownTables.has(t) && !tables.includes(t)) {
+        tables.push(t)
+      }
+    }
+  }
+  // Also scan for known table names directly
+  for (const t of knownTables) {
+    if (content.includes(t) && !tables.includes(t)) {
+      tables.push(t)
+    }
+  }
+
+  // Extract skill/agent invocations: /slash-command references
+  const slashPattern = /(?:^|[^a-zA-Z0-9])\/([a-z][a-z0-9-]+)(?:[^a-zA-Z0-9/]|$)/gm
+  const skipSlugs = new Set(["dev", "api", "skills", "app", "src", "config", "docs", "data", "scripts", "claude", "master", "main", "public", "var", "usr", "bin", "home", "tmp", "etc"])
+  while ((match = slashPattern.exec(content)) !== null) {
+    const s = match[1]
+    if (!skipSlugs.has(s) && s.length > 2 && s.length < 30 && !/^[a-z0-9]{20,}$/.test(s) && !invokes.includes(s)) {
+      invokes.push(s)
+    }
+  }
+
+  // Extract external services
+  const serviceKeywords: Record<string, string> = {
+    "Gmail": "Gmail",
+    "gmail": "Gmail",
+    "Supabase": "Supabase",
+    "supabase": "Supabase",
+    "Notion": "Notion",
+    "notion": "Notion",
+    "Anthropic": "Anthropic API",
+    "Claude API": "Anthropic API",
+    "Attio": "Attio CRM",
+    "Playwright": "Playwright",
+    "Mailchimp": "Mailchimp",
+  }
+  for (const [keyword, service] of Object.entries(serviceKeywords)) {
+    if (content.includes(keyword) && !services.includes(service)) {
+      services.push(service)
+    }
+  }
+
+  return { files, tables, invokes, services }
+}
+
+function scanSkillFiles(skillsDir: string): Record<string, SkillInfo> {
+  const result: Record<string, SkillInfo> = {}
   if (!fs.existsSync(skillsDir)) return result
 
   try {
@@ -125,6 +216,7 @@ function scanSkillFiles(skillsDir: string): Record<string, SkillFile[]> {
     for (const d of dirs) {
       const skillDir = path.join(skillsDir, d.name)
       const files: SkillFile[] = []
+      let allContent = ""
       try {
         const entries = fs.readdirSync(skillDir, { withFileTypes: true })
         for (const entry of entries) {
@@ -134,8 +226,8 @@ function scanSkillFiles(skillsDir: string): Record<string, SkillFile[]> {
               content = fs.readFileSync(path.join(skillDir, entry.name), "utf-8")
             } catch { /* skip binary or unreadable */ }
             files.push({ name: entry.name, path: path.join(skillDir, entry.name), content })
+            if (entry.name.endsWith(".md")) allContent += "\n" + content
           } else if (entry.isDirectory()) {
-            // One level deep for scripts/ subdirs
             try {
               const subEntries = fs.readdirSync(path.join(skillDir, entry.name), { withFileTypes: true })
               for (const sub of subEntries) {
@@ -150,7 +242,9 @@ function scanSkillFiles(skillsDir: string): Record<string, SkillFile[]> {
           }
         }
       } catch { /* skip */ }
-      if (files.length > 0) result[d.name] = files
+
+      const relationships = parseRelationships(allContent)
+      if (files.length > 0) result[d.name] = { files, relationships }
     }
   } catch { /* skip */ }
 
