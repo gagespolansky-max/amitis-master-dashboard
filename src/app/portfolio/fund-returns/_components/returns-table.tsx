@@ -22,6 +22,8 @@ function VerifyButton({ row, onToggle }: { row: FundReturn; onToggle: (id: strin
 export default function ReturnsTable({ initialData }: { initialData: FundReturn[] }) {
   const [data, setData] = useState(initialData)
   const [filter, setFilter] = useState<'all' | 'unverified' | 'verified'>('all')
+  const [running, setRunning] = useState(false)
+  const [runOutput, setRunOutput] = useState<string | null>(null)
 
   const months = [...new Set(data.map(r => r.return_month))].sort((a, b) => {
     const da = new Date(a + ' 1')
@@ -36,6 +38,28 @@ export default function ReturnsTable({ initialData }: { initialData: FundReturn[
     if (filter === 'unverified' && r.verified) return false
     return true
   })
+
+  async function handleRunNow() {
+    setRunning(true)
+    setRunOutput(null)
+    try {
+      const resp = await fetch('/portfolio/fund-returns/api/run', { method: 'POST' })
+      const result = await resp.json()
+      setRunOutput(result.output || result.error || 'Done')
+      // Refresh data from Supabase
+      const dataResp = await fetch('/portfolio/fund-returns/api/data')
+      if (dataResp.ok) {
+        const fresh = await dataResp.json()
+        setData(fresh)
+      } else {
+        window.location.reload()
+      }
+    } catch {
+      setRunOutput('Failed to run extraction')
+    } finally {
+      setRunning(false)
+    }
+  }
 
   async function handleToggleVerify(id: string, verified: boolean) {
     const resp = await fetch('/portfolio/fund-returns/api/verify', {
@@ -56,8 +80,8 @@ export default function ReturnsTable({ initialData }: { initialData: FundReturn[
 
   return (
     <div>
-      {/* Filters */}
-      <div className="flex gap-4 mb-6">
+      {/* Filters + Run Now */}
+      <div className="flex gap-4 mb-6 items-center">
         <select
           value={selectedMonth}
           onChange={e => setSelectedMonth(e.target.value)}
@@ -80,7 +104,27 @@ export default function ReturnsTable({ initialData }: { initialData: FundReturn[
             </button>
           ))}
         </div>
+        <div className="ml-auto">
+          <button
+            onClick={handleRunNow}
+            disabled={running}
+            className={`px-4 py-1.5 rounded text-sm font-medium transition-colors ${
+              running
+                ? 'bg-zinc-700 text-zinc-400 cursor-wait'
+                : 'bg-indigo-600 text-white hover:bg-indigo-500'
+            }`}
+          >
+            {running ? 'Running...' : 'Run Now'}
+          </button>
+        </div>
       </div>
+
+      {/* Run output */}
+      {runOutput && (
+        <pre className="mb-4 p-3 bg-zinc-900 border border-zinc-700 rounded text-xs text-zinc-400 max-h-48 overflow-y-auto whitespace-pre-wrap">
+          {runOutput}
+        </pre>
+      )}
 
       {/* Table */}
       <div className="overflow-x-auto">
