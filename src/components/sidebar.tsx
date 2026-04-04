@@ -33,6 +33,7 @@ const navigation: NavItem[] = [
     href: '/investor-relations',
     children: [
       { label: 'One Pagers', href: '/investor-relations/one-pagers' },
+      { label: 'Marketing Collaterals', href: '/investor-relations/marketing-collaterals' },
       { label: 'Market Newsletters', href: '/investor-relations/newsletters' },
       { label: 'X Posts', href: '/investor-relations/x-posts' },
     ],

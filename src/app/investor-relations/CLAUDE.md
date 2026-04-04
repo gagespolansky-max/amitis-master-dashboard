@@ -5,7 +5,7 @@ Parent module for LP-facing communications and materials. page.tsx redirects to 
 ## Owns
 
 - **page.tsx:** Redirect only
-- **Children:** one-pagers/, newsletters/, x-posts/ (each has own CLAUDE.md)
+- **Children:** one-pagers/, marketing-collaterals/, newsletters/, x-posts/ (each has own CLAUDE.md)
 
 ## Status
 
