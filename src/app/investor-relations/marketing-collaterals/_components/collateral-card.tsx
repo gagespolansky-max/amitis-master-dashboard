@@ -3,20 +3,20 @@
 import { useState, useRef, useEffect } from 'react'
 import { ExternalLink, FileText, Check, X } from 'lucide-react'
 
-interface CollateralCardProps {
-  title: string
-  name: string
-  path: string
-  fileType: string
-  modified: string
-  dropboxUrl: string | null
-}
-
-interface CardMeta {
+export interface CardMeta {
   displayTitle: string
   useCase: string
   illustrates: string
   whyCare: string
+}
+
+interface CollateralCardProps {
+  title: string
+  path: string
+  fileType: string
+  modified: string
+  dropboxUrl: string | null
+  initialMeta?: CardMeta
 }
 
 const EMPTY_META: CardMeta = { displayTitle: '', useCase: '', illustrates: '', whyCare: '' }
@@ -39,23 +39,9 @@ function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-function getStoredMeta(path: string): CardMeta {
-  if (typeof window === 'undefined') return EMPTY_META
-  try {
-    const raw = localStorage.getItem(`collateral-meta:${path}`)
-    return raw ? { ...EMPTY_META, ...JSON.parse(raw) } : EMPTY_META
-  } catch {
-    return EMPTY_META
-  }
-}
-
-function storeMeta(path: string, meta: CardMeta) {
-  localStorage.setItem(`collateral-meta:${path}`, JSON.stringify(meta))
-}
-
-export default function CollateralCard({ title, path, fileType, modified, dropboxUrl }: CollateralCardProps) {
+export default function CollateralCard({ title, path, fileType, modified, dropboxUrl, initialMeta }: CollateralCardProps) {
   const [imgError, setImgError] = useState(false)
-  const [meta, setMeta] = useState<CardMeta>(EMPTY_META)
+  const [meta, setMeta] = useState<CardMeta>(initialMeta || EMPTY_META)
   const [editingField, setEditingField] = useState<keyof CardMeta | null>(null)
   const [draftValue, setDraftValue] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
@@ -65,8 +51,8 @@ export default function CollateralCard({ title, path, fileType, modified, dropbo
   const displayTitle = meta.displayTitle || title
 
   useEffect(() => {
-    setMeta(getStoredMeta(path))
-  }, [path])
+    setMeta(initialMeta || EMPTY_META)
+  }, [initialMeta])
 
   useEffect(() => {
     if (editingField && inputRef.current) {
@@ -77,12 +63,27 @@ export default function CollateralCard({ title, path, fileType, modified, dropbo
     }
   }, [editingField])
 
-  function handleSaveField() {
+  async function handleSaveField() {
     if (!editingField) return
     const updated = { ...meta, [editingField]: draftValue.trim() }
     setMeta(updated)
-    storeMeta(path, updated)
     setEditingField(null)
+
+    try {
+      await fetch('/investor-relations/marketing-collaterals/api/metadata', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          dropboxPath: path,
+          displayTitle: updated.displayTitle,
+          useCase: updated.useCase,
+          illustrates: updated.illustrates,
+          whyCare: updated.whyCare,
+        }),
+      })
+    } catch (err) {
+      console.error('Failed to save metadata:', err)
+    }
   }
 
   function handleCancelField() {

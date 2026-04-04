@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getDropboxHeaders } from '../../_lib/dropbox'
+import { getAccessToken, getDropboxHeaders } from '../../_lib/dropbox'
 
 export async function GET(request: NextRequest) {
   const path = request.nextUrl.searchParams.get('path')
@@ -8,12 +8,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Missing path parameter' }, { status: 400 })
   }
 
-  const token = process.env.DROPBOX_ACCESS_TOKEN
-  if (!token) {
-    return NextResponse.json({ error: 'Dropbox token not configured' }, { status: 500 })
-  }
-
   try {
+    const token = await getAccessToken()
     const headers = getDropboxHeaders(token)
 
     const res = await fetch('https://content.dropboxapi.com/2/files/get_thumbnail_v2', {

@@ -4,25 +4,37 @@ import { useEffect, useState, useCallback } from 'react'
 import { Loader2, RefreshCw } from 'lucide-react'
 import CollateralCard from './collateral-card'
 import type { CollateralFile } from '../api/folder/route'
+import type { CardMeta } from './collateral-card'
+
+type MetaMap = Record<string, CardMeta>
 
 export default function CollateralsGrid() {
   const [files, setFiles] = useState<CollateralFile[]>([])
+  const [metaMap, setMetaMap] = useState<MetaMap>({})
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const fetchFiles = useCallback(async (isRefresh = false) => {
+  const fetchData = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true)
     try {
-      const res = await fetch('/investor-relations/marketing-collaterals/api/folder', {
-        cache: 'no-store',
-      })
-      if (!res.ok) {
-        const data = await res.json()
+      const [filesRes, metaRes] = await Promise.all([
+        fetch('/investor-relations/marketing-collaterals/api/folder', { cache: 'no-store' }),
+        fetch('/investor-relations/marketing-collaterals/api/metadata'),
+      ])
+
+      if (!filesRes.ok) {
+        const data = await filesRes.json()
         throw new Error(data.error || 'Failed to load collaterals')
       }
-      const data: CollateralFile[] = await res.json()
-      setFiles(data)
+
+      const filesData: CollateralFile[] = await filesRes.json()
+      setFiles(filesData)
+
+      if (metaRes.ok) {
+        setMetaMap(await metaRes.json())
+      }
+
       setError(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load collaterals')
@@ -33,8 +45,8 @@ export default function CollateralsGrid() {
   }, [])
 
   useEffect(() => {
-    fetchFiles()
-  }, [fetchFiles])
+    fetchData()
+  }, [fetchData])
 
   return (
     <div>
@@ -43,7 +55,7 @@ export default function CollateralsGrid() {
           {loading ? 'Scanning…' : `${files.length} file${files.length !== 1 ? 's' : ''}`}
         </p>
         <button
-          onClick={() => fetchFiles(true)}
+          onClick={() => fetchData(true)}
           disabled={loading || refreshing}
           className="flex items-center gap-1.5 text-xs text-muted hover:text-foreground transition-colors disabled:opacity-50"
         >
@@ -75,6 +87,7 @@ export default function CollateralsGrid() {
               fileType={file.fileType}
               modified={file.modified}
               dropboxUrl={file.dropboxUrl}
+              initialMeta={metaMap[file.path]}
             />
           ))}
         </div>

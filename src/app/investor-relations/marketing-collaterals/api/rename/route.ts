@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getDropboxHeaders } from '../../_lib/dropbox'
+import { getAccessToken, getDropboxHeaders } from '../../_lib/dropbox'
 
 export async function POST(request: NextRequest) {
-  const token = process.env.DROPBOX_ACCESS_TOKEN
-  if (!token) {
-    return NextResponse.json({ error: 'Dropbox token not configured' }, { status: 500 })
-  }
-
   const { from_path, to_path } = await request.json()
 
   if (!from_path || !to_path) {
@@ -14,6 +9,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    const token = await getAccessToken()
     const res = await fetch('https://api.dropboxapi.com/2/files/move_v2', {
       method: 'POST',
       headers: { ...getDropboxHeaders(token), 'Content-Type': 'application/json' },

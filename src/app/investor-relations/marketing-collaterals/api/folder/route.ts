@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { getDropboxHeaders } from '../../_lib/dropbox'
+import { getAccessToken, getDropboxHeaders } from '../../_lib/dropbox'
 
 interface DropboxFileMetadata {
   '.tag': 'file'
@@ -88,17 +88,17 @@ async function getSharedLink(token: string, path: string): Promise<string | null
 }
 
 export async function GET() {
-  const token = process.env.DROPBOX_ACCESS_TOKEN
   const folder = process.env.DROPBOX_COLLATERALS_FOLDER
 
-  if (!token || !folder) {
+  if (!folder) {
     return NextResponse.json(
-      { error: 'Dropbox not configured. Set DROPBOX_ACCESS_TOKEN and DROPBOX_COLLATERALS_FOLDER.' },
+      { error: 'Dropbox not configured. Set DROPBOX_COLLATERALS_FOLDER.' },
       { status: 500 }
     )
   }
 
   try {
+    const token = await getAccessToken()
     const res = await fetch('https://api.dropboxapi.com/2/files/list_folder', {
       method: 'POST',
       headers: { ...getDropboxHeaders(token), 'Content-Type': 'application/json' },
