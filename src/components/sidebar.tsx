@@ -62,6 +62,7 @@ const navigation: NavItem[] = [
     label: 'Operations',
     href: '/operations',
     children: [
+      { label: 'Organization', href: '/operations/organization' },
       { label: 'AI Initiatives', href: '/operations/ai-initiatives' },
       { label: 'Enablement', href: '/operations/enablement' },
       { label: 'Learning Log', href: '/operations/enablement/learning-log' },
