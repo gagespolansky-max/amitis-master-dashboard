@@ -69,20 +69,13 @@ Admin reviews in Skills Hub Development tab → approves or rejects
 Approved skills move to skill_catalog via POST /skills/api/approve
 
 Fund returns pipeline — two parallel paths
-Pipeline 1 (source of truth — Cowork fund-returns skill):
-Gmail → extract returns → Portfolio Model (NAV_BTC + NAV_USD sheets) → 01 ACDAM Net Returns Internal (perf chart + VAMI chart) → branches to: Master Comps (net return → risk statistics) AND One-Pagers. Both 01 ACDAM Net Returns (perf chart, VAMI) and Master Comps (risk stats) feed into One-Pagers. One-Pagers → Performance Newsletter (Mailchimp — literally just the one-pagers packaged).
-Pipeline 2 (display only — Flask dashboard):
-Gmail → extract returns → Notion → fund-returns-dashboard (Flask, port 5050). Iframed into master dashboard at /portfolio/fund-returns.
-Reconciliation: Green/red dot on dashboard compares Pipeline 2 values against Pipeline 1. Portfolio Model is the canonical source of truth. Dashboard reads but never writes.
-Fund reporting is messy:
+Pipeline 1 (truth, Cowork fund-returns skill): Gmail → extract → Portfolio Model → 01 ACDAM Net Returns Internal → One-Pagers + Master Comps → Performance Newsletter. Pipeline 2 (display only, Flask): Gmail → Notion → fund-returns-dashboard (port 5050), iframed at /portfolio/fund-returns. Reconciliation dot on dashboard compares Pipeline 2 vs Pipeline 1.
 
-Returns come via: email body, PDF attachment, Telegram (Grandline), portal/Playwright (Eltican)
-Report stages: MTD (irregular, could be weekly), EOM (month close), investor statement (final, always net, arrives 15–30+ days later)
-Same fund may send gross one week and net the next
-Confidence hierarchy: investor_statement (3) > eom (2) > mtd (1)
+See `src/app/portfolio/fund-returns/CLAUDE.md` for pipeline detail, confidence hierarchy, and reporting edge cases.
 
 Page/workstream map
-RouteStatusWhat it does/ActiveDashboard overview + priority board/prioritiesActiveAI-ranked Kanban (drag-drop via @hello-pangea/dnd)/skillsActiveSkills Hub — Skills In Use, Marketplace (deep detail + embedded Claude), Development (submissions + proposals), Eval History/portfolio/fund-returnsActiveNative page. Daily cron extracts returns to Supabase, user verifies here./operations/enablementActiveTabbed: Daily Quiz, Architecture Lab, Notes, Weekly Reports/operations/ai-initiativesActiveAI initiative tracker — clickable cards with detail views, status progression, linked skills/operations/enablement/learning-logComing soonBrowse technical concepts captured during work sessions (reads Supabase learning_log)/portfolio/fund-accountingScopingSupabase schema designed, tables created. Next: wire dashboard to read from Supabase, build reconciliation dot./investor-relations/one-pagersComing soonGenerate and update investor-facing single-page fund summaries/investor-relations/newslettersComing soonMarket commentary and performance newsletters for LP distribution/investor-relations/x-postsComing soonSocial media content scheduling for X (Twitter)/researchComing soonFund vetting, deal evaluation/acio/dealsIn progressDeal pipeline — sourced through committed stages. Colocated _components/, _lib/, api/./acio/investment-memosComing soonAI-assisted investment memo drafting and library
+RouteStatusWhat it does/ActiveDashboard overview + priority board/prioritiesActiveAI-ranked Kanban (drag-drop via @hello-pangea/dnd)/skillsActiveSkills Hub — Skills In Use, Marketplace (deep detail + embedded Claude), Development (submissions + proposals), Eval History/portfolio/fund-returnsActiveNative page. Daily cron extracts returns to Supabase, user verifies here./operations/enablementActiveTabbed: Daily Quiz, Architecture Lab, Notes, Weekly Reports/operations/ai-initiativesActiveAI initiative tracker — clickable cards with detail views, status progression, linked skills/operations/enablement/learning-logActiveBrowse technical concepts captured during work sessions (reads Supabase learning_log). Rich markdown KB + screenshot dropzone + Ask Claude.
+/operations/organizationActiveOrg chart (draggable cards, React Flow), responsibilities matrix, Notion access audit. Owns 6 `org_*` Supabase tables./portfolio/fund-accountingScopingSupabase schema designed, tables created. Next: wire dashboard to read from Supabase, build reconciliation dot./investor-relations/one-pagersComing soonGenerate and update investor-facing single-page fund summaries/investor-relations/newslettersComing soonMarket commentary and performance newsletters for LP distribution/investor-relations/x-postsComing soonSocial media content scheduling for X (Twitter)/researchComing soonFund vetting, deal evaluation/acio/dealsIn progressDeal pipeline — sourced through committed stages. Colocated _components/, _lib/, api/./acio/investment-memosComing soonAI-assisted investment memo drafting and library
 Shared components (src/components/)
 
 sidebar.tsx — Main navigation with expandable groups, active-state tracking
@@ -90,12 +83,43 @@ page-header.tsx — Reusable page header with title, description, status badge
 placeholder-card.tsx — "Coming soon" placeholder
 doodle-pad.tsx — Draggable floating notepad with topic tagging, localStorage
 
+Auth & access
+
+Google SSO via Supabase Auth, restricted to @amitiscapital.com via (a) Google Workspace OAuth app Internal type and (b) server-side email check in `/auth/callback`. Single OAuth flow captures Gmail scopes (`gmail.readonly`, `gmail.modify`) in the same consent step as login — refresh token persisted to `user_gmail_credentials` (service-role only; RLS blocks user reads) via the callback route. All routes guarded by `src/middleware.ts` except `/login` and `/auth/callback`. Service role continues to serve shared data (no per-user RLS on deals etc.) — auth is the gate, data is uniformly visible. Use `requireUser()` from `src/lib/auth.ts` in API routes. Get a Gmail client with `getGmailClientForUser(userId)` from `src/app/acio/deals/_lib/gmail.ts`.
+
+Python scripts (`scripts/refresh-priorities.py`) still use the legacy `GMAIL_REFRESH_TOKEN` env var for Gage's personal inbox — deferred migration, not in scope for the SSO rollout.
+
+Environment variables
+
+Required (set locally in `.env.local` and on Vercel):
+- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` — public Supabase config
+- `SUPABASE_SERVICE_ROLE_KEY` — server-only, bypasses RLS
+- `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET` — Google OAuth app credentials (same app serves both Supabase Auth login and Gmail API access)
+- `GMAIL_ACIO_LABEL_ID` — Gmail label ID for ACIO-Opportunities scan mode
+- `ANTHROPIC_API_KEY` — Claude API
+- `NOTION_ORG_API_KEY` — org module Notion audit
+- `DROPBOX_*` — marketing collaterals (access, refresh, app key/secret, folder, namespace)
+- `ACIO_URL` — (dev only) internal ACIO service
+
+Legacy, local-only (do not set on Vercel):
+- `GMAIL_REFRESH_TOKEN`, `GMAIL_USER_EMAIL` — used by Python scripts against Gage's inbox. Web app uses per-user tokens from `user_gmail_credentials`.
+
+Deployment
+
+Vercel production. Custom domain via DNS CNAME to `cname.vercel-dns.com`. First-deploy checklist:
+1. Run `supabase-auth-migration.sql` in Supabase SQL editor.
+2. Configure Google OAuth (Internal user type, Gmail API enabled, redirect URI `https://<supabase-project>.supabase.co/auth/v1/callback`).
+3. Configure Supabase Auth → Google provider with Gmail scopes and Site URL / Redirect URLs.
+4. Set Vercel env vars.
+5. Sign in once, verify `user_gmail_credentials` row exists, run an ACIO scan.
+6. Remove `GMAIL_REFRESH_TOKEN` / `GMAIL_USER_EMAIL` from Vercel (Python scripts stay local).
+
 External dependencies
 
 Fund Returns Dashboard — Separate Flask app (~/fund-return-dashboard/) on port 5050, iframed into portfolio section. Has its own Notion integration for storing extracted fund returns.
 Supabase — PostgreSQL database at https://njmqygpadjqlnbinblun.supabase.co. Primary data store for fund returns, ACIO deals, learning log, skill analytics, and Skills Hub. Connection via @supabase/supabase-js (client at src/lib/supabase.ts). Free tier, Amitis Capital Supabase org.
 Skill Sync Pipeline — skill-analytics skill (Mode 3) detects new/modified skills across Cowork/Claude Code/Claude.ai, writes to skill_proposals for admin approval. Batch scan via python scripts/sync-skills.py. Approved skills move to skill_catalog.
-Gmail API — OAuth2 credentials for reading emails (used by refresh-priorities.py and the fund returns pipeline)
+Gmail API — per-user OAuth via Supabase Auth (`user_gmail_credentials`). Python scripts (legacy) still use a single `GMAIL_REFRESH_TOKEN`.
 Attio CRM — API key for pulling tasks and notes into the priority system
 Anthropic API — Powers all AI features via @anthropic-ai/sdk
 

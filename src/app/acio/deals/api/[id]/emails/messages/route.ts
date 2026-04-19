@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@/lib/supabase-server"
-import { fetchThreadMessages } from "@/app/acio/deals/_lib/gmail"
+import { fetchThreadMessages, getGmailClientForUser } from "@/app/acio/deals/_lib/gmail"
 import { extractLinksFromText } from "@/app/acio/deals/_lib/links"
+import { requireUser } from "@/lib/auth"
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id: dealId } = await params
@@ -27,7 +28,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   // Fetch from Gmail and cache
   try {
-    const messages = await fetchThreadMessages(threadId)
+    const user = await requireUser()
+    const gmail = await getGmailClientForUser(user.id)
+    const messages = await fetchThreadMessages(gmail, threadId)
 
     const rows = messages.map((m) => ({
       deal_email_id: dealEmailId,

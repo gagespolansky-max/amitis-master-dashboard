@@ -1,18 +1,32 @@
-import { google } from "googleapis"
+import { google, gmail_v1 } from "googleapis"
+import { createServerClient as createServiceRoleClient } from "@/lib/supabase-server"
 
-function getAuth() {
+export type GmailClient = gmail_v1.Gmail
+
+/**
+ * Build a Gmail client for a specific user using their stored refresh token.
+ * Throws if the user has no credentials (they must sign in again).
+ */
+export async function getGmailClientForUser(userId: string): Promise<GmailClient> {
+  const admin = createServiceRoleClient()
+  const { data, error } = await admin
+    .from("user_gmail_credentials")
+    .select("refresh_token")
+    .eq("user_id", userId)
+    .single()
+
+  if (error || !data?.refresh_token) {
+    throw new Error(
+      `No Gmail credentials for user ${userId}. Sign in again to reconnect Gmail.`
+    )
+  }
+
   const oauth2Client = new google.auth.OAuth2(
     process.env.GMAIL_CLIENT_ID,
     process.env.GMAIL_CLIENT_SECRET
   )
-  oauth2Client.setCredentials({
-    refresh_token: process.env.GMAIL_REFRESH_TOKEN,
-  })
-  return oauth2Client
-}
-
-export function getGmailClient() {
-  return google.gmail({ version: "v1", auth: getAuth() })
+  oauth2Client.setCredentials({ refresh_token: data.refresh_token })
+  return google.gmail({ version: "v1", auth: oauth2Client })
 }
 
 export interface ThreadMeta {
@@ -25,8 +39,7 @@ export interface ThreadMeta {
   bodyPreview: string
 }
 
-export async function fetchThreadMeta(threadId: string): Promise<ThreadMeta> {
-  const gmail = getGmailClient()
+export async function fetchThreadMeta(gmail: GmailClient, threadId: string): Promise<ThreadMeta> {
   const thread = await gmail.users.threads.get({
     userId: "me",
     id: threadId,
@@ -111,13 +124,11 @@ function findPartByMime(part: any, mimeType: string): any | undefined {
   return undefined
 }
 
-// Inline signature images to filter out
 const INLINE_IMAGE_PATTERN = /^image\d{3}\.(png|jpe?g|gif|bmp)$/i
 
 function isSignatureAttachment(filename: string, mimeType: string, size: number): boolean {
   if (!mimeType.startsWith("image/")) return false
   if (INLINE_IMAGE_PATTERN.test(filename)) return true
-  // Tiny images (< 100KB) with no meaningful name are likely signature/logo
   if (size < 100_000 && /^(logo|banner|icon|signature|footer|header)\b/i.test(filename)) return true
   return false
 }
@@ -139,8 +150,10 @@ function extractAttachments(messageId: string, part: any): AttachmentMeta[] {
   return results
 }
 
-export async function fetchThreadMessages(threadId: string): Promise<ThreadMessage[]> {
-  const gmail = getGmailClient()
+export async function fetchThreadMessages(
+  gmail: GmailClient,
+  threadId: string
+): Promise<ThreadMessage[]> {
   const thread = await gmail.users.threads.get({
     userId: "me",
     id: threadId,
@@ -190,8 +203,11 @@ export async function fetchThreadMessages(threadId: string): Promise<ThreadMessa
   return messages
 }
 
-export async function fetchAttachmentData(messageId: string, attachmentId: string): Promise<Buffer> {
-  const gmail = getGmailClient()
+export async function fetchAttachmentData(
+  gmail: GmailClient,
+  messageId: string,
+  attachmentId: string
+): Promise<Buffer> {
   const res = await gmail.users.messages.attachments.get({
     userId: "me",
     messageId,
@@ -200,8 +216,7 @@ export async function fetchAttachmentData(messageId: string, attachmentId: strin
   return Buffer.from(res.data.data || "", "base64url")
 }
 
-export async function searchThreads(query: string): Promise<string[]> {
-  const gmail = getGmailClient()
+export async function searchThreads(gmail: GmailClient, query: string): Promise<string[]> {
   const threadIds: string[] = []
   let pageToken: string | undefined
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
-import { fetchAttachmentData } from "@/app/acio/deals/_lib/gmail"
+import { fetchAttachmentData, getGmailClientForUser } from "@/app/acio/deals/_lib/gmail"
+import { requireUser } from "@/lib/auth"
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl
@@ -13,7 +14,9 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const data = await fetchAttachmentData(messageId, attachmentId)
+    const user = await requireUser()
+    const gmail = await getGmailClientForUser(user.id)
+    const data = await fetchAttachmentData(gmail, messageId, attachmentId)
 
     return new NextResponse(new Uint8Array(data), {
       headers: {

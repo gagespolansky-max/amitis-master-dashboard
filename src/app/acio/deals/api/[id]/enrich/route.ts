@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@/lib/supabase-server"
-import { fetchThreadMessages } from "@/app/acio/deals/_lib/gmail"
+import { fetchThreadMessages, getGmailClientForUser, type GmailClient } from "@/app/acio/deals/_lib/gmail"
 import { enrichDealFromEmails } from "@/app/acio/deals/_lib/classify"
+import { requireUser } from "@/lib/auth"
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const supabase = createServerClient()
   const { id: dealId } = await params
+  const user = await requireUser()
+  let gmail: GmailClient | null = null
 
   // Fetch the deal
   const { data: deal, error: dealErr } = await supabase
@@ -51,7 +54,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     // Fetch from Gmail
     try {
-      const messages = await fetchThreadMessages(threadId)
+      if (!gmail) gmail = await getGmailClientForUser(user.id)
+      const messages = await fetchThreadMessages(gmail, threadId)
       for (const m of messages) {
         if (m.bodyText) allMessages.push({ from_email: m.fromEmail || "", date: m.date || "", body_text: m.bodyText })
       }

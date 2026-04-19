@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@/lib/supabase-server"
-import { searchThreads, fetchThreadMeta } from "@/app/acio/deals/_lib/gmail"
+import {
+  searchThreads,
+  fetchThreadMeta,
+  getGmailClientForUser,
+  type GmailClient,
+} from "@/app/acio/deals/_lib/gmail"
 import { classifyThread, extractDealMetadata } from "@/app/acio/deals/_lib/classify"
 import { findMatchingDeal, linkThreadToExistingDeal, type ExistingDeal } from "@/app/acio/deals/_lib/dedup"
+import { requireUser } from "@/lib/auth"
 
 const INTERNAL_DOMAINS = ["amitiscapital.com", "theamitisgroup.com"]
 
@@ -22,12 +28,16 @@ export async function POST(req: NextRequest) {
   }
 
   try {
+    const user = await requireUser()
+    const gmail = await getGmailClientForUser(user.id)
+
     if (mode === "baseline") {
-      return await runBaselineScan()
+      return await runBaselineScan(gmail, user.id)
     } else {
-      return await runLabelScan()
+      return await runLabelScan(gmail, user.id)
     }
   } catch (err) {
+    if (err instanceof Response) return err
     const message = err instanceof Error ? err.message : "Unknown error"
     return NextResponse.json({ error: message }, { status: 500 })
   }
@@ -49,7 +59,7 @@ function isAllInternal(participants: { name: string; email: string }[]): boolean
   )
 }
 
-async function runBaselineScan() {
+async function runBaselineScan(gmail: GmailClient, userId: string) {
   const supabase = createServerClient()
   const threeMonthsAgo = new Date()
   threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3)
@@ -57,7 +67,7 @@ async function runBaselineScan() {
 
   const allThreadIds = new Set<string>()
   for (const q of BASELINE_QUERIES) {
-    const ids = await searchThreads(`${q} after:${dateStr}`)
+    const ids = await searchThreads(gmail, `${q} after:${dateStr}`)
     ids.forEach((id) => allThreadIds.add(id))
   }
 
@@ -75,7 +85,7 @@ async function runBaselineScan() {
   let mergedIntoExisting = 0
 
   for (const threadId of newThreadIds) {
-    const meta = await fetchThreadMeta(threadId)
+    const meta = await fetchThreadMeta(gmail, threadId)
 
     if (isAllInternal(meta.participants)) continue
 
@@ -107,6 +117,7 @@ async function runBaselineScan() {
         company_stage: classification.company_stage || null,
         company_description: classification.company_description || null,
         value_proposition: classification.value_proposition || null,
+        created_by_user_id: userId,
       })
       .select()
       .single()
@@ -141,7 +152,7 @@ async function runBaselineScan() {
   })
 }
 
-async function runLabelScan() {
+async function runLabelScan(gmail: GmailClient, userId: string) {
   const supabase = createServerClient()
   const labelId = process.env.GMAIL_ACIO_LABEL_ID
   if (!labelId) {
@@ -163,7 +174,7 @@ async function runLabelScan() {
     query += ` after:${dateStr}`
   }
 
-  const threadIds = await searchThreads(query)
+  const threadIds = await searchThreads(gmail, query)
   const existing = await getExistingThreadIds()
   const newThreadIds = threadIds.filter((id) => !existing.has(id))
 
@@ -178,7 +189,7 @@ async function runLabelScan() {
   let mergedIntoExisting = 0
 
   for (const threadId of newThreadIds) {
-    const meta = await fetchThreadMeta(threadId)
+    const meta = await fetchThreadMeta(gmail, threadId)
     const extraction = await extractDealMetadata(meta)
 
     // Check for existing deal match before inserting
@@ -205,6 +216,7 @@ async function runLabelScan() {
         company_stage: extraction.company_stage || null,
         company_description: extraction.company_description || null,
         value_proposition: extraction.value_proposition || null,
+        created_by_user_id: userId,
       })
       .select()
       .single()
