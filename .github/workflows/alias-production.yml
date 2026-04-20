@@ -1,0 +1,53 @@
+name: Re-alias amitis-dashboard to latest production
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: vercel-alias
+  cancel-in-progress: false
+
+jobs:
+  alias:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Wait for Vercel production deploy to succeed
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for i in $(seq 1 40); do
+            state=$(gh api repos/${{ github.repository }}/commits/${{ github.sha }}/status --jq '.state' 2>/dev/null || echo "pending")
+            echo "attempt=$i state=$state"
+            if [ "$state" = "success" ]; then exit 0; fi
+            if [ "$state" = "failure" ] || [ "$state" = "error" ]; then
+              echo "Vercel deploy failed — skipping alias update"
+              exit 1
+            fi
+            sleep 15
+          done
+          echo "Timed out waiting for Vercel deploy status"
+          exit 1
+
+      - name: Resolve latest production deployment URL
+        id: latest
+        run: |
+          url=$(npx --yes vercel@latest ls master-dashboard \
+            --token ${{ secrets.VERCEL_TOKEN }} \
+            --scope gagespolansky-4488s-projects 2>&1 \
+            | awk '/Ready/ && /Production/ {for(i=1;i<=NF;i++) if($i ~ /^https:\/\//) {print $i; exit}}')
+          if [ -z "$url" ]; then
+            echo "Could not determine latest production deployment URL"
+            exit 1
+          fi
+          echo "Latest production: $url"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: Re-point amitis-dashboard.vercel.app
+        run: |
+          npx --yes vercel@latest alias set \
+            ${{ steps.latest.outputs.url }} \
+            amitis-dashboard.vercel.app \
+            --token ${{ secrets.VERCEL_TOKEN }} \
+            --scope gagespolansky-4488s-projects
