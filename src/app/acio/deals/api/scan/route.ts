@@ -159,21 +159,7 @@ async function runLabelScan(gmail: GmailClient, userId: string) {
     return NextResponse.json({ error: "GMAIL_ACIO_LABEL_ID not configured" }, { status: 500 })
   }
 
-  const { data: lastScan } = await supabase
-    .from("acio_scan_log")
-    .select("scanned_at")
-    .eq("scan_type", "label")
-    .order("scanned_at", { ascending: false })
-    .limit(1)
-    .single()
-
-  let query = "label:ACIO-Opportunities"
-  if (lastScan?.scanned_at) {
-    const d = new Date(lastScan.scanned_at)
-    const dateStr = `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, "0")}/${String(d.getDate()).padStart(2, "0")}`
-    query += ` after:${dateStr}`
-  }
-
+  const query = "label:ACIO-Opportunities"
   const threadIds = await searchThreads(gmail, query)
   const existing = await getExistingThreadIds()
   const newThreadIds = threadIds.filter((id) => !existing.has(id))
