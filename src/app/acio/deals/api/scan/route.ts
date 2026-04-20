@@ -12,6 +12,8 @@ import { requireUser } from "@/lib/auth"
 
 const INTERNAL_DOMAINS = ["amitiscapital.com", "theamitisgroup.com"]
 
+const DEPLOY_SHA = process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) ?? "local"
+
 const BASELINE_QUERIES = [
   '"DD call" OR "due diligence" OR "data room"',
   '"series" OR "round" OR "co-invest" OR "commitment" OR "allocation"',
@@ -141,7 +143,7 @@ async function runBaselineScan(gmail: GmailClient, userId: string) {
     scan_type: "baseline",
     threads_scanned: newThreadIds.length,
     new_deals_found: newDeals,
-    query_used: BASELINE_QUERIES.join(" | "),
+    query_used: `${BASELINE_QUERIES.join(" | ")} [sha:${DEPLOY_SHA}]`,
   })
 
   return NextResponse.json({
@@ -226,7 +228,7 @@ async function runLabelScan(gmail: GmailClient, userId: string) {
     scan_type: "label",
     threads_scanned: newThreadIds.length,
     new_deals_found: newDeals,
-    query_used: query,
+    query_used: `${query} [sha:${DEPLOY_SHA}]`,
   })
 
   return NextResponse.json({
