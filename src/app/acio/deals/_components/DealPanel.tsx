@@ -223,6 +223,11 @@ export default function DealPanel({ deal, allDeals, onClose, onUpdate, onDelete,
   emails
     .filter((e) => e.thread_id !== deal.source_thread_id)
     .forEach((e) => allEmailItems.push({ isSource: false, dealEmail: e }))
+  allEmailItems.sort((a, b) => {
+    const aDate = a.dealEmail.last_message_date || ""
+    const bDate = b.dealEmail.last_message_date || ""
+    return bDate.localeCompare(aDate)
+  })
 
   const moveTargets = allDeals
     .filter((d) => d.id !== deal.id && d.status !== "dismissed")
