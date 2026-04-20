@@ -4,6 +4,11 @@ on:
   push:
     branches: [main]
 
+permissions:
+  contents: read
+  statuses: read
+  deployments: read
+
 concurrency:
   group: vercel-alias
   cancel-in-progress: false
@@ -18,10 +23,16 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           for i in $(seq 1 40); do
-            state=$(gh api repos/${{ github.repository }}/commits/${{ github.sha }}/status --jq '.state' 2>/dev/null || echo "pending")
-            echo "attempt=$i state=$state"
-            if [ "$state" = "success" ]; then exit 0; fi
-            if [ "$state" = "failure" ] || [ "$state" = "error" ]; then
+            response=$(gh api "repos/${{ github.repository }}/commits/${{ github.sha }}/status" 2>&1) || {
+              echo "attempt=$i gh api call failed: $response"
+              sleep 15
+              continue
+            }
+            state=$(echo "$response" | jq -r '.state')
+            vercel_state=$(echo "$response" | jq -r '[.statuses[] | select(.context == "Vercel")] | .[0].state // "pending"')
+            echo "attempt=$i overall=$state vercel=$vercel_state"
+            if [ "$vercel_state" = "success" ]; then exit 0; fi
+            if [ "$vercel_state" = "failure" ] || [ "$vercel_state" = "error" ]; then
               echo "Vercel deploy failed — skipping alias update"
               exit 1
             fi
