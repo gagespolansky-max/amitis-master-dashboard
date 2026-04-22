@@ -450,6 +450,24 @@ export default function OrgChart() {
 
   function resetView() { setZoom(0.85); setPan({ x: 0, y: 0 }) }
 
+  // Build edges from org_edges table (must be before early returns — rules of hooks)
+  const personById = useMemo(() => {
+    const map = new Map<string, OrgPerson>()
+    for (const p of internal) map.set(p.id, p)
+    return map
+  }, [internal])
+
+  const edges = useMemo(() => {
+    return edgeData
+      .filter((e) => idSet.has(e.source_id) && idSet.has(e.target_id))
+      .map((e) => {
+        const source = personById.get(e.source_id)
+        const target = personById.get(e.target_id)
+        const isSamara = source?.team === 'samara' || target?.team === 'samara'
+        return { sourceId: e.source_id, targetId: e.target_id, isSamara }
+      })
+  }, [edgeData, idSet, personById])
+
   if (loading) {
     return <div className="flex items-center justify-center py-20"><Loader2 className="w-5 h-5 animate-spin text-muted" /></div>
   }
@@ -467,24 +485,6 @@ export default function OrgChart() {
   }
 
   const selectedPerson = selectedId ? people.find((p) => p.id === selectedId) || null : null
-
-  // Build edges from org_edges table
-  const personById = useMemo(() => {
-    const map = new Map<string, OrgPerson>()
-    for (const p of internal) map.set(p.id, p)
-    return map
-  }, [internal])
-
-  const edges = useMemo(() => {
-    return edgeData
-      .filter((e) => idSet.has(e.source_id) && idSet.has(e.target_id))
-      .map((e) => {
-        const source = personById.get(e.source_id)
-        const target = personById.get(e.target_id)
-        const isSamara = source?.team === 'samara' || target?.team === 'samara'
-        return { sourceId: e.source_id, targetId: e.target_id, isSamara }
-      })
-  }, [edgeData, idSet, personById])
 
   return (
     <div>
