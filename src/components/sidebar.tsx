@@ -70,13 +70,21 @@ const navigation: NavItem[] = [
   },
 ]
 
-export default function Sidebar() {
+const TEAMMATE_VISIBLE_HREFS = new Set(['/acio'])
+
+interface Props {
+  role: 'admin' | 'teammate'
+}
+
+export default function Sidebar({ role }: Props) {
   const pathname = usePathname()
   const { collapsed, toggle } = useSidebar()
+  const visibleNavigation =
+    role === 'admin' ? navigation : navigation.filter((item) => TEAMMATE_VISIBLE_HREFS.has(item.href))
   const [expanded, setExpanded] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {}
-    navigation.forEach((item) => {
-      if (item.children && pathname.startsWith(item.href)) {
+    visibleNavigation.forEach((item) => {
+      if (item.children && (pathname.startsWith(item.href) || role !== 'admin')) {
         initial[item.href] = true
       }
     })
@@ -127,7 +135,7 @@ export default function Sidebar() {
       {!collapsed && (
         <>
           <nav className="flex-1 overflow-y-auto py-3 px-3">
-            {navigation.map((item) => (
+            {visibleNavigation.map((item) => (
               <div key={item.href} className="mb-1">
                 {item.children ? (
                   <>

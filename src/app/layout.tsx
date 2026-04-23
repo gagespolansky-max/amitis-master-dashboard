@@ -5,6 +5,7 @@ import Sidebar from "@/components/sidebar"
 import SidebarLayout from "@/components/sidebar-layout"
 import MainContent from "@/components/main-content"
 import DoodlePad from "@/components/doodle-pad"
+import { getUserWithRole } from "@/lib/auth"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -21,19 +22,27 @@ export const metadata: Metadata = {
   description: "Central hub for all workflows and initiatives",
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const { user, role } = await getUserWithRole()
+
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}>
       <body className="min-h-full">
-        <SidebarLayout>
-          <Sidebar />
-          <MainContent>{children}</MainContent>
-        </SidebarLayout>
-        <DoodlePad />
+        {user ? (
+          <>
+            <SidebarLayout>
+              <Sidebar role={role ?? "teammate"} />
+              <MainContent>{children}</MainContent>
+            </SidebarLayout>
+            <DoodlePad />
+          </>
+        ) : (
+          children
+        )}
       </body>
     </html>
   )

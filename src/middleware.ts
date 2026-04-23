@@ -1,7 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createServerClient } from "@supabase/ssr"
+import { createClient } from "@supabase/supabase-js"
 
 const PUBLIC_PATHS = ["/login", "/auth/callback"]
+const TEAMMATE_ALLOWED_PREFIXES = ["/acio"]
+const TEAMMATE_HOME = "/acio/deals"
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request })
@@ -25,7 +28,6 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  // getUser() revalidates the JWT server-side; getSession() does not.
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -45,6 +47,33 @@ export async function middleware(request: NextRequest) {
     url.pathname = "/"
     url.search = ""
     return NextResponse.redirect(url)
+  }
+
+  // Role-based gate: non-admin users can only reach /acio/*.
+  if (user && !isPublic) {
+    const admin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    )
+    const { data: roleRow } = await admin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .maybeSingle()
+    const role: string = roleRow?.role ?? "teammate"
+
+    if (role !== "admin") {
+      const allowed = TEAMMATE_ALLOWED_PREFIXES.some(
+        (p) => pathname === p || pathname.startsWith(`${p}/`)
+      )
+      if (!allowed) {
+        const url = request.nextUrl.clone()
+        url.pathname = TEAMMATE_HOME
+        url.search = ""
+        return NextResponse.redirect(url)
+      }
+    }
   }
 
   return response
