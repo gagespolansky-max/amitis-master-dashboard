@@ -38,7 +38,7 @@ export default async function RootLayout({
         {user ? (
           <>
             <SidebarLayout>
-              <Sidebar role={role ?? "teammate"} />
+              <Sidebar role={role ?? "teammate"} email={user.email ?? ""} />
               <MainContent>{children}</MainContent>
             </SidebarLayout>
             <DoodlePad />

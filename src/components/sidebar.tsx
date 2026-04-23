@@ -74,9 +74,10 @@ const TEAMMATE_VISIBLE_HREFS = new Set(['/acio'])
 
 interface Props {
   role: 'admin' | 'teammate'
+  email: string
 }
 
-export default function Sidebar({ role }: Props) {
+export default function Sidebar({ role, email }: Props) {
   const pathname = usePathname()
   const { collapsed, toggle } = useSidebar()
   const visibleNavigation =
@@ -191,8 +192,15 @@ export default function Sidebar({ role }: Props) {
             ))}
           </nav>
 
-          <div className="px-5 py-3 border-t border-sidebar-border">
-            <p className="text-xs text-muted">v0.1.0</p>
+          <div className="px-5 py-3 border-t border-sidebar-border space-y-1.5">
+            <p className="text-[11px] text-muted truncate" title={email}>{email}</p>
+            <a
+              href="/logout"
+              className="inline-block text-[11px] text-muted hover:text-foreground transition-colors"
+            >
+              Sign out
+            </a>
+            <p className="text-[10px] text-muted/50 pt-1">v0.1.0</p>
           </div>
         </>
       )}

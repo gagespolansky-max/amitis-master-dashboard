@@ -3,7 +3,7 @@ import { createServerClient } from "@supabase/ssr"
 import { createClient } from "@supabase/supabase-js"
 
 const PUBLIC_PATHS = ["/login", "/auth/callback"]
-const TEAMMATE_ALLOWED_PREFIXES = ["/acio"]
+const TEAMMATE_ALLOWED_PREFIXES = ["/acio", "/logout"]
 const TEAMMATE_HOME = "/acio/deals"
 
 export async function middleware(request: NextRequest) {
