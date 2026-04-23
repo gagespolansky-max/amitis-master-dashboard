@@ -22,6 +22,9 @@ export const metadata: Metadata = {
   description: "Central hub for all workflows and initiatives",
 }
 
+// Layout reads the user's role per request; never cache the rendered HTML.
+export const dynamic = "force-dynamic"
+
 export default async function RootLayout({
   children,
 }: Readonly<{
