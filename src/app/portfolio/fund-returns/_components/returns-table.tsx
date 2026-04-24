@@ -25,6 +25,8 @@ export default function ReturnsTable({ initialData }: { initialData: FundReturn[
   const [running, setRunning] = useState(false)
   const [runOutput, setRunOutput] = useState<string | null>(null)
 
+  const isVercel = Boolean(process.env.NEXT_PUBLIC_VERCEL_ENV)
+
   const months = [...new Set(data.map(r => r.return_month))].sort((a, b) => {
     const da = new Date(a + ' 1')
     const db = new Date(b + ' 1')
@@ -54,6 +56,8 @@ export default function ReturnsTable({ initialData }: { initialData: FundReturn[
       } else {
         window.location.reload()
       }
+      // Auto-dismiss the log after 10 seconds
+      setTimeout(() => setRunOutput(null), 10000)
     } catch {
       setRunOutput('Failed to run extraction')
     } finally {
@@ -104,26 +108,36 @@ export default function ReturnsTable({ initialData }: { initialData: FundReturn[
             </button>
           ))}
         </div>
-        <div className="ml-auto">
-          <button
-            onClick={handleRunNow}
-            disabled={running}
-            className={`px-4 py-1.5 rounded text-sm font-medium transition-colors ${
-              running
-                ? 'bg-zinc-700 text-zinc-400 cursor-wait'
-                : 'bg-indigo-600 text-white hover:bg-indigo-500'
-            }`}
-          >
-            {running ? 'Running...' : 'Run Now'}
-          </button>
-        </div>
+        {!isVercel && (
+          <div className="ml-auto">
+            <button
+              onClick={handleRunNow}
+              disabled={running}
+              className={`px-4 py-1.5 rounded text-sm font-medium transition-colors ${
+                running
+                  ? 'bg-zinc-700 text-zinc-400 cursor-wait'
+                  : 'bg-indigo-600 text-white hover:bg-indigo-500'
+              }`}
+            >
+              {running ? 'Running...' : 'Run Now'}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Run output */}
       {runOutput && (
-        <pre className="mb-4 p-3 bg-zinc-900 border border-zinc-700 rounded text-xs text-zinc-400 max-h-48 overflow-y-auto whitespace-pre-wrap">
-          {runOutput}
-        </pre>
+        <div className="mb-4 relative">
+          <button
+            onClick={() => setRunOutput(null)}
+            className="absolute top-2 right-2 text-zinc-500 hover:text-zinc-300 text-xs"
+          >
+            Dismiss
+          </button>
+          <pre className="p-3 bg-zinc-900 border border-zinc-700 rounded text-xs text-zinc-400 max-h-48 overflow-y-auto whitespace-pre-wrap">
+            {runOutput}
+          </pre>
+        </div>
       )}
 
       {/* Table */}
