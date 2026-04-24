@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FundReturn } from '../_lib/types'
 
 function VerifyButton({ row, onToggle }: { row: FundReturn; onToggle: (id: string, v: boolean) => void }) {
@@ -25,7 +25,13 @@ export default function ReturnsTable({ initialData }: { initialData: FundReturn[
   const [running, setRunning] = useState(false)
   const [runOutput, setRunOutput] = useState<string | null>(null)
 
-  const isVercel = Boolean(process.env.NEXT_PUBLIC_VERCEL_ENV)
+  // Run Now only works when the Next.js server can spawn the local cron.
+  // Default-hidden on SSR; enabled only once we confirm we're on localhost.
+  const [isLocal, setIsLocal] = useState(false)
+  useEffect(() => {
+    const h = window.location.hostname
+    setIsLocal(h === 'localhost' || h === '127.0.0.1' || h.startsWith('192.168.'))
+  }, [])
 
   const months = [...new Set(data.map(r => r.return_month))].sort((a, b) => {
     const da = new Date(a + ' 1')
@@ -108,7 +114,7 @@ export default function ReturnsTable({ initialData }: { initialData: FundReturn[
             </button>
           ))}
         </div>
-        {!isVercel && (
+        {isLocal && (
           <div className="ml-auto">
             <button
               onClick={handleRunNow}
