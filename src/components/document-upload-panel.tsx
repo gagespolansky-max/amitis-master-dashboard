@@ -1,7 +1,13 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { readSystemDocuments, writeSystemDocuments, formatBytes, categoryOptions, type UploadedDocument, type DocumentCategory } from '@/lib/byod-documents'
+import {
+  readSystemDocuments,
+  writeSystemDocuments,
+  formatBytes,
+  type UploadedDocument,
+  type DocumentCategory,
+} from '@/lib/byod-documents'
 
 function storageKey(workstream: DocumentCategory) {
   return `amitis-byod-documents-${workstream.toLowerCase()}`
@@ -27,7 +33,6 @@ export default function DocumentUploadPanel({ workstream }: { workstream: Docume
     if (!files?.length) return
 
     const now = new Date().toISOString()
-
     const uploaded: UploadedDocument[] = Array.from(files).map((file) => ({
       id: crypto.randomUUID(),
       name: file.name,
@@ -39,10 +44,8 @@ export default function DocumentUploadPanel({ workstream }: { workstream: Docume
       uploadedAt: now,
     }))
 
-    // local module state
     setDocuments((prev) => [...uploaded, ...prev])
 
-    // system-wide state
     const existing = readSystemDocuments()
     writeSystemDocuments([...uploaded, ...existing])
 
@@ -72,3 +75,5 @@ export default function DocumentUploadPanel({ workstream }: { workstream: Docume
         </div>
       ))}
     </section>
+  )
+}
