@@ -1,88 +1,60 @@
 import Link from 'next/link'
-import PriorityBoard from '@/app/priorities/_components/priority-board'
 
-const workstreams = [
+const sections = [
   {
-    title: 'Portfolio',
-    description: 'Fund returns tracking and accounting',
-    href: '/portfolio/fund-returns',
-    status: 'in-progress' as const,
-    items: ['Fund Returns Dashboard', 'Fund Accounting'],
+    title: 'Today',
+    items: ['Review new deals', 'Check fund returns anomalies', 'Clear top 3 priorities'],
   },
   {
-    title: 'Investor Relations',
-    description: 'One pagers, newsletters, and LP communications',
-    href: '/investor-relations',
-    status: 'coming-soon' as const,
-    items: ['One Pagers', 'Market Newsletters'],
+    title: 'This Week',
+    items: ['Prepare LP updates', 'Advance AI initiatives', 'Update learning log'],
   },
   {
-    title: 'Research',
-    description: 'Fund vetting, deal evaluation, and pipeline',
-    href: '/research',
-    status: 'coming-soon' as const,
-    items: ['Fund Vetting', 'Deal Evaluation'],
-  },
-  {
-    title: 'Operations',
-    description: 'AI initiatives and enablement',
-    href: '/operations/enablement',
-    status: 'in-progress' as const,
-    items: ['AI Initiatives', 'Enablement'],
+    title: 'Needs Attention',
+    items: ['Unreviewed returns', 'Stale deals', 'Pending skill approvals'],
   },
 ]
 
-const statusStyles = {
-  active: 'bg-success/10 text-success',
-  'in-progress': 'bg-warning/10 text-warning',
-  'coming-soon': 'bg-muted/10 text-muted',
-}
-
-const statusLabels = {
-  active: 'Active',
-  'in-progress': 'In Progress',
-  'coming-soon': 'Coming Soon',
-}
+const workstreams = [
+  { title: 'ACIO', href: '/acio/deals', desc: 'Deal pipeline and memos' },
+  { title: 'Portfolio', href: '/portfolio/fund-returns', desc: 'Fund returns and accounting' },
+  { title: 'Operations', href: '/operations/enablement', desc: 'Enablement and initiatives' },
+  { title: 'Investor Relations', href: '/investor-relations/marketing-collaterals', desc: 'LP materials and comms' },
+  { title: 'Priorities', href: '/priorities', desc: 'AI-ranked task board' },
+  { title: 'Skills', href: '/skills', desc: 'Skills hub and marketplace' },
+  { title: 'Research', href: '/research', desc: 'Fund vetting and evaluation' },
+]
 
 export default function Home() {
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
-        <p className="mt-1.5 text-sm text-muted">Your workstreams at a glance.</p>
+    <div className="space-y-10">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Command Center</h1>
+        <p className="mt-1.5 text-sm text-muted">
+          Your operating system for Amitis. What matters now, what’s coming, and where to act.
+        </p>
       </div>
 
-      <section className="mb-10">
-        <h2 className="text-lg font-medium mb-4">Priorities</h2>
-        <PriorityBoard />
+      <section className="grid gap-4 md:grid-cols-3">
+        {sections.map((section) => (
+          <div key={section.title} className="rounded-xl border border-card-border bg-card-bg p-5">
+            <h2 className="text-sm font-medium">{section.title}</h2>
+            <ul className="mt-3 space-y-2">
+              {section.items.map((item) => (
+                <li key={item} className="text-sm text-muted">• {item}</li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </section>
 
       <section>
         <h2 className="text-lg font-medium mb-4">Workstreams</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {workstreams.map((ws) => (
-            <Link
-              key={ws.title}
-              href={ws.href}
-              className="group rounded-xl border border-card-border bg-card-bg p-6 transition-colors hover:border-accent/30"
-            >
-              <div className="flex items-center justify-between mb-3">
-                <h2 className="text-base font-medium group-hover:text-accent transition-colors">
-                  {ws.title}
-                </h2>
-                <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${statusStyles[ws.status]}`}>
-                  {statusLabels[ws.status]}
-                </span>
-              </div>
-              <p className="text-sm text-muted mb-4">{ws.description}</p>
-              <ul className="space-y-1.5">
-                {ws.items.map((item) => (
-                  <li key={item} className="flex items-center gap-2 text-sm text-muted">
-                    <span className="w-1.5 h-1.5 rounded-full bg-card-border" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
+            <Link key={ws.title} href={ws.href} className="rounded-xl border border-card-border bg-card-bg p-5 hover:border-accent/30 transition">
+              <h3 className="text-sm font-medium">{ws.title}</h3>
+              <p className="mt-1 text-sm text-muted">{ws.desc}</p>
             </Link>
           ))}
         </div>
