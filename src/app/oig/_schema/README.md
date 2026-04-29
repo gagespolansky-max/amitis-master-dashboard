@@ -6,7 +6,8 @@ This is the **OIG Database Engineer** workspace. The schema docs in `~/Desktop/O
 
 | File | Purpose |
 |---|---|
-| `migrations/001_foundation.sql` | The DDL — extensions, enums, tables, indexes, triggers, RLS |
+| `migrations/001_foundation.sql` | Phase 1 DDL — extensions, enums, tables, indexes, triggers, RLS |
+| `migrations/002_agent_runtime.sql` | Phase 4 DDL — `agent_conversations`, `agent_messages`, `agent_memory` |
 | `seed.sql` | Realistic test data exercising open / overdue / stale / done states across two orgs and four people |
 | `verification.sql` | Ten queries that prove the schema supports the patterns Audit and Chief of Staff will rely on |
 | `CLAUDE.md` | Schema invariants and rules for adding to it |
