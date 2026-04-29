@@ -4,12 +4,13 @@ import { Suspense, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { createBrowserSupabaseClient } from "@/lib/supabase-browser"
 
-const GMAIL_SCOPES = [
+const GOOGLE_SCOPES = [
   "openid",
   "email",
   "profile",
   "https://www.googleapis.com/auth/gmail.readonly",
   "https://www.googleapis.com/auth/gmail.modify",
+  "https://www.googleapis.com/auth/calendar.readonly",
 ].join(" ")
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -33,7 +34,7 @@ function LoginContent() {
       provider: "google",
       options: {
         redirectTo,
-        scopes: GMAIL_SCOPES,
+        scopes: GOOGLE_SCOPES,
         queryParams: {
           access_type: "offline",
           prompt: "consent",
@@ -64,8 +65,10 @@ function LoginContent() {
       </button>
 
       <p className="mt-6 text-xs text-white/40 leading-relaxed">
-        We request Gmail access so the ACIO deal tracker can scan your inbox for new deals.
-        Your refresh token is stored server-side and used only when you run a scan.
+        We request Gmail and read-only Google Calendar access so the ACIO deal tracker can
+        scan your inbox for new deals and the OIG Chief of Staff can show your week. Your
+        refresh token is stored server-side and used only when you run a scan or open a
+        Chief of Staff session.
       </p>
     </div>
   )

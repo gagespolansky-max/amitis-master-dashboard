@@ -4,9 +4,13 @@ import { createServerClient as createServiceRoleClient } from "@/lib/supabase-se
 
 const ALLOWED_DOMAIN = "amitiscapital.com"
 
-const GMAIL_SCOPES = [
+// Google OAuth scopes the app captures during sign-in. Gmail scopes power the
+// ACIO deal scanner + COS draft writes; calendar.readonly powers the OIG COS
+// calendar grid + meeting context.
+const GOOGLE_SCOPES = [
   "https://www.googleapis.com/auth/gmail.readonly",
   "https://www.googleapis.com/auth/gmail.modify",
+  "https://www.googleapis.com/auth/calendar.readonly",
 ]
 
 export async function GET(req: NextRequest) {
@@ -45,7 +49,7 @@ export async function GET(req: NextRequest) {
           user_id: session.user.id,
           email,
           refresh_token: providerRefreshToken,
-          scopes: GMAIL_SCOPES,
+          scopes: GOOGLE_SCOPES,
           updated_at: new Date().toISOString(),
         },
         { onConflict: "user_id" }
