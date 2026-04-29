@@ -59,6 +59,14 @@ const navigation: NavItem[] = [
     ],
   },
   {
+    label: 'OIG',
+    href: '/oig',
+    children: [
+      { label: 'Chief of Staff', href: '/oig/cos' },
+      { label: 'Triage', href: '/oig/triage' },
+    ],
+  },
+  {
     label: 'Operations',
     href: '/operations',
     children: [
