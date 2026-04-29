@@ -26,8 +26,14 @@
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted);
   --color-success: var(--success);
   --color-warning: var(--warning);
+  /* Semantic aliases used by the OIG UI primitives. */
+  --color-primary: var(--accent);
+  --color-card: var(--card-bg);
+  --color-border: var(--card-border);
+  --color-destructive: #f87171;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
