@@ -10,6 +10,7 @@ const GMAIL_SCOPES = [
   "profile",
   "https://www.googleapis.com/auth/gmail.readonly",
   "https://www.googleapis.com/auth/gmail.modify",
+  "https://www.googleapis.com/auth/calendar.readonly",
 ].join(" ")
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -64,8 +65,8 @@ function LoginContent() {
       </button>
 
       <p className="mt-6 text-xs text-white/40 leading-relaxed">
-        We request Gmail access so the ACIO deal tracker can scan your inbox for new deals.
-        Your refresh token is stored server-side and used only when you run a scan.
+        We request Gmail and Calendar access so ACIO and OIG can scan inbox activity,
+        draft follow-ups, and prepare meeting context.
       </p>
     </div>
   )

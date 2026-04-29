@@ -710,19 +710,13 @@ export async function processThread(input: ProcessThreadInput): Promise<ProcessT
   }
 
   // Resolve org and primary person in parallel.
-  const [orgResult, personResult] = await Promise.all([
+  const [orgResult] = await Promise.all([
     input.organization
       ? findOrCreateOrganization({
           name: input.organization.name,
           domain: input.organization.domain,
           org_type: input.organization.org_type,
         })
-      : Promise.resolve(null),
-    input.primary_person
-      ? (async () => {
-          // Person needs org_id; resolve org first if both are provided.
-          return null // placeholder; real resolution below
-        })()
       : Promise.resolve(null),
   ])
   const orgId = orgResult?.id ?? null

@@ -51,6 +51,14 @@ const navigation: NavItem[] = [
     ],
   },
   {
+    label: 'OIG',
+    href: '/oig',
+    children: [
+      { label: 'Overview', href: '/oig' },
+      { label: 'Chief of Staff', href: '/oig/cos' },
+    ],
+  },
+  {
     label: 'Skills Hub',
     href: '/skills',
     children: [
@@ -70,7 +78,7 @@ const navigation: NavItem[] = [
   },
 ]
 
-const TEAMMATE_VISIBLE_HREFS = new Set(['/acio'])
+const TEAMMATE_VISIBLE_HREFS = new Set(['/acio', '/oig'])
 
 interface Props {
   role: 'admin' | 'teammate'

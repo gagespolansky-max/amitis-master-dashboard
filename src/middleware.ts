@@ -3,7 +3,7 @@ import { createServerClient } from "@supabase/ssr"
 import { createClient } from "@supabase/supabase-js"
 
 const PUBLIC_PATHS = ["/login", "/auth/callback"]
-const TEAMMATE_ALLOWED_PREFIXES = ["/acio", "/logout"]
+const TEAMMATE_ALLOWED_PREFIXES = ["/acio", "/oig", "/logout"]
 const TEAMMATE_HOME = "/acio/deals"
 
 export async function middleware(request: NextRequest) {
@@ -49,7 +49,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Role-based gate: non-admin users can only reach /acio/*.
+  // Role-based gate: teammates can reach shipped teammate workstreams only.
   if (user && !isPublic) {
     const admin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,

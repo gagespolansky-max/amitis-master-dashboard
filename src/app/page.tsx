@@ -30,6 +30,13 @@ const workstreams = [
     status: 'in-progress' as const,
     items: ['AI Initiatives', 'Enablement'],
   },
+  {
+    title: 'Operations Intelligence',
+    description: 'Chief of Staff, calendar prep, and OIG memory',
+    href: '/oig/cos',
+    status: 'in-progress' as const,
+    items: ['Chief of Staff', 'Triage'],
+  },
 ]
 
 const statusStyles = {
