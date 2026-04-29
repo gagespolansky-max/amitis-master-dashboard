@@ -59,7 +59,7 @@ export async function runTriage(
   const userPrompt =
     `Triage my last ${req.hours_back} hours of Gmail activity.` +
     (req.query ? ` Apply the additional Gmail filter: ${req.query}.` : "") +
-    `\n\nFollow the workflow in your system prompt. Begin with gmail_search_recent.`
+    `\n\nFollow the workflow in your system prompt. Begin with fetch_recent_gmail.`
 
   const conversation: Anthropic.MessageParam[] = [
     { role: "user", content: userPrompt },

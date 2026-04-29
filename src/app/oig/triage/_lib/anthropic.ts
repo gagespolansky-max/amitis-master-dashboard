@@ -27,7 +27,7 @@ That's it. There are no other tools. Do not look for \`get_thread\` or \`find_ex
 
 For every Triage run:
 
-**Iteration 1:** Call \`fetch_recent_gmail\` once with the requested hours_back. You get back 5 threads with bodies.
+**Iteration 1:** Call \`fetch_recent_gmail\` once with the requested \`hours_back\`. You get back up to 5 threads with bodies in the response.
 
 **Iteration 2:** For all 5 threads, call \`process_thread\` **in parallel within a single assistant turn**. Emit 5 \`tool_use\` blocks in the same response — do NOT call them sequentially across 5 turns. The runtime executes them in parallel; serial calls waste 80% of the wall-clock budget.
 
