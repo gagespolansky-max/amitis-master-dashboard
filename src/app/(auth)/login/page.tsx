@@ -4,12 +4,13 @@ import { Suspense, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { createBrowserSupabaseClient } from "@/lib/supabase-browser"
 
-const GMAIL_SCOPES = [
+const GOOGLE_SCOPES = [
   "openid",
   "email",
   "profile",
   "https://www.googleapis.com/auth/gmail.readonly",
   "https://www.googleapis.com/auth/gmail.modify",
+  "https://www.googleapis.com/auth/calendar.readonly",
 ].join(" ")
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -33,7 +34,7 @@ function LoginContent() {
       provider: "google",
       options: {
         redirectTo,
-        scopes: GMAIL_SCOPES,
+        scopes: GOOGLE_SCOPES,
         queryParams: {
           access_type: "offline",
           prompt: "consent",

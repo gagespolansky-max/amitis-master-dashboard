@@ -2,36 +2,36 @@
   "this_week": [
     {
       "id": "tw-1",
-      "title": "Address 16 overdue tasks in Attio CRM",
-      "description": "Follow up on overdue tasks including Sergio Chaverri email connection and Louis Najem follow-up from November 2025.",
+      "title": "Complete May 1st BTC subscription transactions for Constella",
+      "description": "Execute test transactions and provide hashes/screenshots to finalize the Amitis x Constella BTC subscription before May 1st deadline.",
       "source": "email",
       "urgency": "high"
     },
     {
       "id": "tw-2",
-      "title": "Schedule call with Michael Stanley (GCMLP)",
-      "description": "Coordinate call between 12:30pm-4pm ET and prepare latest Amitis materials/deck for digital assets fund review.",
+      "title": "Resolve Komainu whitelist rejection for May 1st subscriptions",
+      "description": "Address the rejected whitelist additions in Fireblocks to ensure May 1st subscription transactions can proceed.",
       "source": "email",
       "urgency": "high"
     },
     {
       "id": "tw-3",
-      "title": "Download DDQ data room materials",
-      "description": "Access and download materials from Orangedox data room as requested by Chris Solarz.",
-      "source": "email",
-      "urgency": "high"
-    },
-    {
-      "id": "tw-4",
-      "title": "Send performance materials to Issac Septon",
-      "description": "Provide fund performance data or letters to CIO at 247lookout regarding emerging fund manager John Salemi.",
+      "title": "Provide Excel API documentation to Samara team",
+      "description": "Send available Excel API documentation to Leyu Zou for the Alternative Soft installation on Amitis Capital Windows VM.",
       "source": "email",
       "urgency": "medium"
     },
     {
+      "id": "tw-4",
+      "title": "Renew ChatGPT subscription before May 29th",
+      "description": "Decide whether to renew the ChatGPT plan that expires on May 29, 2026.",
+      "source": "email",
+      "urgency": "low"
+    },
+    {
       "id": "tw-5",
-      "title": "Respond to AYU network introduction",
-      "description": "Follow up with Chicago founder of Buoyant Ventures energy tech venture fund for potential collaboration.",
+      "title": "Prepare materials for Emma intro meeting",
+      "description": "Share relevant materials ahead of time for the Emma introduction that Adam Feldheim will brief Gage on.",
       "source": "email",
       "urgency": "medium"
     }
@@ -39,41 +39,34 @@
   "this_month": [
     {
       "id": "tm-1",
-      "title": "Review March 2026 investor statement",
-      "description": "Analyze Eltican Neutron SP BTC investment statement from NAV Fund Services for Amitis Digital Assets fund.",
+      "title": "Process April payslip from Deel",
+      "description": "Review and process the latest payslip that is now available and being processed.",
       "source": "email",
-      "urgency": "high"
+      "urgency": "medium"
     },
     {
       "id": "tm-2",
-      "title": "Attend Oakbridge bi-weekly catch-up",
-      "description": "Participate in scheduled bi-weekly meeting between Oakbridge and Amitis for fund administration matters.",
+      "title": "Finalize ACDAM email group setup",
+      "description": "Complete the addition of Aram Ebrahimi to the ACDAM email group following successful testing.",
       "source": "email",
-      "urgency": "medium"
-    },
-    {
-      "id": "tm-3",
-      "title": "Review Pareto Capital Partners Centurion materials",
-      "description": "Evaluate $300M FX arbitrage and $10M crypto arbitrage managed account opportunity from Pareto.",
-      "source": "email",
-      "urgency": "medium"
+      "urgency": "low"
     }
   ],
   "on_deck": [
     {
       "id": "od-1",
-      "title": "Consider India Finance Minister private event",
-      "description": "Evaluate attending Opal Group's private conversation with Nirmala Sitharaman about India investment opportunities.",
+      "title": "Evaluate Montreal Alternative Investment Forum attendance",
+      "description": "Consider attending the AIMA Montreal Alternative Investment Forum on June 17, 2026 for networking opportunities.",
       "source": "email",
       "urgency": "low"
     },
     {
       "id": "od-2",
-      "title": "Attend OpenClaw on Nebius webinar",
-      "description": "Participate in registered Workshop webinar on running OpenClaw technology platform on Nebius infrastructure.",
+      "title": "Review Crucible Capital market insights",
+      "description": "Analyze Crucible Capital's Q1 expansion into structured credit and direct lending for potential strategic insights.",
       "source": "email",
       "urgency": "low"
     }
   ],
-  "last_refreshed": "2026-04-02T09:14:31.227468"
+  "last_refreshed": "2026-04-29T13:51:46.724521"
 }

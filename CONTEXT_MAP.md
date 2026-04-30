@@ -10,6 +10,7 @@ src/app/
 ├── auth/callback             # OAuth code exchange + Gmail token persist
 ├── acio/                     # Deal pipeline + investment memos
 ├── investor-relations/       # One-pagers, newsletters, x-posts, marketing collaterals
+├── oig/                      # Operations Intelligence Engine — schema, COS, Triage
 ├── operations/               # Enablement, AI initiatives, organization
 ├── portfolio/                # Fund returns, fund accounting
 ├── priorities/               # AI-ranked Kanban + personal screenshot OCR
@@ -45,6 +46,9 @@ src/app/
 | `operations/enablement` | Active | `learning_log`, `suggestions` (file), `weekly_reports` (file) + localStorage for quiz/lab/notes | Supabase Storage (screenshots) | User UI, Python scripts |
 | `operations/ai-initiatives` | Active | `ai_initiatives` | — | User UI |
 | `operations/organization` | Active | `org_people`, `org_tech_stack`, `org_responsibilities`, `org_responsibility_assignments`, `org_notion_pages`, `org_notion_access` | Notion API | Sync API + user UI |
+| `oig/_schema` | Active | `organizations`, `people`, `interactions`, `action_items`, `interaction_tags`, `action_item_tags`, `audit_findings` (+ pgvector) | — | Database Engineer migrations |
+| `oig/cos` | Active | — (reads OIG tables) | Gmail (per-user, drill+draft only), Anthropic | User UI (chat) |
+| `oig/triage` | Active (Gmail only) | (sole writer of OIG memory tables) | Gmail/Slack/Attio/Tactiq, Anthropic | On-demand button + future cron |
 | `portfolio/fund-returns` | Active | `fund_returns` + `fund-return-audits` storage bucket | Flask dashboard (iframe), Portfolio Model (out-of-band) | Cron |
 | `portfolio/fund-accounting` | Scoping | `funds`, `fund_allocations`, `reconciliation_log` | — | — |
 | `priorities` | Active | `data/priorities.json` | Gmail + Attio (Python) | `scripts/refresh-priorities.py` |
@@ -74,6 +78,10 @@ src/app/
 - `src/app/operations/enablement/learning-log/CLAUDE.md` — markdown KB + screenshots
 - `src/app/operations/ai-initiatives/CLAUDE.md` — initiative tracker
 - `src/app/operations/organization/CLAUDE.md` — org chart + Notion audit
+- `src/app/oig/CLAUDE.md` — Operations Intelligence Engine architecture overview, phase status
+- `src/app/oig/_schema/CLAUDE.md` — Database Engineer invariants and rules for evolving the OIG schema
+- `src/app/oig/cos/CLAUDE.md` — Chief of Staff agent (reads OIG memory; limited source access for drill+draft)
+- `src/app/oig/triage/CLAUDE.md` — Triage agent (sole ingestor; reads sources, writes OIG)
 - `src/app/portfolio/CLAUDE.md` — parent
 - `src/app/portfolio/fund-returns/CLAUDE.md` — pipeline detail, confidence hierarchy
 - `src/app/portfolio/fund-accounting/CLAUDE.md` — scoping notes
@@ -93,6 +101,8 @@ No `.claude/rules/` files in this project (root-level rules live in `~/.claude/r
 - `learning_log` → `operations/enablement/learning-log`
 - `ai_initiatives` → `operations/ai-initiatives`
 - `org_people`, `org_tech_stack`, `org_responsibilities`, `org_responsibility_assignments`, `org_notion_pages`, `org_notion_access` → `operations/organization`
+- `agent_permissions`, `agent_memory`, `agent_conversations`, `agent_messages` → `oig/_shared` (cross-agent platform tables)
+- `organizations`, `people`, `interactions`, `action_items`, `interaction_tags`, `action_item_tags`, `audit_findings` → `oig/_schema` (Triage writes; COS and Audit read)
 - `skill_catalog`, `skill_evals`, `skill_versions`, `skill_proposals`, `skills`, `skill_usage` → `skills/`
 - `gage_screenshots` → `priorities/gage`
 - `user_profiles`, `user_gmail_credentials`, `audit_log` → cross-cutting auth (`middleware.ts`, `auth/callback`)
