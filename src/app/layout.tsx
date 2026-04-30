@@ -6,6 +6,7 @@ import SidebarLayout from "@/components/sidebar-layout"
 import MainContent from "@/components/main-content"
 import DoodlePad from "@/components/doodle-pad"
 import { getUserWithRole } from "@/lib/auth"
+import { TooltipProvider } from "@/components/ui/tooltip"
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,17 +36,19 @@ export default async function RootLayout({
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}>
       <body className="min-h-full">
-        {user ? (
-          <>
-            <SidebarLayout>
-              <Sidebar role={role ?? "teammate"} email={user.email ?? ""} />
-              <MainContent>{children}</MainContent>
-            </SidebarLayout>
-            <DoodlePad />
-          </>
-        ) : (
-          children
-        )}
+        <TooltipProvider delay={300}>
+          {user ? (
+            <>
+              <SidebarLayout>
+                <Sidebar role={role ?? "teammate"} email={user.email ?? ""} />
+                <MainContent>{children}</MainContent>
+              </SidebarLayout>
+              <DoodlePad />
+            </>
+          ) : (
+            children
+          )}
+        </TooltipProvider>
       </body>
     </html>
   )

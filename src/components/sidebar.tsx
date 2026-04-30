@@ -13,6 +13,10 @@ interface NavItem {
 
 const navigation: NavItem[] = [
   {
+    label: 'OIG',
+    href: '/oig/cos',
+  },
+  {
     label: 'Priorities',
     href: '/priorities',
     children: [
