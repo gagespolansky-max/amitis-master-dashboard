@@ -247,7 +247,7 @@ export async function toolGmailSearchRecent(
   // Primary tab. Excludes promotions/social/forums/updates without depending
   // on Gmail having explicitly marked threads as Important (most inboxes
   // haven't curated that signal).
-  const baseFilters = "category:primary -in:chat"
+  const baseFilters = "-in:promotions -in:social -in:forums -in:updates -in:chat -from:noreply -from:no-reply"
   const userQuery = args.query?.trim() ? args.query.trim() : ""
   const query = `${newerClause} ${baseFilters}${userQuery ? ` ${userQuery}` : ""}`.trim()
 

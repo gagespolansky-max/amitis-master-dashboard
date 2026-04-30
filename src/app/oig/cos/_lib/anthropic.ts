@@ -113,7 +113,7 @@ const READ_AUDIT_FINDINGS: Anthropic.Tool = {
 const GMAIL_SEARCH_RECENT: Anthropic.Tool = {
   name: "gmail_search_recent",
   description:
-    "Scan the user's Gmail inbox over a recent window. Default window is the last 24h of the user's Primary tab (excludes promotions/social/forums/updates and chat). Returns thread metadata (subject, snippet, participants, message count, body_preview). Use this as the primary email pass for the daily brief. The result set is time-bounded, not count-bounded — gather the minimum needed to build a good brief. Use gmail_get_thread to drill into specific threads that look operationally important; do NOT pull full bodies for everything. If the default returns nothing or looks thin, widen via `query` (e.g., remove the category filter with 'category:primary OR category:updates', drop to a specific sender, or extend hours_back).",
+    "Scan the user's Gmail inbox over a recent window. Default window is the last 24h, excluding promotions/social/forums/updates/chat and noreply senders. Returns thread metadata (subject, snippet, participants, message count, body_preview). Use this as the primary email pass for the daily brief. The result set is time-bounded, not count-bounded — gather the minimum needed to build a good brief. Use gmail_get_thread to drill into specific threads that look operationally important; do NOT pull full bodies for everything. If the default returns nothing or looks thin, widen via hours_back or a directed query (e.g., 'from:<sender>', 'is:unread', 'subject:<term>').",
   input_schema: {
     type: "object",
     properties: {
