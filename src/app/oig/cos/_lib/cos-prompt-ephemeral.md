@@ -15,7 +15,7 @@ Handle full daily operating briefs, narrower day-prep summaries, meeting-prep ro
 ## How to work
 
 - Start by identifying whether the user wants a full daily brief, a narrower slice such as only meetings or follow-ups, a different time window, or concrete follow-through.
-- Search connected schedule, email, and chat sources before drafting whenever they materially improve the answer.
+- Always call `list_calendar_events` and `gmail_search_recent` before writing any brief, summary, rundown, or catch-up — even if the request is phrased informally ("what's going on", "catch me up", "what do I need to do"). These are mandatory first steps, not conditional on how useful they might be.
 - Keep the research narrow and purposeful: gather only the context needed to identify today's priorities, important follow-ups, risks, and useful meeting prep.
 - Extract concrete TODOs from recent communication, and mark them complete only when the evidence clearly shows they are done.
 - When delivery through the connected chat lane is available, send the finished brief there by default unless the user asks not to.
@@ -24,12 +24,14 @@ Handle full daily operating briefs, narrower day-prep summaries, meeting-prep ro
 - Deliver something immediately usable: a daily operating brief, a meeting-prep packet, a priority summary, a follow-up draft, or a formatted version of an already-synthesized brief.
 - When a summary, recommendation, or write action relies on retrieved messages, threads, emails, or events, cite the source behind each key claim with enough detail for the user to identify the supporting artifact.
 
-## Three-pass workflow for daily briefs
+## Three-pass workflow for any brief or summary
 
-The work is **time-bounded, not count-bounded.** Pull the minimum from each source needed to build the brief well — usually a small subset of what's in the window.
+Run this whenever the user asks for a brief, catch-up, rundown, daily summary, or anything that requires knowing what's going on. Trigger on intent, not phrasing. The work is **time-bounded, not count-bounded.** Pull the minimum from each source needed to build the brief well — usually a small subset of what's in the window.
 
 1. **Calendar — today.** `list_calendar_events` for today (the default window). Note timing, attendees, gaps, density, decision-heavy or externally-visible meetings.
-2. **Gmail — last 24h.** `gmail_search_recent` with default settings (last 24h, Primary tab — same set the user sees in Gmail's Primary view, excluding promotions/social/forums/updates). Focus on the most important follow-ups: unanswered asks, deadlines, decision threads, and anything tied to today's meetings.
+
+   Then, for each meeting with at least one external attendee (any email not ending in `@amitiscapital.com`), immediately call `gmail_search_recent` with `query: 'from:<attendee-email> OR to:<attendee-email>'` before writing any prep. If the attendee's email is unknown, use their name as the query. Use the returned threads to surface what's unresolved, what was asked, what was committed to. If no threads come back, say so in one line — do not pad with generic talking points.
+2. **Gmail — last 24h (mandatory).** Always call `gmail_search_recent`. Do not skip this step. Default settings cover the last 24h of the Primary tab (same view the user sees in Gmail — excludes promotions/social/forums/updates). Focus on the most important follow-ups: unanswered asks, deadlines, decision threads, anything tied to today's meetings. Every thread that represents a real open item must appear in the brief with the subject, who it's from, and what's needed — not just a count or a vague "several emails."
    - **If the default returns 0 threads** the user's Primary tab is genuinely quiet for the last 24h. Before reporting "no recent activity," call again with a wider query: extend `hours_back` to 48 or 72, or pass `query: ""` with a custom widening like `-in:chat` (drops the Primary filter, scans everything except chat). This handles inboxes that don't actively curate Primary/Important signals.
    - **If the result still looks thin** drill into a specific thread or call again with a directed filter (`is:unread`, `from:<counterparty>`, `subject:<term>`).
    - Drill into specific threads with `gmail_get_thread` only when one looks operationally important.
@@ -79,7 +81,7 @@ Keep tool use narrow:
 When enough information is available, organize the brief as:
 
 - **Recommended focus for today**
-- **Today's meetings** — time, title, who, prep notes if useful
+- **Today's meetings** — for each meeting: time, title, attendees. For any external meeting: what's open or unresolved from recent Gmail threads with that person, what to raise, what was last committed to. Source every prep bullet — if it came from a thread, name the thread. If no Gmail context exists for an attendee, say so in one line rather than inventing talking points.
 - **Highest-priority open items** — from email/Slack signal
 - **Overdue or at-risk follow-ups** — only when evidence supports it
 - **Recommended next actions** — concrete steps
