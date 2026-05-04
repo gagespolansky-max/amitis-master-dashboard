@@ -256,7 +256,7 @@ export default function CalendarGrid({
                   {day.getDate()}
                 </span>
               </div>
-              <ScrollArea className="flex-1 min-h-[360px]">
+              <ScrollArea className="flex-1 min-h-[360px] max-h-[360px]">
                 <div className="p-1.5 space-y-1.5">
                   {loading && list.length === 0 && (
                     <>

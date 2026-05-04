@@ -1,0 +1,100 @@
+{
+  "grandline": [
+    {
+      "question": "What are the management fee terms?",
+      "expected_doc_types": ["ppm", "ddq"]
+    },
+    {
+      "question": "What is the performance fee or carried interest rate?",
+      "expected_doc_types": ["ppm", "ddq"]
+    },
+    {
+      "question": "Is there a hurdle rate, and if so what is it?",
+      "expected_doc_types": ["ppm", "ddq"]
+    },
+    {
+      "question": "Is there a high-water mark provision?",
+      "expected_doc_types": ["ppm", "ddq"]
+    },
+    {
+      "question": "What is the redemption notice period?",
+      "expected_doc_types": ["ppm", "ddq"]
+    },
+    {
+      "question": "Is there a lock-up period? How long?",
+      "expected_doc_types": ["ppm", "ddq"]
+    },
+    {
+      "question": "What gating provisions exist on redemptions?",
+      "expected_doc_types": ["ppm", "ddq"]
+    },
+    {
+      "question": "Is there a redemption gate threshold?",
+      "expected_doc_types": ["ppm", "ddq"]
+    },
+    {
+      "question": "Are there any side letters affecting our share class?",
+      "expected_doc_types": ["side_letter", "sub_agreement"]
+    },
+    {
+      "question": "Do we have an MFN (most-favored-nation) clause?",
+      "expected_doc_types": ["side_letter", "sub_agreement"]
+    },
+    {
+      "question": "What capacity rights or co-investment rights do we have?",
+      "expected_doc_types": ["side_letter", "sub_agreement"]
+    },
+    {
+      "question": "Is there a fee break or fee rebate?",
+      "expected_doc_types": ["side_letter", "sub_agreement"]
+    },
+    {
+      "question": "Who is the portfolio manager?",
+      "expected_doc_types": ["ddq", "deck"]
+    },
+    {
+      "question": "What is the firm's AUM?",
+      "expected_doc_types": ["factsheet", "ddq"]
+    },
+    {
+      "question": "What was the strategy's max drawdown to date?",
+      "expected_doc_types": ["factsheet", "audited_fs"]
+    },
+    {
+      "question": "What was the 2024 net return?",
+      "expected_doc_types": ["factsheet", "audited_fs"]
+    },
+    {
+      "question": "Who is the fund administrator?",
+      "expected_doc_types": ["ddq", "ppm"]
+    },
+    {
+      "question": "Who is the auditor?",
+      "expected_doc_types": ["ddq", "audited_fs"]
+    },
+    {
+      "question": "What is the fund's domicile / jurisdiction?",
+      "expected_doc_types": ["ppm", "ddq"]
+    },
+    {
+      "question": "What is the GP commitment to the fund?",
+      "expected_doc_types": ["ppm", "ddq", "deck"]
+    },
+    {
+      "question": "Is there a key-person clause? Who is named?",
+      "expected_doc_types": ["ppm", "ddq"]
+    },
+    {
+      "question": "What share classes are offered, and what are their differences?",
+      "expected_doc_types": ["ppm", "sub_agreement"]
+    },
+    {
+      "question": "What is the strategy's investment approach in one paragraph?",
+      "expected_doc_types": ["ddq", "deck", "ppm"]
+    },
+    {
+      "question": "What custodians or prime brokers does the fund use?",
+      "expected_doc_types": ["ddq", "ppm"]
+    }
+  ]
+}

@@ -26,6 +26,8 @@ Attio/TACD IQ      structured   ions,         drift        clean
 
 Database Engineer is conceptual — there's no chatbot for it. When schema work is needed, that work happens in `_schema/` under DBE rules.
 
+Shared capabilities live in `_shared/` when more than one OIG agent may need them. Fund Doc Search is represented there as `fund-doc-search`: OIG agents should consume cited fund-document answers through that shared layer once evals pass and the runtime adapter is enabled.
+
 ## Phase status
 
 | Phase | Status |
@@ -43,11 +45,13 @@ Database Engineer is conceptual — there's no chatbot for it. When schema work 
 | 11. Embeddings layer | Pending (schema ready; generation later) |
 | 12a. Calendar integration (read-only) | ✅ Shipped — needs user re-auth + Google Cloud scope add |
 | 12b. Contacts integration | Pending (re-auth + scope add) |
+| 13. Fund Doc Search | Build-ready — index/query CLI implemented; runtime adapter/evals pending |
 
 ## Owns
 
 - **Tables:** `organizations`, `people`, `interactions`, `action_items`, `interaction_tags`, `action_item_tags`, `audit_findings` — see `_schema/` for the canonical schema
 - **`_schema/`:** Database Engineer workspace (migrations, seed, verification, README)
+- **`_shared/`:** reusable OIG utilities, including the Fund Doc Search contract
 - **Future children:** `cos/`, `triage/`, `audit/` (each will have its own CLAUDE.md)
 
 ## Connections

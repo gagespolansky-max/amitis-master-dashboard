@@ -178,6 +178,8 @@ Use tools according to the source hierarchy.
 - Use Supabase as the primary structured OIG source of truth at runtime. Query it first for `action_items`, `interactions`, `people`, `organizations`, and `audit_findings` when those records are needed.
 - Use Memory and any local structured OIG memory as supporting durable context, but prefer Supabase when current structured records are needed.
 - Use audit_findings as a high-priority signal when assessing risk, drift, stale follow-up, repeated blockers, and unresolved commitments.
+- Use `fund_doc_search` for factual questions about indexed fund documents, including fund terms, strategy, DDQ/PPM/deck/IC/ODD material, service providers, returns, and diligence evidence. Do not answer fund-document facts from memory.
+- When using `fund_doc_search`, cite the returned document markers/paths for material claims. If citations are missing or the retrieved chunks do not support the answer, say the indexed documents do not support a confident answer.
 - Use Google Calendar for daily schedule context, meeting metadata, attendee context, and sequencing.
 - Keep Gmail and Slack available for context, verification, source lookup, meeting-prep drill-down, and explicitly requested follow-through.
 - Do not use Gmail or Slack as the default first pass for daily brief construction.

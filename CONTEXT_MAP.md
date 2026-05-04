@@ -47,8 +47,10 @@ src/app/
 | `operations/ai-initiatives` | Active | `ai_initiatives` | — | User UI |
 | `operations/organization` | Active | `org_people`, `org_tech_stack`, `org_responsibilities`, `org_responsibility_assignments`, `org_notion_pages`, `org_notion_access` | Notion API | Sync API + user UI |
 | `oig/_schema` | Active | `organizations`, `people`, `interactions`, `action_items`, `interaction_tags`, `action_item_tags`, `audit_findings` (+ pgvector) | — | Database Engineer migrations |
+| `oig/_shared` | Active | shared OIG utilities; `fund-doc-search` contract | Fund Doc Search query layer | OIG agents |
 | `oig/cos` | Active | — (reads OIG tables) | Gmail (per-user, drill+draft only), Anthropic | User UI (chat) |
 | `oig/triage` | Active (Gmail only) | (sole writer of OIG memory tables) | Gmail/Slack/Attio/Tactiq, Anthropic | On-demand button + future cron |
+| Fund Doc Search | Build-ready | `fund_managers`, `fund_documents`, `fund_document_chunks`; SQLite `runs`, `file_events` | Dropbox fund docs | `scripts/index_fund_docs.py` |
 | `portfolio/fund-returns` | Active | `fund_returns` + `fund-return-audits` storage bucket | Flask dashboard (iframe), Portfolio Model (out-of-band) | Cron |
 | `portfolio/fund-accounting` | Scoping | `funds`, `fund_allocations`, `reconciliation_log` | — | — |
 | `priorities` | Active | `data/priorities.json` | Gmail + Attio (Python) | `scripts/refresh-priorities.py` |
@@ -80,6 +82,7 @@ src/app/
 - `src/app/operations/organization/CLAUDE.md` — org chart + Notion audit
 - `src/app/oig/CLAUDE.md` — Operations Intelligence Engine architecture overview, phase status
 - `src/app/oig/_schema/CLAUDE.md` — Database Engineer invariants and rules for evolving the OIG schema
+- `src/app/oig/_shared/CLAUDE.md` — shared OIG utilities and Fund Doc Search contract
 - `src/app/oig/cos/CLAUDE.md` — Chief of Staff agent (reads OIG memory; limited source access for drill+draft)
 - `src/app/oig/triage/CLAUDE.md` — Triage agent (sole ingestor; reads sources, writes OIG)
 - `src/app/portfolio/CLAUDE.md` — parent
@@ -97,6 +100,7 @@ No `.claude/rules/` files in this project (root-level rules live in `~/.claude/r
 
 **Supabase tables → owning area**
 - `funds`, `fund_returns`, `fund_allocations`, `reconciliation_log` → `portfolio/`
+- `fund_managers`, `fund_documents`, `fund_document_chunks` → Fund Doc Search (`scripts/index_fund_docs.py`, `scripts/query_funds.py`)
 - `acio_deals`, `acio_deal_emails`, `acio_email_messages`, `acio_email_attachments`, `acio_deal_links`, `acio_scan_log`, `deal_notes` → `acio/deals`
 - `learning_log` → `operations/enablement/learning-log`
 - `ai_initiatives` → `operations/ai-initiatives`
@@ -116,6 +120,7 @@ No `.claude/rules/` files in this project (root-level rules live in `~/.claude/r
 - `data/priorities.json` → `priorities/` (written by `scripts/refresh-priorities.py`)
 - `data/suggestions.json` → `operations/enablement` (written by `scripts/log-suggestion.py`)
 - `data/weekly-reports.json` → `operations/enablement` (written by `scripts/compile-weekly-report.py`)
+- `data/fund_indexing_log.db` → Fund Doc Search local runtime log (ignored by git)
 
 **External sources**
 - Gmail (per-user, via `user_gmail_credentials`) → `acio/deals` scan

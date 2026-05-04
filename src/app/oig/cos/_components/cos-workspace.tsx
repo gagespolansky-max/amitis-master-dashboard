@@ -84,8 +84,8 @@ export default function CosWorkspace() {
   }
 
   return (
-    <div className="space-y-4">
-      <header className="flex items-center justify-between gap-2 flex-wrap">
+    <div className="flex flex-col gap-4 xl:h-[calc(100dvh-168px)] xl:min-h-[620px] xl:overflow-hidden">
+      <header className="flex shrink-0 items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-3">
           <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
             Mode
@@ -128,38 +128,45 @@ export default function CosWorkspace() {
         </Card>
       )}
 
-      <CalendarGrid
-        selectedIds={selectedIds}
-        onSelectionChange={handleSelectionChange}
-        onActiveChange={handleActiveChange}
-        refreshTick={triageRefreshTick}
-      />
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 xl:grid-cols-[minmax(460px,560px)_minmax(0,1fr)]">
+        <div className="min-h-0 space-y-4 xl:overflow-y-auto xl:pr-1">
+          <CalendarGrid
+            selectedIds={selectedIds}
+            onSelectionChange={handleSelectionChange}
+            onActiveChange={handleActiveChange}
+            refreshTick={triageRefreshTick}
+          />
 
-      {selectedIds.size >= 2 && (
-        <BulkActionBar
-          count={selectedIds.size}
-          onPrep={bulkPrep}
-          onFollowup={bulkFollowup}
-          onAsk={bulkAsk}
-          onClear={clearSelection}
-        />
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(340px,420px)_1fr] gap-4">
-        <div className="h-[640px]">
-          {activeEvent ? (
-            <MeetingContextPanel
-              event={activeEvent}
-              onAskPrep={(p) => ask(p)}
-              onAskFollowup={(p) => ask(p)}
-              onAskCustom={(p) => chatRef.current?.draftQuestion(p)}
-              onClose={clearSelection}
+          {selectedIds.size >= 2 && (
+            <BulkActionBar
+              count={selectedIds.size}
+              onPrep={bulkPrep}
+              onFollowup={bulkFollowup}
+              onAsk={bulkAsk}
+              onClear={clearSelection}
             />
-          ) : (
-            <PlaceholderPanel selectedCount={selectedIds.size} onAsk={ask} />
           )}
+
+          <div className="h-[420px] xl:h-[360px]">
+            {activeEvent ? (
+              <MeetingContextPanel
+                event={activeEvent}
+                onAskPrep={(p) => ask(p)}
+                onAskFollowup={(p) => ask(p)}
+                onAskCustom={(p) => chatRef.current?.draftQuestion(p)}
+                onClose={clearSelection}
+              />
+            ) : (
+              <PlaceholderPanel selectedCount={selectedIds.size} onAsk={ask} />
+            )}
+          </div>
         </div>
-        <ChatShell ref={chatRef} mode={mode} />
+
+        <ChatShell
+          ref={chatRef}
+          mode={mode}
+          className="min-h-[560px] xl:h-full xl:min-h-0"
+        />
       </div>
     </div>
   )

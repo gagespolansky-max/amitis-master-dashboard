@@ -1,0 +1,9 @@
+pdfplumber
+python-docx
+openpyxl
+tiktoken
+openai
+anthropic
+supabase
+python-dotenv
+tqdm

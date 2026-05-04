@@ -7,6 +7,7 @@ import {
   type GmailClient,
 } from "@/app/acio/deals/_lib/gmail"
 import { getCalendarClientForUser } from "@/app/oig/_shared/calendar"
+import { searchFundDocs } from "@/app/oig/_shared/fund-doc-search"
 import {
   readActionItems,
   readInteractions,
@@ -79,6 +80,31 @@ export async function toolReadAuditFindings(args: ReadAuditFindingsArgs): Promis
 }> {
   const findings = await readAuditFindings(args)
   return { count: findings.length, findings }
+}
+
+// ---------------------------------------------------------------------------
+// Fund documents (shared OIG cited retrieval)
+// ---------------------------------------------------------------------------
+
+export interface FundDocSearchToolArgs {
+  fund_slug: string
+  question: string
+  doc_types?: string[]
+  exclude_doc_types?: string[]
+  top_k?: number
+  similarity_floor?: number
+}
+
+export async function toolFundDocSearch(args: FundDocSearchToolArgs): Promise<unknown> {
+  return searchFundDocs({
+    fundSlug: args.fund_slug,
+    question: args.question,
+    docTypes: args.doc_types,
+    excludeDocTypes: args.exclude_doc_types,
+    topK: args.top_k,
+    similarityFloor: args.similarity_floor,
+    retrievalOnly: true,
+  })
 }
 
 // ---------------------------------------------------------------------------
@@ -410,6 +436,7 @@ export type CosToolName =
   | "read_action_items"
   | "read_interactions"
   | "read_audit_findings"
+  | "fund_doc_search"
   | "gmail_get_thread"
   | "gmail_search_recent"
   | "create_gmail_draft"
@@ -434,6 +461,8 @@ export async function executeCosTool(
       return toolReadInteractions(call.input as ReadInteractionsArgs)
     case "read_audit_findings":
       return toolReadAuditFindings(call.input as ReadAuditFindingsArgs)
+    case "fund_doc_search":
+      return toolFundDocSearch(call.input as unknown as FundDocSearchToolArgs)
     case "gmail_get_thread":
       return toolGmailGetThread(userId, call.input as unknown as GmailGetThreadArgs)
     case "gmail_search_recent":

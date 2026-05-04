@@ -110,6 +110,46 @@ const READ_AUDIT_FINDINGS: Anthropic.Tool = {
   },
 }
 
+const FUND_DOC_SEARCH: Anthropic.Tool = {
+  name: "fund_doc_search",
+  description:
+    "Search indexed fund documents with cited retrieval. Use this for fund-document factual questions about terms, strategy, operations, service providers, returns, DDQ/PPM/deck/IC/ODD content, or other fund diligence material. Returns an answer, citations, and retrieved chunks. Default excludes side letters and subscription agreements unless explicitly requested and available.",
+  input_schema: {
+    type: "object",
+    properties: {
+      fund_slug: {
+        type: "string",
+        description: "Fund slug to search, e.g. 'grandline'.",
+      },
+      question: {
+        type: "string",
+        description: "The factual fund-document question to answer.",
+      },
+      doc_types: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "Optional doc_type filters such as ppm, ddq, deck, factsheet, ic_report, odd_report, audited_fs.",
+      },
+      exclude_doc_types: {
+        type: "array",
+        items: { type: "string" },
+        description:
+          "Optional exclusions. Defaults to side_letter and sub_agreement in the underlying search layer.",
+      },
+      top_k: {
+        type: "number",
+        description: "Number of cited chunks to retrieve. 1-20; default 8.",
+      },
+      similarity_floor: {
+        type: "number",
+        description: "Minimum similarity for additional chunks. Default 0.5.",
+      },
+    },
+    required: ["fund_slug", "question"],
+  },
+}
+
 const GMAIL_SEARCH_RECENT: Anthropic.Tool = {
   name: "gmail_search_recent",
   description:
@@ -238,6 +278,7 @@ export const COS_TOOLS_STRUCTURED: Anthropic.Tool[] = [
   READ_ACTION_ITEMS,
   READ_INTERACTIONS,
   READ_AUDIT_FINDINGS,
+  FUND_DOC_SEARCH,
   GMAIL_GET_THREAD,
   CREATE_GMAIL_DRAFT,
   LIST_CALENDAR_EVENTS,
@@ -247,6 +288,7 @@ export const COS_TOOLS_STRUCTURED: Anthropic.Tool[] = [
 
 export const COS_TOOLS_EPHEMERAL: Anthropic.Tool[] = [
   LIST_CALENDAR_EVENTS,
+  FUND_DOC_SEARCH,
   GMAIL_SEARCH_RECENT,
   GMAIL_GET_THREAD,
   CREATE_GMAIL_DRAFT,

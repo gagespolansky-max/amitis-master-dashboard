@@ -5,7 +5,7 @@ import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { Plus, Send } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card"
+import { Card, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
@@ -21,6 +21,7 @@ export type ChatMode = "structured" | "ephemeral"
 
 export interface ChatShellProps {
   mode: ChatMode
+  className?: string
 }
 
 interface ConversationSummary {
@@ -220,7 +221,13 @@ const ChatShell = forwardRef<ChatShellHandle, ChatShellProps>(function ChatShell
   }
 
   return (
-    <Card size="sm" className="grid grid-cols-1 md:grid-cols-[200px_1fr] gap-0 py-0 h-[640px] overflow-hidden">
+    <Card
+      size="sm"
+      className={cn(
+        "grid grid-cols-1 md:grid-cols-[200px_1fr] gap-0 py-0 h-[640px] overflow-hidden",
+        props.className,
+      )}
+    >
       {/* Sidebar */}
       <aside className="hidden md:flex flex-col border-r border-border bg-card/40">
         <div className="p-2.5 border-b border-border">
@@ -317,7 +324,7 @@ const ChatShell = forwardRef<ChatShellHandle, ChatShellProps>(function ChatShell
             placeholder="Ask for a daily brief, meeting prep, overdue items… (⌘+Enter to send)"
             className="resize-none min-h-[60px]"
           />
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between pr-14">
             <span className="text-[10px] text-muted-foreground/70">
               {conversationId ? "Continuing conversation" : "New conversation"}
             </span>

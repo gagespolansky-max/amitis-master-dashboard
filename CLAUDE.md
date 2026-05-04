@@ -15,6 +15,8 @@ python scripts/log-suggestion.py "<type>" "<title>" "<description>" — Log enab
 python scripts/refresh-priorities.py — Pull from Gmail + Attio, rank via Claude, write to data/priorities.json
 python scripts/compile-weekly-report.py — Aggregate week's suggestions into data/weekly-reports.json
 python scripts/sync-skills.py — Scan ~/.claude/skills/ and ~/.claude/plugins/, create Supabase submissions for admin approval
+python scripts/index_fund_docs.py --fund <slug> --source-provider dropbox — Fund Doc Search indexer; indexes Dropbox fund docs into Supabase pgvector
+python scripts/query_funds.py --fund <slug> --question "<question>" — Fund Doc Search query CLI with cited answers
 
 Global Claude Code skills (installed at ~/.claude/skills/, available across all projects)
 
@@ -38,6 +40,13 @@ funds — Master list of funds + share classes, maps to Portfolio Model rows. Se
 fund_returns — Every extracted return figure. Has confidence hierarchy (1=MTD, 2=EOM, 3=investor_statement). Auto-trigger sets is_current on insert — highest confidence wins, then most recent. Investor statements are always confidence 3 and always net.
 fund_allocations — Which funds are in which portfolios (flagship, mn_btc, mn_usd).
 reconciliation_log — Compares Pipeline 1 (Portfolio Model) vs Pipeline 2 (dashboard) values. Powers green/red dot.
+
+Fund Doc Search cluster:
+
+fund_managers — One row per external fund manager; legal-name metadata for fund-doc search.
+fund_documents — One row per indexed source file; Dropbox filepath, doc_type, hash, authoritative-format flag, soft-delete state.
+fund_document_chunks — pgvector-backed chunks with generic citation locators and embedding_model.
+Local runtime log: data/fund_indexing_log.db (ignored by git). OIG consumes this through shared fund-doc-search rather than direct Dropbox access. Python deps install from requirements-fund-doc-search.txt.
 
 Skills Hub cluster (active):
 
@@ -97,6 +106,7 @@ Required (set locally in `.env.local` and on Vercel):
 - `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET` — Google OAuth app credentials (same app serves both Supabase Auth login and Gmail API access)
 - `GMAIL_ACIO_LABEL_ID` — Gmail label ID for ACIO-Opportunities scan mode
 - `ANTHROPIC_API_KEY` — Claude API
+- `OPENAI_API_KEY` — Fund Doc Search embeddings
 - `NOTION_ORG_API_KEY` — org module Notion audit
 - `DROPBOX_*` — marketing collaterals (access, refresh, app key/secret, folder, namespace)
 - `ACIO_URL` — (dev only) internal ACIO service

@@ -35,10 +35,22 @@ yarn-error.log*
 
 # python
 /venv
+/.venv
+__pycache__/
+*.py[cod]
 
 # logs and sessions
 /logs
 /sessions
+
+# Fund Portal runtime artifacts
+/data/fund_indexing_log.db
+/data/locks/*
+!/data/locks/.gitkeep
+/data/test-fixtures/*
+!/data/test-fixtures/.gitkeep
+!/data/test-fixtures/grandline-smoke/
+!/data/test-fixtures/grandline-smoke/.gitkeep
 
 # vercel
 .vercel

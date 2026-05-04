@@ -27,6 +27,7 @@ User-facing reader agent. Top layer of the OIG architecture: reads curated state
 | `read_action_items` | DB read | Primary TODO source; filters status, owner_email, priority, due_before, overdue_only |
 | `read_interactions` | DB read | Recent threads, meeting prep by org/person, threads-with-open-asks |
 | `read_audit_findings` | DB read | Risk / drift / overdue / repeated blockers (Audit Agent will populate) |
+| `fund_doc_search` | Shared retrieval | Searches indexed fund documents with citations via `oig/_shared/fund-doc-search.ts` |
 | `gmail_get_thread` | Source drill | Pulls a single Gmail thread for verification or drafting |
 | `create_gmail_draft` | Source write | Drafts only — never sends; threads correctly via In-Reply-To |
 | `list_calendar_events` | Source read | Google Calendar (read-only); anchors daily brief + meeting prep |
@@ -34,10 +35,16 @@ User-facing reader agent. Top layer of the OIG architecture: reads curated state
 
 Contacts tool is still pending — requires `contacts.readonly` scope and another re-auth.
 
+## Shared retrieval
+
+| Skill | Owner | Purpose |
+|---|---|---|
+| `fund-doc-search` | `oig/_shared` + Fund Doc Search | Search embedded fund documents with citations. Chief of Staff uses this for fund-document factual questions instead of answering from memory or reading Dropbox directly. |
+
 ## Connections
 
 - Reads: `interactions`, `action_items`, `interaction_tags`, `action_item_tags`, `audit_findings`, `organizations`, `people` (all owned by `oig/_schema/`)
-- Reuses: `oig/_shared/persistence.ts` for chat history; `oig/_shared/db.ts` `readActionItems` / `readInteractions` / `readAuditFindings`; per-user Gmail OAuth via `getGmailClientForUser` from `acio/deals/_lib/gmail.ts`
+- Reuses: `oig/_shared/persistence.ts` for chat history; `oig/_shared/db.ts` `readActionItems` / `readInteractions` / `readAuditFindings`; `oig/_shared/fund-doc-search.ts` for cited fund-document retrieval; per-user Gmail OAuth via `getGmailClientForUser` from `acio/deals/_lib/gmail.ts`
 - Anthropic SDK (Sonnet 4) for the loop, MAX_LOOP_ITERATIONS=18, 290s deadline
 
 ## Status
