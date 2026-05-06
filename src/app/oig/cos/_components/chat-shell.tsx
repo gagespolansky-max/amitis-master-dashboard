@@ -1,6 +1,6 @@
 "use client"
 
-import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react"
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { Plus, Send } from "lucide-react"
@@ -95,39 +95,7 @@ const ChatShell = forwardRef<ChatShellHandle, ChatShellProps>(function ChatShell
   const sendingRef = useRef(false)
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
 
-  useEffect(() => {
-    void refreshConversationList()
-  }, [])
-
-  useEffect(() => {
-    conversationIdRef.current = conversationId
-  }, [conversationId])
-
-  useEffect(() => {
-    sendingRef.current = sending
-  }, [sending])
-
-  useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" })
-  }, [messages.length, sending])
-
-  useImperativeHandle(
-    ref,
-    () => ({
-      ask(prompt: string) {
-        if (!prompt.trim() || sendingRef.current) return
-        void sendDirect(prompt.trim())
-      },
-      draftQuestion(prompt: string) {
-        setInput(prompt)
-        setTimeout(() => textareaRef.current?.focus(), 0)
-      },
-      newConversation,
-    }),
-    [],
-  )
-
-  async function refreshConversationList() {
+  const refreshConversationList = useCallback(async function refreshConversationList() {
     try {
       const res = await fetch("/oig/cos/api/conversation")
       if (!res.ok) return
@@ -136,40 +104,16 @@ const ChatShell = forwardRef<ChatShellHandle, ChatShellProps>(function ChatShell
     } catch {
       // silent
     }
-  }
+  }, [])
 
-  async function selectConversation(id: string) {
-    if (id === conversationId) return
-    setLoadingHistory(true)
-    setError(null)
-    try {
-      const res = await fetch(`/oig/cos/api/conversation?id=${encodeURIComponent(id)}`)
-      if (!res.ok) throw new Error(`Load failed (${res.status})`)
-      const data = (await res.json()) as { messages: RawMessage[] }
-      setConversationId(id)
-      setMessages(flatten(data.messages))
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to load")
-    } finally {
-      setLoadingHistory(false)
-    }
-  }
-
-  function newConversation() {
+  const newConversation = useCallback(function newConversation() {
     setConversationId(null)
     setMessages([])
     setError(null)
     setInput("")
-  }
+  }, [])
 
-  async function sendMessage() {
-    const content = input.trim()
-    if (!content) return
-    setInput("")
-    await sendDirect(content)
-  }
-
-  async function sendDirect(content: string) {
+  const sendDirect = useCallback(async function sendDirect(content: string) {
     if (!content || sendingRef.current) return
     setError(null)
     setSending(true)
@@ -211,6 +155,62 @@ const ChatShell = forwardRef<ChatShellHandle, ChatShellProps>(function ChatShell
       setSending(false)
       sendingRef.current = false
     }
+  }, [refreshConversationList])
+
+  useEffect(() => {
+    void refreshConversationList()
+  }, [refreshConversationList])
+
+  useEffect(() => {
+    conversationIdRef.current = conversationId
+  }, [conversationId])
+
+  useEffect(() => {
+    sendingRef.current = sending
+  }, [sending])
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" })
+  }, [messages.length, sending])
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      ask(prompt: string) {
+        if (!prompt.trim() || sendingRef.current) return
+        void sendDirect(prompt.trim())
+      },
+      draftQuestion(prompt: string) {
+        setInput(prompt)
+        setTimeout(() => textareaRef.current?.focus(), 0)
+      },
+      newConversation,
+    }),
+    [newConversation, sendDirect],
+  )
+
+  async function selectConversation(id: string) {
+    if (id === conversationId) return
+    setLoadingHistory(true)
+    setError(null)
+    try {
+      const res = await fetch(`/oig/cos/api/conversation?id=${encodeURIComponent(id)}`)
+      if (!res.ok) throw new Error(`Load failed (${res.status})`)
+      const data = (await res.json()) as { messages: RawMessage[] }
+      setConversationId(id)
+      setMessages(flatten(data.messages))
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load")
+    } finally {
+      setLoadingHistory(false)
+    }
+  }
+
+  async function sendMessage() {
+    const content = input.trim()
+    if (!content) return
+    setInput("")
+    await sendDirect(content)
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
@@ -224,7 +224,7 @@ const ChatShell = forwardRef<ChatShellHandle, ChatShellProps>(function ChatShell
     <Card
       size="sm"
       className={cn(
-        "grid grid-cols-1 md:grid-cols-[200px_1fr] gap-0 py-0 h-[640px] overflow-hidden",
+        "grid h-full min-h-0 grid-cols-1 gap-0 overflow-hidden py-0 md:grid-cols-[200px_1fr]",
         props.className,
       )}
     >
@@ -269,7 +269,7 @@ const ChatShell = forwardRef<ChatShellHandle, ChatShellProps>(function ChatShell
       </aside>
 
       {/* Main */}
-      <div className="flex flex-col min-h-0">
+      <div className="flex min-h-0 flex-col">
         <CardHeader className="px-4 py-2.5 border-b border-border flex-row items-center gap-2">
           <CardTitle className="text-sm flex items-center gap-2">
             Chief of Staff
@@ -287,7 +287,7 @@ const ChatShell = forwardRef<ChatShellHandle, ChatShellProps>(function ChatShell
           </CardTitle>
         </CardHeader>
 
-        <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+        <div ref={scrollRef} className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4">
           {loadingHistory && (
             <div className="text-[12px] text-muted-foreground">Loading conversation…</div>
           )}
@@ -313,7 +313,7 @@ const ChatShell = forwardRef<ChatShellHandle, ChatShellProps>(function ChatShell
           </div>
         )}
 
-        <CardFooter className="bg-card/40 border-t border-border p-3 flex-col items-stretch gap-2">
+        <CardFooter className="shrink-0 flex-col items-stretch gap-2 border-t border-border bg-card/40 p-3">
           <Textarea
             ref={textareaRef}
             value={input}
@@ -322,9 +322,9 @@ const ChatShell = forwardRef<ChatShellHandle, ChatShellProps>(function ChatShell
             disabled={sending}
             rows={2}
             placeholder="Ask for a daily brief, meeting prep, overdue items… (⌘+Enter to send)"
-            className="resize-none min-h-[60px]"
+            className="h-[60px] min-h-[60px] max-h-[120px] resize-none overflow-y-auto"
           />
-          <div className="flex items-center justify-between pr-14">
+          <div className="flex items-center justify-between">
             <span className="text-[10px] text-muted-foreground/70">
               {conversationId ? "Continuing conversation" : "New conversation"}
             </span>
