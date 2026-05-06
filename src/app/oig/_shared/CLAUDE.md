@@ -10,8 +10,8 @@ Shared OIG utilities used by multiple agents. Keep reusable capabilities here wh
 
 ## Fund Doc Search shared capability
 
-- `fund-doc-search.ts` - shared adapter/contract for the Fund Doc Search capability. It shells out to `scripts/query_funds.py --json`; keep it out of live agent tool lists until migration, indexing, and evals pass.
+- `fund-doc-search.ts` - shared adapter for the Fund Doc Search capability. Native TypeScript pipeline: OpenAI `text-embedding-3-small` → Supabase `match_fund_document_chunks` RPC → optional Claude synthesis with `[N]` citations. Runs in any Node runtime (local dev, Vercel serverless). The Python `scripts/query_funds.py` is the offline twin used for indexing-side evals; the runtime path no longer shells out.
 
-The shared skill should call the Fund Doc Search query layer rather than letting each OIG agent inspect Dropbox or query vector tables ad hoc. Chief of Staff is one consumer, not the owner.
+The shared adapter is the canonical query layer. OIG agents should call `searchFundDocs` rather than inspect Dropbox or query vector tables ad hoc. Chief of Staff is one consumer, not the owner.
 
-When evals pass, wire `fund-doc-search` into the relevant OIG agent tool lists. For fund-document factual questions, agents should search Fund Doc Search and cite returned source chunks instead of answering from memory.
+For fund-document factual questions, agents search Fund Doc Search and cite returned source chunks instead of answering from memory.
