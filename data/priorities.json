@@ -2,36 +2,36 @@
   "this_week": [
     {
       "id": "tw-1",
-      "title": "Complete May 1st BTC subscription transactions for Constella",
-      "description": "Execute test transactions and provide hashes/screenshots to finalize the Amitis x Constella BTC subscription before May 1st deadline.",
+      "title": "Complete bfinance questionnaire for Amitis Capital",
+      "description": "Pravir Sharma is following up on an incomplete questionnaire that's different from the previously submitted RFI.",
       "source": "email",
       "urgency": "high"
     },
     {
       "id": "tw-2",
-      "title": "Resolve Komainu whitelist rejection for May 1st subscriptions",
-      "description": "Address the rejected whitelist additions in Fireblocks to ensure May 1st subscription transactions can proceed.",
+      "title": "Submit April 2026 performance to HFR",
+      "description": "HFR deadline is Thursday, May 7th at 12pm CT for April 2026 fund performance reporting.",
       "source": "email",
       "urgency": "high"
     },
     {
       "id": "tw-3",
-      "title": "Provide Excel API documentation to Samara team",
-      "description": "Send available Excel API documentation to Leyu Zou for the Alternative Soft installation on Amitis Capital Windows VM.",
+      "title": "Provide OKX entity confirmation for Constella VASP",
+      "description": "Molly Nash at Komainu needs confirmation of the correct OKX entity (currently defaulting to OKX Seychelles).",
+      "source": "email",
+      "urgency": "high"
+    },
+    {
+      "id": "tw-4",
+      "title": "Discuss Starcloud opportunity with Monica",
+      "description": "Monica Monajem wants to discuss the Starcloud deal forwarded by Adam for the tracker.",
       "source": "email",
       "urgency": "medium"
     },
     {
-      "id": "tw-4",
-      "title": "Renew ChatGPT subscription before May 29th",
-      "description": "Decide whether to renew the ChatGPT plan that expires on May 29, 2026.",
-      "source": "email",
-      "urgency": "low"
-    },
-    {
       "id": "tw-5",
-      "title": "Prepare materials for Emma intro meeting",
-      "description": "Share relevant materials ahead of time for the Emma introduction that Adam Feldheim will brief Gage on.",
+      "title": "Address 4 overdue Attio tasks",
+      "description": "System alert shows 4 overdue tasks including building org chart for Amitis + Samara team.",
       "source": "email",
       "urgency": "medium"
     }
@@ -39,34 +39,41 @@
   "this_month": [
     {
       "id": "tm-1",
-      "title": "Process April payslip from Deel",
-      "description": "Review and process the latest payslip that is now available and being processed.",
+      "title": "Build Amitis + Samara combined org chart",
+      "description": "Create organizational chart with job descriptions, roles, and responsibilities for the combined team (overdue from May 1st).",
+      "source": "email",
+      "urgency": "high"
+    },
+    {
+      "id": "tm-2",
+      "title": "Reschedule Emma intro meeting",
+      "description": "Adam cancelled this week's meeting due to LA family visit and plans to reschedule for next Tuesday.",
       "source": "email",
       "urgency": "medium"
     },
     {
-      "id": "tm-2",
-      "title": "Finalize ACDAM email group setup",
-      "description": "Complete the addition of Aram Ebrahimi to the ACDAM email group following successful testing.",
+      "id": "tm-3",
+      "title": "Complete Travel Rule documentation for Komainu transfer",
+      "description": "Follow up on Transfer Message Request #670 and provide any additional clarification needed.",
       "source": "email",
-      "urgency": "low"
+      "urgency": "medium"
     }
   ],
   "on_deck": [
     {
       "id": "od-1",
-      "title": "Evaluate Montreal Alternative Investment Forum attendance",
-      "description": "Consider attending the AIMA Montreal Alternative Investment Forum on June 17, 2026 for networking opportunities.",
+      "title": "Prepare for Agribot x Amitis meeting",
+      "description": "Scheduled meeting with Adam on Tuesday May 12th, 10am-11am EDT to discuss potential opportunity.",
       "source": "email",
       "urgency": "low"
     },
     {
       "id": "od-2",
-      "title": "Review Crucible Capital market insights",
-      "description": "Analyze Crucible Capital's Q1 expansion into structured credit and direct lending for potential strategic insights.",
+      "title": "Continue agent-architect development project",
+      "description": "Ongoing technical project involving Cursor + Codex adapters based on recent repository updates.",
       "source": "email",
       "urgency": "low"
     }
   ],
-  "last_refreshed": "2026-04-29T13:51:46.724521"
+  "last_refreshed": "2026-05-07T06:29:24.454472"
 }

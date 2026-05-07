@@ -12,6 +12,7 @@ Operational scripts that run from the project root. Keep scripts small, explicit
 ## Fund Doc Search scripts
 
 - `index_fund_docs.py` - indexer for one fund's Dropbox docs. Use `--source-provider dropbox` to list/download bytes from Dropbox via `DROPBOX_MCP_TOKEN` instead of local Smart Sync placeholders. Walks source roots, extracts text via pdfplumber/python-docx/openpyxl/csv, chunks at uniform 600 tokens / 100 overlap, embeds via OpenAI `text-embedding-3-small`, and atomically replaces chunks in Supabase through `replace_fund_document_chunks`. Idempotent by SHA-256 hash skip, observable through SQLite log + progress bar, guarded by a per-fund `fcntl.flock` lock. Default-excludes `side_letter` and `sub_agreement` until data-egress approval is recorded.
+- `index_fund_batch.py` - batch wrapper over `agents/fund-indexer/fund-source-roots.json`. Runs the one-fund indexer for selected manifest funds, defaults to Dropbox, resume mode, legal-name prompt skip, and `side_letter,sub_agreement` exclusions, then runs retrieval-only smoke checks with `query_funds.py`.
 - `query_funds.py` - query CLI for Fund Doc Search. Embeds the question, retrieves top-k chunks from pgvector with similarity-floor reconciliation, and synthesizes a Claude answer with inline `[N]` citations mapping to filepath + locator. Eval-harness mode via `--eval-file`.
 
 Fund Doc Search runtime logs belong in `data/fund_indexing_log.db`. Lockfiles belong in `data/locks/`. Real fund document fixtures must stay out of git; `data/test-fixtures/` is ignored except for `.gitkeep` placeholders.

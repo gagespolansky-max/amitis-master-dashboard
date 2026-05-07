@@ -50,7 +50,7 @@ src/app/
 | `oig/_shared` | Active | shared OIG utilities; `fund-doc-search` contract | Fund Doc Search query layer | OIG agents |
 | `oig/cos` | Active | — (reads OIG tables) | Gmail (per-user, drill+draft only), Anthropic | User UI (chat) |
 | `oig/triage` | Active (Gmail only) | (sole writer of OIG memory tables) | Gmail/Slack/Attio/Tactiq, Anthropic | On-demand button + future cron |
-| Fund Doc Search | Build-ready | `fund_managers`, `fund_documents`, `fund_document_chunks`; SQLite `runs`, `file_events` | Dropbox fund docs | `scripts/index_fund_docs.py` |
+| Fund Doc Search | Build-ready | `fund_managers`, `fund_documents`, `fund_document_chunks`; SQLite `runs`, `file_events`; 16-fund source manifest | Dropbox fund docs | `scripts/index_fund_docs.py`, `scripts/index_fund_batch.py` |
 | `portfolio/fund-returns` | Active | `fund_returns` + `fund-return-audits` storage bucket | Flask dashboard (iframe), Portfolio Model (out-of-band) | Cron |
 | `portfolio/fund-accounting` | Scoping | `funds`, `fund_allocations`, `reconciliation_log` | — | — |
 | `priorities` | Active | `data/priorities.json` | Gmail + Attio (Python) | `scripts/refresh-priorities.py` |
@@ -63,6 +63,7 @@ src/app/
 
 **Root**
 - `CLAUDE.md` — architecture, commands, data layer overview, auth, env vars, deployment, conventions
+- `agents/README.md` — project agent registry. `agents/fund-indexer/` owns the Fund Indexer Agent persona, source manifest, runbook, and spec.
 
 **Module-level** (one per top-level workstream parent + each sub-module)
 - `src/app/acio/CLAUDE.md` — parent; redirects
@@ -121,6 +122,7 @@ No `.claude/rules/` files in this project (root-level rules live in `~/.claude/r
 - `data/suggestions.json` → `operations/enablement` (written by `scripts/log-suggestion.py`)
 - `data/weekly-reports.json` → `operations/enablement` (written by `scripts/compile-weekly-report.py`)
 - `data/fund_indexing_log.db` → Fund Doc Search local runtime log (ignored by git)
+- `agents/fund-indexer/fund-source-roots.json` → Fund Doc Search 16-fund Dropbox source-root manifest
 
 **External sources**
 - Gmail (per-user, via `user_gmail_credentials`) → `acio/deals` scan

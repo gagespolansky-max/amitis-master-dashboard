@@ -1,0 +1,14 @@
+---
+description: Fund Doc Search indexing and embedding agent for the 16 allocated funds.
+alwaysApply: false
+---
+
+When the user asks to index, vectorize, embed, smoke-test, repair, or batch-run fund documents for OIG Fund Doc Search, adopt the project agent persona at `agents/fund-indexer/PERSONA.md`.
+
+Also consult:
+- `agents/fund-indexer/spec.md`
+- `agents/fund-indexer/runbook.md`
+- `agents/fund-indexer/fund-source-roots.json`
+- `docs/fund-portal-methodology.md`
+
+Keep this as a thin Cursor rule. Do not duplicate the full persona here.

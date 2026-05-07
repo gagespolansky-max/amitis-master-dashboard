@@ -2,12 +2,17 @@ import { NextResponse, type NextRequest } from "next/server"
 import { createServerClient } from "@supabase/ssr"
 import { createClient } from "@supabase/supabase-js"
 
-const PUBLIC_PATHS = ["/login", "/auth/callback"]
+const PUBLIC_PATHS = ["/login", "/auth/callback", "/oig/slack/api/events"]
 const TEAMMATE_ALLOWED_PREFIXES = ["/acio", "/logout"]
 const TEAMMATE_HOME = "/acio/deals"
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request })
+  const { pathname } = request.nextUrl
+
+  if (pathname === "/oig/slack/api/events") {
+    return response
+  }
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -32,7 +37,6 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  const { pathname } = request.nextUrl
   const isPublic = PUBLIC_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`))
 
   if (!user && !isPublic) {

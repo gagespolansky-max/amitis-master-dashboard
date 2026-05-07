@@ -1,0 +1,326 @@
+{
+  "version": 1,
+  "description": "Dropbox source-root manifest for the 16 allocated external funds in Fund Doc Search.",
+  "defaults": {
+    "source_provider": "dropbox",
+    "exclude_doc_types": "side_letter,sub_agreement",
+    "max_cost_usd_per_fund": 5.0,
+    "smoke_question": "What are the management fee terms?"
+  },
+  "excluded_subscription_folders": [
+    {
+      "folder": "AGHL ACDAM",
+      "reason": "Internal/portfolio folder; user requested the 16 allocated external funds."
+    }
+  ],
+  "funds": [
+    {
+      "slug": "black-lotus",
+      "display_name": "Black Lotus",
+      "enabled": true,
+      "roots": [
+        {
+          "source_root": "subscriptions",
+          "path": "/Amitis Capital - General/AC - Digital/ACDAM Portfolio/Portfolio - Subscriptions/Black Lotus"
+        },
+        {
+          "source_root": "manager_materials",
+          "path": "/Amitis Capital - General/AC - Digital/Manager Materials/Black Lotus"
+        },
+        {
+          "source_root": "ic_materials",
+          "path": "/Amitis Capital - General/AC - Digital/IC Materials/Black Lotus"
+        }
+      ]
+    },
+    {
+      "slug": "blockchange",
+      "display_name": "Blockchange",
+      "enabled": true,
+      "roots": [
+        {
+          "source_root": "subscriptions",
+          "path": "/Amitis Capital - General/AC - Digital/ACDAM Portfolio/Portfolio - Subscriptions/Blockchange"
+        },
+        {
+          "source_root": "manager_materials",
+          "path": "/Amitis Capital - General/AC - Digital/Manager Materials/Blockchange Ventures"
+        },
+        {
+          "source_root": "ic_materials",
+          "path": "/Amitis Capital - General/AC - Digital/IC Materials/Blockchange"
+        }
+      ]
+    },
+    {
+      "slug": "dba",
+      "display_name": "DBA",
+      "enabled": true,
+      "roots": [
+        {
+          "source_root": "subscriptions",
+          "path": "/Amitis Capital - General/AC - Digital/ACDAM Portfolio/Portfolio - Subscriptions/DBA"
+        },
+        {
+          "source_root": "manager_materials",
+          "path": "/Amitis Capital - General/AC - Digital/Manager Materials/DBA"
+        },
+        {
+          "source_root": "ic_materials",
+          "path": "/Amitis Capital - General/AC - Digital/IC Materials/DBA"
+        }
+      ]
+    },
+    {
+      "slug": "edge-defi",
+      "display_name": "Edge DeFi",
+      "enabled": true,
+      "roots": [
+        {
+          "source_root": "subscriptions",
+          "path": "/Amitis Capital - General/AC - Digital/ACDAM Portfolio/Portfolio - Subscriptions/Edge DeFi"
+        },
+        {
+          "source_root": "manager_materials",
+          "path": "/Amitis Capital - General/AC - Digital/Manager Materials/Edge"
+        },
+        {
+          "source_root": "ic_materials",
+          "path": "/Amitis Capital - General/AC - Digital/IC Materials/Edge"
+        }
+      ]
+    },
+    {
+      "slug": "fasanara",
+      "display_name": "Fasanara",
+      "enabled": true,
+      "roots": [
+        {
+          "source_root": "subscriptions",
+          "path": "/Amitis Capital - General/AC - Digital/ACDAM Portfolio/Portfolio - Subscriptions/Fasanara"
+        },
+        {
+          "source_root": "manager_materials",
+          "path": "/Amitis Capital - General/AC - Digital/Manager Materials/Fasanara"
+        },
+        {
+          "source_root": "ic_materials",
+          "path": "/Amitis Capital - General/AC - Digital/IC Materials/Fasanara GA"
+        },
+        {
+          "source_root": "ic_materials",
+          "path": "/Amitis Capital - General/AC - Digital/IC Materials/Fasanara MAP"
+        }
+      ]
+    },
+    {
+      "slug": "grandline",
+      "display_name": "GrandLine",
+      "enabled": true,
+      "roots": [
+        {
+          "source_root": "subscriptions",
+          "path": "/Amitis Capital - General/AC - Digital/ACDAM Portfolio/Portfolio - Subscriptions/GrandLine"
+        },
+        {
+          "source_root": "manager_materials",
+          "path": "/Amitis Capital - General/AC - Digital/Manager Materials/Grandline"
+        },
+        {
+          "source_root": "ic_materials",
+          "path": "/Amitis Capital - General/AC - Digital/IC Materials/Grandline"
+        }
+      ]
+    },
+    {
+      "slug": "hypersphere",
+      "display_name": "Hypersphere",
+      "enabled": true,
+      "roots": [
+        {
+          "source_root": "subscriptions",
+          "path": "/Amitis Capital - General/AC - Digital/ACDAM Portfolio/Portfolio - Subscriptions/Hypersphere"
+        },
+        {
+          "source_root": "manager_materials",
+          "path": "/Amitis Capital - General/AC - Digital/Manager Materials/Hypersphere"
+        },
+        {
+          "source_root": "ic_materials",
+          "path": "/Amitis Capital - General/AC - Digital/IC Materials/Hypersphere"
+        }
+      ]
+    },
+    {
+      "slug": "m1",
+      "display_name": "M1",
+      "enabled": true,
+      "roots": [
+        {
+          "source_root": "subscriptions",
+          "path": "/Amitis Capital - General/AC - Digital/ACDAM Portfolio/Portfolio - Subscriptions/M1"
+        },
+        {
+          "source_root": "manager_materials",
+          "path": "/Amitis Capital - General/AC - Digital/Manager Materials/M1"
+        },
+        {
+          "source_root": "ic_materials",
+          "path": "/Amitis Capital - General/AC - Digital/IC Materials/M1"
+        }
+      ]
+    },
+    {
+      "slug": "mnnc",
+      "display_name": "MNNC",
+      "enabled": true,
+      "roots": [
+        {
+          "source_root": "subscriptions",
+          "path": "/Amitis Capital - General/AC - Digital/ACDAM Portfolio/Portfolio - Subscriptions/MNNC"
+        },
+        {
+          "source_root": "manager_materials",
+          "path": "/Amitis Capital - General/AC - Digital/Manager Materials/MNNC"
+        },
+        {
+          "source_root": "ic_materials",
+          "path": "/Amitis Capital - General/AC - Digital/IC Materials/MNNC"
+        }
+      ]
+    },
+    {
+      "slug": "nexyst-digital",
+      "display_name": "Nexyst Digital",
+      "enabled": true,
+      "roots": [
+        {
+          "source_root": "subscriptions",
+          "path": "/Amitis Capital - General/AC - Digital/ACDAM Portfolio/Portfolio - Subscriptions/Nexyst Digital"
+        },
+        {
+          "source_root": "manager_materials",
+          "path": "/Amitis Capital - General/AC - Digital/Manager Materials/Nexyst"
+        },
+        {
+          "source_root": "ic_materials",
+          "path": "/Amitis Capital - General/AC - Digital/IC Materials/Nexyst"
+        }
+      ]
+    },
+    {
+      "slug": "pantera",
+      "display_name": "Pantera",
+      "enabled": true,
+      "roots": [
+        {
+          "source_root": "subscriptions",
+          "path": "/Amitis Capital - General/AC - Digital/ACDAM Portfolio/Portfolio - Subscriptions/Pantera"
+        },
+        {
+          "source_root": "manager_materials",
+          "path": "/Amitis Capital - General/AC - Digital/Manager Materials/Pantera"
+        },
+        {
+          "source_root": "ic_materials",
+          "path": "/Amitis Capital - General/AC - Digital/IC Materials/Pantera DAT"
+        }
+      ]
+    },
+    {
+      "slug": "reforge",
+      "display_name": "Reforge",
+      "enabled": true,
+      "roots": [
+        {
+          "source_root": "subscriptions",
+          "path": "/Amitis Capital - General/AC - Digital/ACDAM Portfolio/Portfolio - Subscriptions/Reforge"
+        },
+        {
+          "source_root": "manager_materials",
+          "path": "/Amitis Capital - General/AC - Digital/Manager Materials/Reforge"
+        },
+        {
+          "source_root": "ic_materials",
+          "path": "/Amitis Capital - General/AC - Digital/IC Materials/Reforge"
+        }
+      ]
+    },
+    {
+      "slug": "samara",
+      "display_name": "Samara",
+      "enabled": true,
+      "roots": [
+        {
+          "source_root": "subscriptions",
+          "path": "/Amitis Capital - General/AC - Digital/ACDAM Portfolio/Portfolio - Subscriptions/Samara"
+        },
+        {
+          "source_root": "manager_materials",
+          "path": "/Amitis Capital - General/AC - Digital/Manager Materials/Samara"
+        },
+        {
+          "source_root": "ic_materials",
+          "path": "/Amitis Capital - General/AC - Digital/IC Materials/Samara"
+        }
+      ]
+    },
+    {
+      "slug": "theia",
+      "display_name": "Theia",
+      "enabled": true,
+      "roots": [
+        {
+          "source_root": "subscriptions",
+          "path": "/Amitis Capital - General/AC - Digital/ACDAM Portfolio/Portfolio - Subscriptions/Theia"
+        },
+        {
+          "source_root": "manager_materials",
+          "path": "/Amitis Capital - General/AC - Digital/Manager Materials/Theia"
+        },
+        {
+          "source_root": "ic_materials",
+          "path": "/Amitis Capital - General/AC - Digital/IC Materials/Theia"
+        }
+      ]
+    },
+    {
+      "slug": "vaneck",
+      "display_name": "Vaneck",
+      "enabled": true,
+      "roots": [
+        {
+          "source_root": "subscriptions",
+          "path": "/Amitis Capital - General/AC - Digital/ACDAM Portfolio/Portfolio - Subscriptions/Vaneck"
+        },
+        {
+          "source_root": "manager_materials",
+          "path": "/Amitis Capital - General/AC - Digital/Manager Materials/Van Eck"
+        },
+        {
+          "source_root": "ic_materials",
+          "path": "/Amitis Capital - General/AC - Digital/IC Materials/Van Eck"
+        }
+      ]
+    },
+    {
+      "slug": "wincent",
+      "display_name": "Wincent",
+      "enabled": true,
+      "roots": [
+        {
+          "source_root": "subscriptions",
+          "path": "/Amitis Capital - General/AC - Digital/ACDAM Portfolio/Portfolio - Subscriptions/Wincent"
+        },
+        {
+          "source_root": "manager_materials",
+          "path": "/Amitis Capital - General/AC - Digital/Manager Materials/Wincent Capital"
+        },
+        {
+          "source_root": "ic_materials",
+          "path": "/Amitis Capital - General/AC - Digital/IC Materials/Wincent"
+        }
+      ]
+    }
+  ]
+}

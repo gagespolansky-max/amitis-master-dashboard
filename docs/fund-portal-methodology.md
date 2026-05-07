@@ -1,10 +1,10 @@
 # Fund Doc Search Methodology
 
-Status: v0 implementation in progress for GrandLine.
+Status: v0 implementation live for GrandLine, with a Fund Indexer Agent scaffold and 16-fund batch queue.
 
 ## 1. Pipeline Overview
 
-Fund Doc Search indexes one fund at a time from Dropbox into Supabase pgvector:
+Fund Doc Search indexes Dropbox fund documents into Supabase pgvector. The core indexer handles one fund at a time; the Fund Indexer Agent batch wrapper queues the 16 allocated funds through that same one-fund path:
 
 1. Discover files under Manager Materials, Portfolio - Subscriptions, and optional IC Materials.
 2. Log every file decision to local SQLite at `data/fund_indexing_log.db`.
@@ -15,7 +15,7 @@ Fund Doc Search indexes one fund at a time from Dropbox into Supabase pgvector:
 7. Estimate OpenAI embedding cost and abort above `--max-cost-usd`.
 8. Embed with `text-embedding-3-small`.
 9. Atomically replace chunks for changed documents through `replace_fund_document_chunks`.
-10. Query through `query_funds.py` with cited answers synthesized by Claude.
+10. Query through `query_funds.py` with cited answers synthesized by Claude or retrieval-only smoke checks.
 
 OIG agents consume this through shared Fund Doc Search, not by directly reading Dropbox.
 
@@ -31,6 +31,18 @@ Use Dropbox-backed reads to avoid local Smart Sync placeholders:
 
 ```text
 python scripts/index_fund_docs.py --fund grandline --source-provider dropbox --skip-legal-name-prompt
+```
+
+Allocated-fund batch roots live in:
+
+```text
+agents/fund-indexer/fund-source-roots.json
+```
+
+Run the queue with:
+
+```text
+python scripts/index_fund_batch.py --funds all --source-provider dropbox --resume --skip-legal-name-prompt
 ```
 
 `--source-provider auto` uses Dropbox when `DROPBOX_MCP_TOKEN` is present; local mode remains available for fixtures and explicit filesystem roots. Override roots with `--source-root-subs`, `--source-root-mm`, and `--source-root-ic`.

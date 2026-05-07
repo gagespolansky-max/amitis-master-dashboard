@@ -16,6 +16,7 @@ python scripts/refresh-priorities.py — Pull from Gmail + Attio, rank via Claud
 python scripts/compile-weekly-report.py — Aggregate week's suggestions into data/weekly-reports.json
 python scripts/sync-skills.py — Scan ~/.claude/skills/ and ~/.claude/plugins/, create Supabase submissions for admin approval
 python scripts/index_fund_docs.py --fund <slug> --source-provider dropbox — Fund Doc Search indexer; indexes Dropbox fund docs into Supabase pgvector
+python scripts/index_fund_batch.py --funds all --source-provider dropbox — Batch Fund Doc Search indexer over the 16 allocated fund manifest
 python scripts/query_funds.py --fund <slug> --question "<question>" — Fund Doc Search query CLI with cited answers
 
 Global Claude Code skills (installed at ~/.claude/skills/, available across all projects)
@@ -23,6 +24,10 @@ Global Claude Code skills (installed at ~/.claude/skills/, available across all 
 learning-log — Captures technical concepts to Supabase learning_log table when concepts are explained during sessions
 project-docs-updater — Generates CLAUDE.md update blocks when meaningful architecture changes happen
 skill-analytics — Logs skill usage events, reports on usage stats, and syncs new/modified skills to skill_proposals for admin approval (Mode 3). NEVER writes directly to skill_catalog.
+
+Project agents
+
+Project agent registry lives in `agents/README.md`. Fund Doc Search indexing is owned by the Fund Indexer Agent at `agents/fund-indexer/PERSONA.md`, with runtime pointers for Claude, Cursor, and Codex. Keep agent topology there; keep this root file as a short pointer only.
 
 Architecture
 Next.js App Router with a sidebar-driven layout. All pages live under src/app/. Path alias: @/* → src/*.
@@ -46,7 +51,7 @@ Fund Doc Search cluster:
 fund_managers — One row per external fund manager; legal-name metadata for fund-doc search.
 fund_documents — One row per indexed source file; Dropbox filepath, doc_type, hash, authoritative-format flag, soft-delete state.
 fund_document_chunks — pgvector-backed chunks with generic citation locators and embedding_model.
-Local runtime log: data/fund_indexing_log.db (ignored by git). OIG consumes this through shared fund-doc-search rather than direct Dropbox access. Python deps install from requirements-fund-doc-search.txt.
+Local runtime log: data/fund_indexing_log.db (ignored by git). Batch source-root manifest: agents/fund-indexer/fund-source-roots.json. OIG consumes this through shared fund-doc-search rather than direct Dropbox access. Python deps install from requirements-fund-doc-search.txt.
 
 Skills Hub cluster (active):
 
