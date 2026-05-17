@@ -17,6 +17,13 @@ const navigation: NavItem[] = [
     href: '/oig/cos',
   },
   {
+    label: 'Data Layer',
+    href: '/data-layer',
+    children: [
+      { label: 'Transcript Review', href: '/data-layer/attio-transcripts/review' },
+    ],
+  },
+  {
     label: 'Priorities',
     href: '/priorities',
     children: [

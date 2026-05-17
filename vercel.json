@@ -1,0 +1,9 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "crons": [
+    {
+      "path": "/data-layer/attio-transcripts/api/ingest",
+      "schedule": "*/30 * * * *"
+    }
+  ]
+}

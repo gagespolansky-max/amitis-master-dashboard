@@ -6,7 +6,13 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "apply:attio-migration": "node scripts/apply-attio-transcript-migration.mjs",
+    "check:attio-review": "node scripts/check-attio-review-queue.mjs",
+    "lint": "eslint",
+    "smoke:attio-ingest": "node scripts/smoke-attio-transcript-ingest.mjs",
+    "test:attio-slack": "node scripts/test-attio-transcript-slack-agent.mjs",
+    "verify:attio-rollout": "node scripts/verify-attio-transcript-rollout.mjs",
+    "verify:attio-rollout:vercel": "node scripts/verify-attio-transcript-rollout.mjs --vercel"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.80.0",
