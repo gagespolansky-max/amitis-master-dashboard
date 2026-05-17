@@ -3,7 +3,7 @@
   "crons": [
     {
       "path": "/data-layer/attio-transcripts/api/ingest",
-      "schedule": "*/30 * * * *"
+      "schedule": "0 23 * * *"
     }
   ]
 }

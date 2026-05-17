@@ -12,7 +12,7 @@ This runbook covers the neutral data-layer Attio transcript ingestion rollout.
 - Optional Slack notification support is wired for new `ready_for_review` transcripts.
 - Participant identity support is added in `007-attio-participant-identities.sql`: company identity + person identity hash into a composite participant identity.
 - Browser UI review clicks still need a real authenticated `chief-of-staff` session if strict UI validation is required.
-- Production deploy is blocked on Vercel Hobby cron limits: `*/30 * * * *` runs more than once per day and requires a Pro plan or a reduced cron cadence.
+- Production deploy uses a daily Vercel Hobby-compatible cron: `0 23 * * *`, which runs at 7:00 PM ET during daylight saving time. Restore `*/30 * * * *` after upgrading Vercel to Pro.
 
 ## Required Environment
 
@@ -145,4 +145,4 @@ Deploy only after:
 
 For this rollout, ingest was smoke-tested through the cron-auth GET route with `ATTIO_TRANSCRIPT_HOURS_BACK=72`, `ATTIO_TRANSCRIPT_MAX_MEETINGS=5`, and `ATTIO_TRANSCRIPT_MAX_RECORDINGS=2` because no interactive browser auth cookie was available. Review state transitions were validated at the database layer using the same status/reviewed metadata semantics as the review route.
 
-The attempted production deploy failed because Vercel Hobby accounts only allow daily cron jobs. Keep the 30-minute cadence and upgrade the Vercel plan, or change `vercel.json` to a daily schedule before deploying on Hobby.
+The first attempted production deploy failed because Vercel Hobby accounts only allow daily cron jobs. The deployed cadence is now daily at `0 23 * * *` so the agent can run on Hobby; keep the 30-minute cadence as the target after upgrading the Vercel plan.
