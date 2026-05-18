@@ -7,6 +7,7 @@ import {
   type GmailClient,
 } from "@/app/acio/deals/_lib/gmail"
 import { classifyThread, extractDealMetadata } from "@/app/acio/deals/_lib/classify"
+import { extractDealMetadataWithAgents } from "@/app/acio/deals/_lib/intake-agents"
 import { findMatchingDeal, linkThreadToExistingDeal, type ExistingDeal } from "@/app/acio/deals/_lib/dedup"
 import { requireUser } from "@/lib/auth"
 
@@ -178,7 +179,13 @@ async function runLabelScan(gmail: GmailClient, userId: string) {
 
   for (const threadId of newThreadIds) {
     const meta = await fetchThreadMeta(gmail, threadId)
-    const extraction = await extractDealMetadata(meta)
+    let extraction
+    try {
+      extraction = await extractDealMetadataWithAgents(gmail, meta)
+    } catch (err) {
+      console.error("[acio label scan] agent intake failed, falling back to metadata extraction:", err)
+      extraction = await extractDealMetadata(meta)
+    }
 
     // Check for existing deal match before inserting
     const match = await findMatchingDeal(extraction.company_name, existingDeals)

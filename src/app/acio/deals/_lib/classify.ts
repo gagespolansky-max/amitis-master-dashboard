@@ -53,7 +53,7 @@ IMPORTANT — These are NOT investment opportunities:
 - Newsletters and marketing emails
 - Scheduling logistics without deal context`
 
-const LABEL_PROMPT = `Extract deal metadata from this email thread. This has already been identified as
+export const LABEL_PROMPT = `Extract deal metadata from this email thread. This has already been identified as
 an investment opportunity by the user — do NOT question whether it's a deal.
 
 Return JSON (no markdown, no code fences):
@@ -105,7 +105,7 @@ export async function classifyThread(thread: ThreadMeta): Promise<BaselineClassi
   return result.data
 }
 
-const ENRICH_PROMPT = `You are enriching deal metadata for Amitis Capital's deal tracker.
+export const ENRICH_PROMPT = `You are enriching deal metadata for Amitis Capital's deal tracker.
 You have access to the full email bodies from threads related to this deal.
 
 Given the current deal info and the email messages, return improved JSON (no markdown, no code fences):

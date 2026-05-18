@@ -1,0 +1,669 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ACIO Opportunity Intake Vector Map</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #18212f;
+      --muted: #637084;
+      --line: #d8dee8;
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --blue: #2456a6;
+      --green: #1f7a55;
+      --amber: #946200;
+      --red: #b42318;
+      --slate: #2f3a4a;
+      --chip: #eef2f7;
+      --code: #f2f5f9;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    header {
+      background: #111827;
+      color: #fff;
+      padding: 28px 36px 22px;
+      border-bottom: 4px solid #3b82f6;
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+
+    header p {
+      margin: 0;
+      color: #cbd5e1;
+      max-width: 980px;
+    }
+
+    main {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 28px;
+    }
+
+    section {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      margin: 0 0 18px;
+      overflow: hidden;
+    }
+
+    section > h2 {
+      margin: 0;
+      padding: 15px 18px;
+      font-size: 17px;
+      background: #f9fafb;
+      border-bottom: 1px solid var(--line);
+      letter-spacing: 0;
+    }
+
+    .content { padding: 18px; }
+
+    .grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .grid.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      background: #fff;
+      min-height: 118px;
+    }
+
+    .metric h3 {
+      margin: 0 0 8px;
+      font-size: 14px;
+      color: var(--slate);
+    }
+
+    .metric p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--chip);
+      color: var(--slate);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .pill.green { background: #e9f8f0; color: var(--green); }
+    .pill.blue { background: #e9f1ff; color: var(--blue); }
+    .pill.amber { background: #fff6db; color: var(--amber); }
+    .pill.red { background: #fdecea; color: var(--red); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th, td {
+      text-align: left;
+      vertical-align: top;
+      border-bottom: 1px solid var(--line);
+      padding: 9px 10px;
+    }
+
+    th {
+      background: #f8fafc;
+      color: #334155;
+      font-weight: 650;
+    }
+
+    tr:last-child td { border-bottom: 0; }
+
+    code, pre {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size: 12px;
+    }
+
+    code {
+      background: var(--code);
+      border: 1px solid #e1e7f0;
+      border-radius: 4px;
+      padding: 1px 4px;
+    }
+
+    pre {
+      margin: 0;
+      padding: 14px;
+      overflow: auto;
+      background: #0f172a;
+      color: #dbeafe;
+      border-radius: 8px;
+      white-space: pre-wrap;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(145px, 1fr));
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .step {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      background: #fff;
+      position: relative;
+      min-height: 138px;
+    }
+
+    .step:not(:last-child)::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      right: -10px;
+      width: 10px;
+      height: 1px;
+      background: var(--line);
+    }
+
+    .step b {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--blue);
+    }
+
+    .step p { margin: 0; color: var(--muted); }
+
+    .note {
+      border-left: 4px solid var(--blue);
+      background: #eef5ff;
+      padding: 12px 14px;
+      border-radius: 6px;
+      color: #243b61;
+    }
+
+    .warn {
+      border-left-color: var(--amber);
+      background: #fff8e7;
+      color: #5f4300;
+    }
+
+    .risk {
+      border-left-color: var(--red);
+      background: #fff1f0;
+      color: #7a271a;
+    }
+
+    .muted { color: var(--muted); }
+    .tight { margin: 0; }
+
+    textarea {
+      width: 100%;
+      min-height: 210px;
+      resize: vertical;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      font: 12px/1.45 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      color: #172033;
+      background: #fbfdff;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin: 10px 0 0;
+    }
+
+    button {
+      border: 1px solid #c8d2e0;
+      background: #fff;
+      color: #1f2937;
+      border-radius: 6px;
+      padding: 7px 10px;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    button.primary {
+      background: #2456a6;
+      color: #fff;
+      border-color: #2456a6;
+    }
+
+    button:hover { border-color: #7c8da6; }
+
+    .source-list {
+      margin: 0;
+      padding-left: 18px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 900px) {
+      main { padding: 16px; }
+      header { padding: 24px 18px; }
+      .grid.cols-3, .grid.cols-2, .flow { grid-template-columns: 1fr; }
+      .step::after { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>ACIO Opportunity Intake Vector Map</h1>
+      <p>What gets tracked in Supabase when a Gmail thread is added through the <strong>ACIO-Opportunities</strong> label and lands in the ACIO deal pipeline. Live schema checked on 2026-05-18. Intake flow updated to use multi-agent analysis.</p>
+  </header>
+
+  <main>
+    <section>
+      <h2>Executive Map</h2>
+      <div class="content grid cols-3">
+        <div class="metric">
+          <h3>Primary intake path</h3>
+          <p><span class="pill blue">Gmail label</span> <code>label:ACIO-Opportunities</code> is scanned by <code>/acio/deals/api/scan</code>. Labeled threads are assumed to be deals and sent through the agent intake workflow.</p>
+        </div>
+        <div class="metric">
+          <h3>Core record</h3>
+          <p><span class="pill green">Tracked</span> New opportunities create one <code>acio_deals</code> row plus one linked <code>acio_deal_emails</code> row. Later views/enrichment can cache full messages, attachments, and memos.</p>
+        </div>
+        <div class="metric">
+          <h3>Intake vector to modify</h3>
+          <p><span class="pill amber">Agent synthesis + schema</span> The extracted vector is synthesized from email, attachment, and web verification reports, validated by <code>DealExtractionSchema</code>, then inserted into Supabase.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Label Intake Flow</h2>
+      <div class="content">
+        <div class="flow">
+          <div class="step">
+            <b>1. User labels thread</b>
+            <p>Thread is placed under Gmail label <code>ACIO-Opportunities</code>.</p>
+          </div>
+          <div class="step">
+            <b>2. Scan route runs</b>
+            <p><code>runLabelScan</code> searches Gmail for <code>label:ACIO-Opportunities</code> and skips thread IDs already linked to deals.</p>
+          </div>
+          <div class="step">
+            <b>3. Full thread fetched</b>
+            <p>Subject, participants, snippets, full message bodies, and attachment metadata are pulled through the Gmail helper.</p>
+          </div>
+          <div class="step">
+            <b>4. Agents analyze evidence</b>
+            <p>Email-body, attachment, and low-weight web verification agents each return structured reports.</p>
+          </div>
+          <div class="step">
+            <b>5. Synthesis + write</b>
+            <p>Lead intake synthesis creates final fields, then inserts or merges into <code>acio_deals</code> and logs <code>acio_scan_log</code>.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Agent Intake Workflow</h2>
+      <div class="content">
+        <table>
+          <thead>
+            <tr>
+              <th>Agent</th>
+              <th>Evidence it sees</th>
+              <th>Weight in final synthesis</th>
+              <th>Limitations</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>email_thread</code></td>
+              <td>Full Gmail message bodies, sender, date, subject, snippets, and attachment filenames.</td>
+              <td><span class="pill green">Highest</span> Used for transaction status, stage, relationship context, and actual conversation facts.</td>
+              <td>Email bodies are capped per message to control token use.</td>
+            </tr>
+            <tr>
+              <td><code>attachments</code></td>
+              <td>PDF attachments up to the configured byte cap plus text-like attachments such as txt, md, csv, json, html.</td>
+              <td><span class="pill green">High</span> Used for strategy, terms, AUM, team, fund/company details, and materials-backed facts.</td>
+              <td>Office files such as docx, xlsx, pptx are currently metadata-only until a conversion path is added.</td>
+            </tr>
+            <tr>
+              <td><code>web_verification</code></td>
+              <td>Claude web search using the thread metadata and email report.</td>
+              <td><span class="pill amber">Lowest</span> Used for public context, source checks, and red flags. Absence of public data is not negative evidence.</td>
+              <td>Many ACIO deals are off-market, so web results cannot override email or attachment evidence unless directly contradictory.</td>
+            </tr>
+            <tr>
+              <td><code>lead_synthesis</code></td>
+              <td>All sub-agent reports.</td>
+              <td><span class="pill blue">Final</span> Resolves conflicts conservatively and emits the validated Supabase vector.</td>
+              <td>If an optional agent fails, synthesis still uses the reports that succeeded; if the full workflow fails, scan falls back to old metadata extraction.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>Current Intake Vector</h2>
+      <div class="content">
+        <table>
+          <thead>
+            <tr>
+              <th>Vector field</th>
+              <th>Allowed shape</th>
+              <th>Where it lands</th>
+              <th>How it is used</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>company_name</code></td>
+              <td>Required string</td>
+              <td><code>acio_deals.company_name</code></td>
+              <td>Primary title, dedup target, board card identity.</td>
+            </tr>
+            <tr>
+              <td><code>deal_type</code></td>
+              <td><code>fund_allocation</code>, <code>co_invest</code>, <code>direct</code>, or null</td>
+              <td><code>acio_deals.deal_type</code></td>
+              <td>Pipeline categorization. If changed to <code>fund_allocation</code>, UI clears <code>vehicle</code> and <code>company_stage</code>.</td>
+            </tr>
+            <tr>
+              <td><code>vehicle</code></td>
+              <td><code>spv</code>, <code>direct_equity</code>, <code>safe_convertible</code>, or null</td>
+              <td><code>acio_deals.vehicle</code></td>
+              <td>Only meaningful for co-invest or direct opportunities.</td>
+            </tr>
+            <tr>
+              <td><code>company_stage</code></td>
+              <td><code>pre_seed</code>, <code>seed</code>, <code>series_a</code>, <code>series_b</code>, <code>series_c_plus</code>, or null</td>
+              <td><code>acio_deals.company_stage</code></td>
+              <td>Venture-style stage for direct/co-invest opportunities.</td>
+            </tr>
+            <tr>
+              <td><code>suggested_stage</code></td>
+              <td><code>sourced</code>, <code>initial_call</code>, <code>dd_in_progress</code>, <code>ic_review</code>, <code>committed</code>, <code>passed</code></td>
+              <td><code>acio_deals.stage</code></td>
+              <td>Initial board column. Dedup merge can auto-advance a deal, but does not auto-advance into <code>passed</code>.</td>
+            </tr>
+            <tr>
+              <td><code>key_contacts</code></td>
+              <td>Array of <code>{name,email,role}</code></td>
+              <td><code>acio_deals.key_contacts</code></td>
+              <td>Displayed as people involved. Merge path deduplicates contacts by email.</td>
+            </tr>
+            <tr>
+              <td><code>industry</code></td>
+              <td>Free text sector</td>
+              <td><code>acio_deals.industry</code></td>
+              <td>Shown on cards/panel; editable in UI from a fixed industry list.</td>
+            </tr>
+            <tr>
+              <td><code>company_description</code></td>
+              <td>1-2 sentence string or null</td>
+              <td><code>acio_deals.company_description</code></td>
+              <td>Deal summary. Enrichment can later rewrite it using full email bodies.</td>
+            </tr>
+            <tr>
+              <td><code>value_proposition</code></td>
+              <td>1 sentence string or null</td>
+              <td><code>acio_deals.value_proposition</code></td>
+              <td>Amitis-specific fit statement. Enrichment can later rewrite it.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>Supabase Tables And Fields</h2>
+      <div class="content">
+        <h3 class="tight">Directly written when a labeled opportunity creates a new deal</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Table</th>
+              <th>Fields written by label scan</th>
+              <th>Defaults / constraints</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>acio_deals</code></td>
+              <td><code>company_name</code>, <code>deal_type</code>, <code>stage</code>, <code>status</code>, <code>source</code>, <code>source_thread_id</code>, <code>source_subject</code>, <code>key_contacts</code>, <code>industry</code>, <code>vehicle</code>, <code>company_stage</code>, <code>company_description</code>, <code>value_proposition</code>, <code>created_by_user_id</code></td>
+              <td><code>status='confirmed'</code>, <code>source='label'</code>. Defaults include <code>priority='medium'</code>, timestamps, and generated <code>id</code>.</td>
+            </tr>
+            <tr>
+              <td><code>acio_deal_emails</code></td>
+              <td><code>deal_id</code>, <code>thread_id</code>, <code>subject</code>, <code>snippet</code>, <code>last_message_date</code>, <code>participants</code></td>
+              <td>Links the Gmail thread to the pipeline deal. <code>id</code> and <code>created_at</code> are defaulted.</td>
+            </tr>
+            <tr>
+              <td><code>acio_scan_log</code></td>
+              <td><code>scan_type</code>, <code>threads_scanned</code>, <code>new_deals_found</code>, <code>query_used</code></td>
+              <td>For label mode, <code>scan_type='label'</code> and <code>query_used='label:ACIO-Opportunities [sha:...]'</code>.</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h3>Tracked later when the user opens or enriches a deal</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Table / storage</th>
+              <th>Fields</th>
+              <th>Triggering action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>acio_email_messages</code></td>
+              <td><code>deal_email_id</code>, <code>message_id</code>, <code>from_name</code>, <code>from_email</code>, <code>date</code>, <code>subject</code>, <code>body_text</code>, <code>snippet</code></td>
+              <td>Opening email messages or running enrichment. Full Gmail bodies are cached here.</td>
+            </tr>
+            <tr>
+              <td><code>acio_email_attachments</code></td>
+              <td><code>deal_id</code>, <code>deal_email_id</code>, <code>gmail_message_id</code>, <code>gmail_attachment_id</code>, <code>filename</code>, <code>mime_type</code>, <code>size</code></td>
+              <td>Opening a thread's messages. Stores metadata, not file bytes.</td>
+            </tr>
+            <tr>
+              <td><code>acio_deals</code></td>
+              <td><code>notes</code>, <code>priority</code>, <code>reminder_date</code>, <code>reminder_note</code>, <code>memo_url</code>, <code>memo_filename</code>, <code>stage_updated_at</code>, <code>updated_at</code></td>
+              <td>Manual edits, stage movement, reminders, and memo uploads.</td>
+            </tr>
+            <tr>
+              <td><code>acio-memos</code> storage bucket</td>
+              <td>Stored at <code>{deal_id}/{file.name}</code>; public URL mirrored on <code>acio_deals.memo_url</code>.</td>
+              <td>Uploading an investment memo from the deal panel.</td>
+            </tr>
+            <tr>
+              <td><code>acio_deal_memos</code></td>
+              <td><code>deal_id</code>, <code>version</code>, <code>filename</code>, <code>storage_path</code>, <code>notes</code>, <code>created_at</code></td>
+              <td>Live table exists, but current upload route only updates <code>acio_deals</code>; it does not write version history yet.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>Live Schema Notes</h2>
+      <div class="content grid cols-2">
+        <div class="note">
+          <strong>Live Supabase columns match the ACIO deal vector.</strong>
+          <p class="tight">The live <code>acio_deals</code> table has <code>deal_type</code>, <code>vehicle</code>, <code>company_stage</code>, <code>company_description</code>, and <code>value_proposition</code>. It does not have <code>investment_type</code>.</p>
+        </div>
+        <div class="note warn">
+          <strong>Code references tables that are absent live.</strong>
+          <p class="tight"><code>acio_deal_links</code> and <code>deal_notes</code> do not exist in live Supabase as of this check, even though routes/docs reference them. Link extraction in <code>emails/messages</code> and the links API will fail until that table exists or those routes are revised.</p>
+        </div>
+        <div class="note warn">
+          <strong>Generated types are missing one live table.</strong>
+          <p class="tight"><code>src/lib/database.types.ts</code> includes the core ACIO tables, but not the live <code>acio_deal_memos</code> table.</p>
+        </div>
+        <div class="note risk">
+          <strong>Security advisory from Supabase MCP.</strong>
+          <p class="tight">Supabase reported RLS disabled on several tables, including <code>acio_deal_memos</code>. Do not enable RLS blindly without adding access policies, because that can block application access.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Editable Intake Vector Draft</h2>
+      <div class="content grid cols-2">
+        <div>
+          <h3 class="tight">Field contract</h3>
+          <p class="muted">Edit this first when deciding what the intake vector should capture. It is saved in this browser's local storage.</p>
+          <textarea id="contract">{
+  "company_name": "company or fund being evaluated",
+  "deal_type": "fund_allocation | co_invest | direct | null",
+  "vehicle": "spv | direct_equity | safe_convertible | null",
+  "company_stage": "pre_seed | seed | series_a | series_b | series_c_plus | null",
+  "suggested_stage": "sourced | initial_call | dd_in_progress | ic_review | committed | passed",
+  "key_contacts": [{"name": "", "email": "", "role": "counterparty | internal | advisor"}],
+  "industry": "sector or strategy",
+  "company_description": "1-2 sentence description",
+  "value_proposition": "Amitis-specific fit statement"
+}</textarea>
+          <div class="toolbar">
+            <button class="primary" data-save="contract">Save draft</button>
+            <button data-reset="contract">Reset</button>
+            <span class="muted" id="contract-status"></span>
+          </div>
+        </div>
+        <div>
+          <h3 class="tight">Prompt change checklist</h3>
+          <table>
+            <thead>
+              <tr>
+                <th>Change area</th>
+                <th>Files to update</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Add/remove extracted field</td>
+                <td><code>_lib/classify.ts</code>, <code>_lib/types.ts</code>, <code>api/scan/route.ts</code>, <code>api/route.ts</code>, Supabase migration, UI components as needed.</td>
+              </tr>
+              <tr>
+                <td>Change allowed values</td>
+                <td><code>DealExtractionSchema</code>, TypeScript unions and labels in <code>_lib/types.ts</code>, database check constraints.</td>
+              </tr>
+              <tr>
+                <td>Change deal classification logic</td>
+                <td><code>BASELINE_PROMPT</code> for baseline scan, <code>LABEL_PROMPT</code> for user-labeled opportunities.</td>
+              </tr>
+              <tr>
+                <td>Improve description/fit after intake</td>
+                <td><code>ENRICH_PROMPT</code> and <code>api/[id]/enrich/route.ts</code>.</td>
+              </tr>
+              <tr>
+                <td>Track source evidence</td>
+                <td>Add schema fields for evidence snippets or citations; current vector does not store source quotes for extracted fields.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Current Label Prompt Skeleton</h2>
+      <div class="content">
+        <pre>Lead intake synthesis:
+Use sub-agent reports to produce the final deal fields.
+
+Evidence weight:
+1. Email thread bodies: highest.
+2. Attachments: high.
+3. Web verification: lowest because many deals are off-market.
+
+Return JSON:
+{
+  "company_name": "...",
+  "deal_type": "fund_allocation|co_invest|direct" or null,
+  "vehicle": "spv|direct_equity|safe_convertible" or null,
+  "company_stage": "pre_seed|seed|series_a|series_b|series_c_plus" or null,
+  "suggested_stage": "sourced|initial_call|dd_in_progress|ic_review|committed|passed",
+  "key_contacts": [{"name": "...", "email": "...", "role": "counterparty|internal|advisor"}],
+  "industry": "...",
+  "company_description": "1-2 sentence description",
+  "value_proposition": "1 sentence on why this is relevant to Amitis Capital"
+}</pre>
+      </div>
+    </section>
+
+    <section>
+      <h2>Source References</h2>
+      <div class="content">
+        <ul class="source-list">
+          <li><code>src/app/acio/deals/api/scan/route.ts</code> - label and baseline scan writes.</li>
+          <li><code>src/app/acio/deals/_lib/intake-agents.ts</code> - email, attachment, web verification, and final synthesis agents.</li>
+          <li><code>src/app/acio/deals/_lib/classify.ts</code> - baseline, label, and enrichment prompts.</li>
+          <li><code>src/app/acio/deals/_lib/types.ts</code> - Zod contracts, TypeScript unions, UI labels.</li>
+          <li><code>src/app/acio/deals/_lib/dedup.ts</code> - duplicate matching and merge behavior.</li>
+          <li><code>src/app/acio/deals/api/route.ts</code> - manual new deal insertion.</li>
+          <li><code>src/app/acio/deals/api/[id]/emails/messages/route.ts</code> - message, attachment, and link caching.</li>
+          <li><code>src/app/acio/deals/api/[id]/route.ts</code> - deal update surface.</li>
+          <li><code>src/lib/database.types.ts</code> and live Supabase information schema - field inventory.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      const defaults = new Map();
+      document.querySelectorAll("textarea[id]").forEach(function (el) {
+        defaults.set(el.id, el.value);
+        const saved = localStorage.getItem("acio-intake-map:" + el.id);
+        if (saved) el.value = saved;
+      });
+
+      document.querySelectorAll("[data-save]").forEach(function (button) {
+        button.addEventListener("click", function () {
+          const id = button.getAttribute("data-save");
+          const el = document.getElementById(id);
+          localStorage.setItem("acio-intake-map:" + id, el.value);
+          const status = document.getElementById(id + "-status");
+          if (status) {
+            status.textContent = "Saved locally at " + new Date().toLocaleTimeString();
+          }
+        });
+      });
+
+      document.querySelectorAll("[data-reset]").forEach(function (button) {
+        button.addEventListener("click", function () {
+          const id = button.getAttribute("data-reset");
+          const el = document.getElementById(id);
+          el.value = defaults.get(id) || "";
+          localStorage.removeItem("acio-intake-map:" + id);
+          const status = document.getElementById(id + "-status");
+          if (status) status.textContent = "Reset";
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
