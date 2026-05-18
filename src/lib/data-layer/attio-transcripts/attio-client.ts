@@ -30,6 +30,14 @@ export class AttioClient {
     return this.getList<AttioMeeting>(`/meetings?${params}`)
   }
 
+  async getMeeting(meetingId: string): Promise<AttioMeeting> {
+    const body = await this.get<{ data?: AttioMeeting }>(
+      `/meetings/${encodeURIComponent(meetingId)}`,
+    )
+    if (!body.data) throw new Error(`Attio meeting not found: ${meetingId}`)
+    return body.data
+  }
+
   async listCallRecordings(meetingId: string): Promise<AttioCallRecording[]> {
     const out: AttioCallRecording[] = []
     let cursor: string | null = null
@@ -43,6 +51,14 @@ export class AttioClient {
       cursor = page.nextCursor
     } while (cursor)
     return out
+  }
+
+  async getCallRecording(meetingId: string, callRecordingId: string): Promise<AttioCallRecording> {
+    const body = await this.get<{ data?: AttioCallRecording }>(
+      `/meetings/${encodeURIComponent(meetingId)}/call_recordings/${encodeURIComponent(callRecordingId)}`,
+    )
+    if (!body.data) throw new Error(`Attio call recording not found: ${meetingId}/${callRecordingId}`)
+    return body.data
   }
 
   async getCallTranscript(

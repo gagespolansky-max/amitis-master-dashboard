@@ -46,6 +46,12 @@ export interface IngestResult {
   errors: Array<{ meeting_id: string; call_recording_id?: string; error: string }>
 }
 
+export interface IngestRecordingRequest {
+  meetingId: string
+  callRecordingId: string
+  force?: boolean
+}
+
 export async function runAttioTranscriptIngest(req: IngestRequest = {}): Promise<IngestResult> {
   const started = Date.now()
   const result: IngestResult = {
@@ -116,6 +122,63 @@ export async function runAttioTranscriptIngest(req: IngestRequest = {}): Promise
   }
 
   result.duration_ms = Date.now() - started
+  return result
+}
+
+export async function runAttioTranscriptIngestForRecording(
+  req: IngestRecordingRequest,
+): Promise<IngestResult> {
+  const started = Date.now()
+  const result: IngestResult = {
+    meetings_examined: 1,
+    recordings_examined: 1,
+    transcripts_processed: 0,
+    transcripts_skipped: 0,
+    transcripts_ignored: 0,
+    transcripts_errored: 0,
+    profiles_updated: 0,
+    duration_ms: 0,
+    errors: [],
+  }
+
+  const client = new AttioClient()
+
+  try {
+    const [meeting, recording] = await Promise.all([
+      client.getMeeting(req.meetingId),
+      client.getCallRecording(req.meetingId, req.callRecordingId),
+    ])
+
+    if (recording.status !== "completed") {
+      result.transcripts_skipped = 1
+      return result
+    }
+
+    const existing = await findExistingTranscript({
+      meetingId: req.meetingId,
+      recordingId: req.callRecordingId,
+    })
+    if (existing && READY_STATUSES.has(existing.status) && !req.force) {
+      result.transcripts_skipped = 1
+      return result
+    }
+
+    const processed = await processRecording({ client, meeting, recording })
+    result.transcripts_processed = processed.processed ? 1 : 0
+    result.transcripts_ignored = processed.ignored ? 1 : 0
+    result.profiles_updated = processed.profilesUpdated
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "unknown error"
+    result.errors.push({
+      meeting_id: req.meetingId,
+      call_recording_id: req.callRecordingId,
+      error: message,
+    })
+    result.transcripts_errored = 1
+  } finally {
+    result.duration_ms = Date.now() - started
+  }
+
   return result
 }
 

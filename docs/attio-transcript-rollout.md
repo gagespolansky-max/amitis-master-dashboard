@@ -28,6 +28,12 @@ Local `.env.local` and Vercel production need:
 
 The 5-minute GitHub Actions scheduler authenticates with GitHub OIDC, scoped to this repository, workflow file, and `main` branch. No GitHub Actions secret is needed for scheduled runs. `CRON_SECRET` remains supported for manual smoke tests and Vercel Cron if the plan is upgraded later.
 
+The Attio webhook primary trigger also needs:
+
+- `ATTIO_TRANSCRIPT_WEBHOOK_SECRET`
+
+This value is returned by Attio when creating the webhook, or can be viewed in the Attio developer settings page for the webhook.
+
 Optional Slack call-summary notifications need:
 
 - `ATTIO_TRANSCRIPT_SLACK_BOT_TOKEN`
@@ -91,6 +97,24 @@ When configured, the ingestion job runs a separate Slack-summary LLM step after 
 The Slack message groups external participants by `company_identity_id` and lists each external individual with `person_identity_id` plus `participant_identity_id`. Amitis participants are listed with their own `person_identity_id`.
 
 See `docs/attio-transcript-slack-agent.md` for the Slack app requirements and message behavior.
+
+## Attio Webhook
+
+Primary ingest should be driven by Attio's `call-recording.created` webhook. The deployed target URL is:
+
+```text
+https://master-dashboard-bay.vercel.app/data-layer/attio-transcripts/api/webhook
+```
+
+The webhook endpoint:
+
+- verifies the `Attio-Signature` or `X-Attio-Signature` HMAC-SHA256 signature against the exact raw request body
+- returns `202` quickly so Attio does not retry because of its 5-second delivery timeout
+- processes each `call-recording.created` event after the response
+- ingests the specific `meeting_id` and `call_recording_id` from the event
+- keeps the 5-minute GitHub Actions scheduler as a backstop for missed deliveries or transcript lag
+
+Create the Attio webhook with event type `call-recording.created`, no filter, and the URL above. Then set the returned secret in Vercel production as `ATTIO_TRANSCRIPT_WEBHOOK_SECRET` and redeploy.
 
 ## Smoke Ingest
 

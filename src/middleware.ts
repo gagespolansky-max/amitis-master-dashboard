@@ -7,6 +7,7 @@ const PUBLIC_PATHS = [
   "/auth/callback",
   "/oig/slack/api/events",
   "/data-layer/attio-transcripts/api/ingest",
+  "/data-layer/attio-transcripts/api/webhook",
 ]
 const TEAMMATE_ALLOWED_PREFIXES = ["/acio", "/logout"]
 const TEAMMATE_HOME = "/acio/deals"
