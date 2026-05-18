@@ -75,7 +75,7 @@ export function formatAttioTranscriptSlackMessage(input: SlackTranscriptNotifica
 
   const sections = [
     `*New Attio call ready for review*`,
-    `*${slackEscape(input.summary.headline || title)}*`,
+    `*${slackEscape(title)}*`,
     [
       `*Type:* ${slackEscape(type)}`,
       `*Sentiment:* ${slackEscape(input.summary.sentiment)}`,

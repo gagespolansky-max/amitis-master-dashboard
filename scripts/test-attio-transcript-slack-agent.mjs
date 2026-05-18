@@ -409,9 +409,10 @@ function formatSlackMessage(transcript, summary) {
     reviewUrl ? `<${reviewUrl.replace(/>/g, "%3E")}|Open review queue>` : null,
     transcript.source_url ? `<${transcript.source_url.replace(/>/g, "%3E")}|Open Attio call>` : null,
   ].filter(Boolean)
+  const title = transcript.title || summary.headline || "Untitled Attio call"
   const sections = [
     `*Test: Attio Slack Summary Agent*`,
-    `*${slackEscape(summary.headline)}*`,
+    `*${slackEscape(title)}*`,
     [
       `*Type:* ${slackEscape(summary.call_type.replace(/_/g, " "))}`,
       `*Sentiment:* ${slackEscape(summary.sentiment)}`,

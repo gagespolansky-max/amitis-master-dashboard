@@ -313,6 +313,7 @@ Runtime rules:
 - Do not produce call_recap_sections in this step.
 - Use only the supplied structured analysis and participant metadata.
 - Do not invent action items, dates, names, amounts, risks, or commitments.
+- The displayed call title comes from the Attio meeting title and is handled by the parent formatter. Do not invent, rewrite, or replace it.
 - Preserve the call category and sentiment unless the supplied analysis is clearly inconsistent.
 - Return JSON only. No markdown.`,
     messages: [
@@ -322,7 +323,7 @@ Runtime rules:
 
 Return this JSON shape exactly:
 {
-  "headline": "short Slack headline",
+  "headline": "short fallback headline; do not rewrite the Attio meeting title",
   "call_type": "lp_update|manager_update|diligence|intro|portfolio|ops|other",
   "sentiment": "positive|neutral|negative|mixed|unknown",
   "counterparty": "external firm/person if clear, otherwise null",

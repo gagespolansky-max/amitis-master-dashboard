@@ -25,7 +25,7 @@ The agent-level contract lives in `src/lib/data-layer/attio-transcripts/agents/c
 
 The message is built from the Slack agent's JSON output, which is generated from the already-extracted transcript analysis and participant metadata.
 
-- Call title, date, type, sentiment, and labels
+- Attio meeting title, date, type, sentiment, and labels
 - External counterparties grouped by company identity, with company ID, person ID, and composite participant ID
 - Amitis participants with their own person identity IDs
 - Call recap up to 500 words, organized by topic or call phase
