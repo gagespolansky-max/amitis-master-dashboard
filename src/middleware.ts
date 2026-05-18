@@ -2,7 +2,12 @@ import { NextResponse, type NextRequest } from "next/server"
 import { createServerClient } from "@supabase/ssr"
 import { createClient } from "@supabase/supabase-js"
 
-const PUBLIC_PATHS = ["/login", "/auth/callback", "/oig/slack/api/events"]
+const PUBLIC_PATHS = [
+  "/login",
+  "/auth/callback",
+  "/oig/slack/api/events",
+  "/data-layer/attio-transcripts/api/ingest",
+]
 const TEAMMATE_ALLOWED_PREFIXES = ["/acio", "/logout"]
 const TEAMMATE_HOME = "/acio/deals"
 
