@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic"
 const AGENT_SLUG = "chief-of-staff"
 
 export async function GET(req: NextRequest) {
-  const auth = authorizeCronRequest(req.headers, process.env.CRON_SECRET)
+  const auth = await authorizeCronRequest(req.headers, process.env.CRON_SECRET)
   if (!auth.authorized) {
     return NextResponse.json(auth.body, { status: auth.status })
   }

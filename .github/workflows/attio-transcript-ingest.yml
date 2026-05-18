@@ -1,0 +1,48 @@
+name: Attio transcript ingest
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: attio-transcript-ingest-production
+  cancel-in-progress: false
+
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Request GitHub OIDC token
+        id: oidc
+        run: |
+          token_json=$(curl -sSf \
+            -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=attio-transcript-ingest")
+          token=$(node -e 'const fs=require("fs"); process.stdout.write(JSON.parse(fs.readFileSync(0, "utf8")).value)' <<< "$token_json")
+          echo "::add-mask::$token"
+          echo "token=$token" >> "$GITHUB_OUTPUT"
+
+      - name: Run production ingest
+        env:
+          GITHUB_OIDC_TOKEN: ${{ steps.oidc.outputs.token }}
+          INGEST_URL: https://master-dashboard-bay.vercel.app/data-layer/attio-transcripts/api/ingest
+        run: |
+          test -n "$GITHUB_OIDC_TOKEN"
+          response_file="$(mktemp)"
+          status=$(curl -sS -L --max-time 310 \
+            -o "$response_file" \
+            -w "%{http_code}" \
+            -H "Authorization: Bearer $GITHUB_OIDC_TOKEN" \
+            "$INGEST_URL")
+          cat "$response_file"
+          echo
+          if [ "$status" -lt 200 ] || [ "$status" -ge 300 ]; then
+            echo "ingest failed with HTTP $status"
+            exit 1
+          fi

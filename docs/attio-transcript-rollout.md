@@ -12,7 +12,7 @@ This runbook covers the neutral data-layer Attio transcript ingestion rollout.
 - Optional Slack notification support is wired for new `ready_for_review` transcripts.
 - Participant identity support is added in `007-attio-participant-identities.sql`: company identity + person identity hash into a composite participant identity.
 - Browser UI review clicks still need a real authenticated `chief-of-staff` session if strict UI validation is required.
-- Production deploy uses a daily Vercel Hobby-compatible cron: `0 23 * * *`, which runs at 7:00 PM ET during daylight saving time. Restore `*/30 * * * *` after upgrading Vercel to Pro.
+- Production ingest is scheduled by GitHub Actions every 5 minutes via `.github/workflows/attio-transcript-ingest.yml`. Vercel Cron is disabled because Vercel Hobby does not allow sub-daily cron cadence.
 
 ## Required Environment
 
@@ -25,6 +25,8 @@ Local `.env.local` and Vercel production need:
 - `SUPABASE_SERVICE_ROLE_KEY`
 
 `CRON_SECRET` and `ATTIO_API_KEY` are already set locally and in Vercel production as of this rollout pass.
+
+The 5-minute GitHub Actions scheduler authenticates with GitHub OIDC, scoped to this repository, workflow file, and `main` branch. No GitHub Actions secret is needed for scheduled runs. `CRON_SECRET` remains supported for manual smoke tests and Vercel Cron if the plan is upgraded later.
 
 Optional Slack call-summary notifications need:
 
@@ -145,4 +147,4 @@ Deploy only after:
 
 For this rollout, ingest was smoke-tested through the cron-auth GET route with `ATTIO_TRANSCRIPT_HOURS_BACK=72`, `ATTIO_TRANSCRIPT_MAX_MEETINGS=5`, and `ATTIO_TRANSCRIPT_MAX_RECORDINGS=2` because no interactive browser auth cookie was available. Review state transitions were validated at the database layer using the same status/reviewed metadata semantics as the review route.
 
-The first attempted production deploy failed because Vercel Hobby accounts only allow daily cron jobs. The deployed cadence is now daily at `0 23 * * *` so the agent can run on Hobby; keep the 30-minute cadence as the target after upgrading the Vercel plan.
+The first attempted production deploy failed because Vercel Hobby accounts only allow daily cron jobs. To satisfy the 5-minute cadence without upgrading Vercel, Vercel Cron is disabled and GitHub Actions now calls the cron-auth ingest endpoint on `*/5 * * * *`.
