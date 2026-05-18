@@ -26,12 +26,15 @@ import { isAttioTranscriptSlackConfigured, notifyAttioTranscriptSlack } from "./
 import { isInternalEmail, type AttioCallRecording, type AttioMeeting } from "./types"
 
 const READY_STATUSES = new Set(["ready_for_review", "reviewed", "ignored"])
+const DEFAULT_SLACK_MAX_CALL_AGE_HOURS = 12
+const MAX_SLACK_MAX_CALL_AGE_HOURS = 24 * 14
 
 export interface IngestRequest {
   hoursBack?: number
   maxMeetings?: number
   maxRecordings?: number
   force?: boolean
+  slackMaxCallAgeHours?: number
 }
 
 export interface IngestResult {
@@ -42,6 +45,8 @@ export interface IngestResult {
   transcripts_ignored: number
   transcripts_errored: number
   profiles_updated: number
+  slack_notifications_sent: number
+  slack_notifications_skipped_old: number
   duration_ms: number
   errors: Array<{ meeting_id: string; call_recording_id?: string; error: string }>
 }
@@ -50,6 +55,7 @@ export interface IngestRecordingRequest {
   meetingId: string
   callRecordingId: string
   force?: boolean
+  slackMaxCallAgeHours?: number
 }
 
 export async function runAttioTranscriptIngest(req: IngestRequest = {}): Promise<IngestResult> {
@@ -62,6 +68,8 @@ export async function runAttioTranscriptIngest(req: IngestRequest = {}): Promise
     transcripts_ignored: 0,
     transcripts_errored: 0,
     profiles_updated: 0,
+    slack_notifications_sent: 0,
+    slack_notifications_skipped_old: 0,
     duration_ms: 0,
     errors: [],
   }
@@ -72,6 +80,7 @@ export async function runAttioTranscriptIngest(req: IngestRequest = {}): Promise
   const endsFrom = new Date(Date.now() - hoursBack * 60 * 60 * 1000).toISOString()
   const maxMeetings = Math.min(200, Math.max(1, req.maxMeetings ?? 50))
   const maxRecordings = Math.min(200, Math.max(1, req.maxRecordings ?? 25))
+  const slackMaxCallAgeHours = resolveSlackMaxCallAgeHours(req.slackMaxCallAgeHours)
 
   const meetings: AttioMeeting[] = []
   let cursor: string | null = null
@@ -109,10 +118,12 @@ export async function runAttioTranscriptIngest(req: IngestRequest = {}): Promise
           result.transcripts_skipped += 1
           continue
         }
-        const processed = await processRecording({ client, meeting, recording })
+        const processed = await processRecording({ client, meeting, recording, slackMaxCallAgeHours })
         result.transcripts_processed += processed.processed ? 1 : 0
         result.transcripts_ignored += processed.ignored ? 1 : 0
         result.profiles_updated += processed.profilesUpdated
+        result.slack_notifications_sent += processed.slackNotificationsSent
+        result.slack_notifications_skipped_old += processed.slackNotificationsSkippedOld
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : "unknown error"
@@ -137,6 +148,8 @@ export async function runAttioTranscriptIngestForRecording(
     transcripts_ignored: 0,
     transcripts_errored: 0,
     profiles_updated: 0,
+    slack_notifications_sent: 0,
+    slack_notifications_skipped_old: 0,
     duration_ms: 0,
     errors: [],
   }
@@ -163,10 +176,17 @@ export async function runAttioTranscriptIngestForRecording(
       return result
     }
 
-    const processed = await processRecording({ client, meeting, recording })
+    const processed = await processRecording({
+      client,
+      meeting,
+      recording,
+      slackMaxCallAgeHours: resolveSlackMaxCallAgeHours(req.slackMaxCallAgeHours),
+    })
     result.transcripts_processed = processed.processed ? 1 : 0
     result.transcripts_ignored = processed.ignored ? 1 : 0
     result.profiles_updated = processed.profilesUpdated
+    result.slack_notifications_sent = processed.slackNotificationsSent
+    result.slack_notifications_skipped_old = processed.slackNotificationsSkippedOld
   } catch (err) {
     const message = err instanceof Error ? err.message : "unknown error"
     result.errors.push({
@@ -186,7 +206,14 @@ async function processRecording(args: {
   client: AttioClient
   meeting: AttioMeeting
   recording: AttioCallRecording
-}): Promise<{ processed: boolean; ignored: boolean; profilesUpdated: number }> {
+  slackMaxCallAgeHours: number
+}): Promise<{
+  processed: boolean
+  ignored: boolean
+  profilesUpdated: number
+  slackNotificationsSent: number
+  slackNotificationsSkippedOld: number
+}> {
   const transcript = await args.client.getCallTranscript(
     args.recording.id.meeting_id,
     args.recording.id.call_recording_id,
@@ -203,14 +230,26 @@ async function processRecording(args: {
 
     if (!normalized.rawTranscript.trim()) {
       await markTranscriptStatus(callId, "needs_human_review", "Attio returned no transcript segments")
-      return { processed: false, ignored: false, profilesUpdated: 0 }
+      return {
+        processed: false,
+        ignored: false,
+        profilesUpdated: 0,
+        slackNotificationsSent: 0,
+        slackNotificationsSkippedOld: 0,
+      }
     }
 
     const participants = await replaceParticipants(callId, normalized.participants)
     const externalParticipants = participants.filter((p) => !isInternalEmail(p.email))
     if (externalParticipants.length === 0) {
       await markTranscriptStatus(callId, "ignored", "No external participants found")
-      return { processed: false, ignored: true, profilesUpdated: 0 }
+      return {
+        processed: false,
+        ignored: true,
+        profilesUpdated: 0,
+        slackNotificationsSent: 0,
+        slackNotificationsSkippedOld: 0,
+      }
     }
 
     let analysisResult: Awaited<ReturnType<typeof analyzeTranscript>>
@@ -246,7 +285,13 @@ async function processRecording(args: {
         error: message,
       })
       await markTranscriptStatus(callId, "needs_human_review", message)
-      return { processed: false, ignored: false, profilesUpdated: 0 }
+      return {
+        processed: false,
+        ignored: false,
+        profilesUpdated: 0,
+        slackNotificationsSent: 0,
+        slackNotificationsSkippedOld: 0,
+      }
     }
 
     await updateTranscriptAnalysis(callId, analysisResult.parsed)
@@ -315,65 +360,103 @@ async function processRecording(args: {
     await markTranscriptStatus(callId, "profiles_updated")
     const finalStatus = observationIds.length > 0 ? "ready_for_review" : "needs_human_review"
     await markTranscriptStatus(callId, finalStatus, observationIds.length > 0 ? undefined : "No observations extracted")
+    let slackNotificationsSent = 0
+    let slackNotificationsSkippedOld = 0
     if (finalStatus === "ready_for_review" && isAttioTranscriptSlackConfigured()) {
-      try {
-        const slackSummary = await summarizeTranscriptForSlack({
-          title: normalized.title,
-          callDate: normalized.callDate,
-          participants: normalized.participants.map((p) => ({
-            display_name: p.display_name,
-            email: p.email,
-            firm_name: p.firm_name,
-          })),
-          transcript: normalized.rawTranscript,
-          analysis: analysisResult.parsed,
-        })
-        await logLlmCall({
-          callTranscriptId: callId,
-          task: "slack_call_summary",
-          promptVersion: SLACK_SUMMARY_PROMPT_VERSION,
-          inputPayload: { title: normalized.title, callDate: normalized.callDate },
-          outputPayload: slackSummary.parsed,
-          rawOutput: slackSummary.rawText,
-          latencyMs: slackSummary.latencyMs,
-          inputTokens: slackSummary.inputTokens,
-          outputTokens: slackSummary.outputTokens,
-        })
-        await notifyAttioTranscriptSlack({
-          callId,
-          normalized,
-          summary: slackSummary.parsed,
-          labels: analysisResult.parsed.labels,
-          analysisPeople: analysisResult.parsed.people,
-          externalParticipants,
-          observationsAdded: observationIds.length,
-          profilesUpdated,
-        })
-      } catch (err) {
+      if (!shouldNotifySlackForCallDate(normalized.callDate, args.slackMaxCallAgeHours)) {
+        slackNotificationsSkippedOld = 1
+        console.info(
+          `[attio-transcripts] Slack notification skipped for ${callId}: call date ${normalized.callDate} is older than ${args.slackMaxCallAgeHours}h`,
+        )
+      } else {
         try {
+          const slackSummary = await summarizeTranscriptForSlack({
+            title: normalized.title,
+            callDate: normalized.callDate,
+            participants: normalized.participants.map((p) => ({
+              display_name: p.display_name,
+              email: p.email,
+              firm_name: p.firm_name,
+            })),
+            transcript: normalized.rawTranscript,
+            analysis: analysisResult.parsed,
+          })
           await logLlmCall({
             callTranscriptId: callId,
             task: "slack_call_summary",
             promptVersion: SLACK_SUMMARY_PROMPT_VERSION,
             inputPayload: { title: normalized.title, callDate: normalized.callDate },
-            error: err instanceof Error ? err.message : String(err),
+            outputPayload: slackSummary.parsed,
+            rawOutput: slackSummary.rawText,
+            latencyMs: slackSummary.latencyMs,
+            inputTokens: slackSummary.inputTokens,
+            outputTokens: slackSummary.outputTokens,
           })
-        } catch {
-          // Preserve ingestion success even if best-effort Slack audit logging fails.
+          await notifyAttioTranscriptSlack({
+            callId,
+            normalized,
+            summary: slackSummary.parsed,
+            labels: analysisResult.parsed.labels,
+            analysisPeople: analysisResult.parsed.people,
+            externalParticipants,
+            observationsAdded: observationIds.length,
+            profilesUpdated,
+          })
+          slackNotificationsSent = 1
+        } catch (err) {
+          try {
+            await logLlmCall({
+              callTranscriptId: callId,
+              task: "slack_call_summary",
+              promptVersion: SLACK_SUMMARY_PROMPT_VERSION,
+              inputPayload: { title: normalized.title, callDate: normalized.callDate },
+              error: err instanceof Error ? err.message : String(err),
+            })
+          } catch {
+            // Preserve ingestion success even if best-effort Slack audit logging fails.
+          }
+          console.error(
+            `[attio-transcripts] Slack notification failed for ${callId}: ${
+              err instanceof Error ? err.message : String(err)
+            }`,
+          )
         }
-        console.error(
-          `[attio-transcripts] Slack notification failed for ${callId}: ${
-            err instanceof Error ? err.message : String(err)
-          }`,
-        )
       }
     }
-    return { processed: true, ignored: false, profilesUpdated }
+    return {
+      processed: true,
+      ignored: false,
+      profilesUpdated,
+      slackNotificationsSent,
+      slackNotificationsSkippedOld,
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : "unknown error"
     await markTranscriptStatus(callId, "error", message)
     throw err
   }
+}
+
+export function shouldNotifySlackForCallDate(
+  callDate: string,
+  maxCallAgeHours = DEFAULT_SLACK_MAX_CALL_AGE_HOURS,
+  now = new Date(),
+): boolean {
+  if (maxCallAgeHours <= 0) return true
+
+  const callMs = Date.parse(callDate)
+  const nowMs = now.getTime()
+  if (!Number.isFinite(callMs) || !Number.isFinite(nowMs)) return false
+
+  return nowMs - callMs <= maxCallAgeHours * 60 * 60 * 1000
+}
+
+function resolveSlackMaxCallAgeHours(value?: number): number {
+  const configured = value ?? Number(
+    process.env.ATTIO_TRANSCRIPT_SLACK_MAX_CALL_AGE_HOURS ?? DEFAULT_SLACK_MAX_CALL_AGE_HOURS,
+  )
+  if (!Number.isFinite(configured)) return DEFAULT_SLACK_MAX_CALL_AGE_HOURS
+  return Math.min(MAX_SLACK_MAX_CALL_AGE_HOURS, Math.max(0, configured))
 }
 
 async function ensureProfiles(args: {

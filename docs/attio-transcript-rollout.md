@@ -39,6 +39,7 @@ Optional Slack call-summary notifications need:
 - `ATTIO_TRANSCRIPT_SLACK_BOT_TOKEN`
 - `ATTIO_TRANSCRIPT_SLACK_CHANNEL_ID`
 - `ATTIO_TRANSCRIPT_REVIEW_URL` or `NEXT_PUBLIC_APP_URL` for review links
+- `ATTIO_TRANSCRIPT_SLACK_MAX_CALL_AGE_HOURS` to tune stale-call suppression; default is 12 hours, and `0` disables the age gate
 
 Slack posting is best-effort. If these vars are missing, ingestion still works and no Slack message is sent.
 
@@ -92,7 +93,9 @@ The verifier checks:
 
 ## Slack Notifications
 
-When configured, the ingestion job runs a separate Slack-summary LLM step after a transcript reaches `ready_for_review`, then posts the resulting Slack-friendly message. The message includes call type, sentiment, labels, TLDR, action items, key points, open questions, risks, relationship signals, and links back to the review queue / Attio call when available.
+When configured, the ingestion job runs a separate Slack-summary LLM step after a transcript reaches `ready_for_review`, then posts the resulting Slack-friendly message when the call date is inside the configured Slack age window. The message includes call type, sentiment, labels, TLDR, action items, key points, open questions, risks, relationship signals, and links back to the review queue / Attio call when available.
+
+The 5-minute GitHub Actions scheduler intentionally keeps a wider Attio polling window as a backstop for missed webhook deliveries and transcript lag. That poller can still ingest older unprocessed transcripts into Supabase, but Slack notifications are suppressed for calls older than `ATTIO_TRANSCRIPT_SLACK_MAX_CALL_AGE_HOURS` so stale backfill does not appear as a new call in Slack.
 
 The Slack message groups external participants by `company_identity_id` and lists each external individual with `person_identity_id` plus `participant_identity_id`. Amitis participants are listed with their own `person_identity_id`.
 

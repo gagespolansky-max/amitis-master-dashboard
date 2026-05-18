@@ -68,6 +68,7 @@ Optional:
 
 - `ATTIO_TRANSCRIPT_REVIEW_URL` - explicit review queue URL for Slack links
 - `NEXT_PUBLIC_APP_URL` - fallback base URL used to build `/data-layer/attio-transcripts/review`
+- `ATTIO_TRANSCRIPT_SLACK_MAX_CALL_AGE_HOURS` - stale-call suppression window; defaults to 12 hours, and `0` disables the age gate
 
 ## Slack App Requirements
 
@@ -82,3 +83,5 @@ The Slack summary LLM call is also best-effort. A failure is logged to `llm_call
 ## Trigger Point
 
 The notifier runs only when a processed transcript reaches `ready_for_review`. Transcripts with no external participants, no transcript text, no observations, or processing errors are not posted.
+
+Slack notifications are also age-gated by call date. The fallback poller may ingest older missed transcripts into Supabase, but it does not announce calls older than `ATTIO_TRANSCRIPT_SLACK_MAX_CALL_AGE_HOURS`.
